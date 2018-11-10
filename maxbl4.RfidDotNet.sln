@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet", "maxbl4.RfidDotNet\maxbl4.RfidDotNet.csproj", "{B7086186-E78E-4818-8C13-0626BB60B4A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.AlienTech", "maxbl4.RfidDotNet.AlienTech\maxbl4.RfidDotNet.AlienTech.csproj", "{9C0291BE-0220-4D46-8659-31E5B30DFB88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.AlienTech.Tests", "maxbl4.RfidDotNet.AlienTech.Tests\maxbl4.RfidDotNet.AlienTech.Tests.csproj", "{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{B7086186-E78E-4818-8C13-0626BB60B4A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7086186-E78E-4818-8C13-0626BB60B4A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7086186-E78E-4818-8C13-0626BB60B4A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C0291BE-0220-4D46-8659-31E5B30DFB88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C0291BE-0220-4D46-8659-31E5B30DFB88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C0291BE-0220-4D46-8659-31E5B30DFB88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C0291BE-0220-4D46-8659-31E5B30DFB88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
