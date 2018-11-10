@@ -52,7 +52,7 @@ namespace maxbl4.RfidDotNet.AlienTech
                     {
                         var doc = new XmlDocument();
                         doc.Load(new MemoryStream(result.Buffer));
-                        var ri = ReaderInfo.FromXmlString(doc);
+                        var ri = ReaderInfoParser.FromXmlString(doc);
                         discovery.OnNext(ri);
                         readers.Add(ri);
                     }

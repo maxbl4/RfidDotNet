@@ -88,7 +88,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             tagStreamListener?.Dispose();
             await api.TagStreamKeepAliveTime(1800);
             await api.TagStreamFormat(ListFormat.Custom);
-            await api.TagStreamCustomFormat(Tag.CustomFormat);
+            await api.TagStreamCustomFormat(TagParser.CustomFormat);
             await api.AutoModeReset();
             await api.Clear();                        
             await api.StreamHeader(true);
@@ -103,9 +103,9 @@ namespace maxbl4.RfidDotNet.AlienTech
         public async Task StartTagPolling(IObserver<Tag> tags)
         {
             await api.TagListFormat(ListFormat.Custom);
-            await api.TagListCustomFormat(Tag.CustomFormat);
+            await api.TagListCustomFormat(TagParser.CustomFormat);
             await api.TagStreamFormat(ListFormat.Custom);
-            await api.TagStreamCustomFormat(Tag.CustomFormat);
+            await api.TagStreamCustomFormat(TagParser.CustomFormat);
             await api.AutoModeReset();
             await api.Clear();
             await api.NotifyMode(false);

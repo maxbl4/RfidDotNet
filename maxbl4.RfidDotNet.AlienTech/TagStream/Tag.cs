@@ -4,15 +4,8 @@ using System.Text;
 
 namespace maxbl4.RfidDotNet.AlienTech.TagStream
 {
-    public class Tag
+    public class TagParser
     {
-        public ReaderInfo Reader { get; set; }
-        public string TagId { get; set; }
-        public DateTimeOffset DiscoveryTime { get; set; }
-        public DateTimeOffset LastSeenTime { get; set; }
-        public int Antenna { get; set; }
-        public int ReadCount { get; set; }
-        public double Rssi { get; set; }
         public static string CustomFormat => "%k;${MSEC1};${MSEC2};%a;%m;%r";
 
         public static Tag Parse(string msg)

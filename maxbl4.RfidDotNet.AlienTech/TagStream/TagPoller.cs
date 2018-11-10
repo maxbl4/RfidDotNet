@@ -36,7 +36,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                     {
                         if (line == ProtocolMessages.NoTags)
                             continue;
-                        if (Tag.TryParse(line, out var t))
+                        if (TagParser.TryParse(line, out var t))
                             tags.OnNext(t);
                         else
                             unparsedMessages.OnNext(line);

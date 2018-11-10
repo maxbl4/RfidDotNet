@@ -14,7 +14,7 @@
                 return TagStreamParserReponse.Failed;
             }
 
-            if (Tag.TryParse(msg, out var tag))
+            if (TagParser.TryParse(msg, out var tag))
             {
                 tag.Reader = Reader;
                 Tag = tag;

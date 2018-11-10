@@ -81,7 +81,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
   <MACAddress>00:1B:5F:01:08:E4</MACAddress>
   <ReaderVersion>17.11.13.00</ReaderVersion>
 </Alien-RFID-Reader-Heartbeat>");
-            var ri = ReaderInfo.FromXmlString(doc);
+            var ri = ReaderInfoParser.FromXmlString(doc);
             ri.ReaderName.ShouldBe("Alien RFID Reader");
             ri.IPAddress.ShouldBe(IPAddress.Parse("10.0.0.41"));
             ri.IPAddress6.ShouldBe(IPAddress.Parse("fdaa::aaaa"));
@@ -163,7 +163,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         public void Tag_parser()
         {
             var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
-            var tag = Tag.Parse(tagString);
+            var tag = TagParser.Parse(tagString);
             tag.TagId.ShouldBe("E20000165919004418405CBA");
             tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
             tag.LastSeenTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3"));
@@ -171,7 +171,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             tag.Rssi.ShouldBe(-35.4, 0.1);
             tag.ReadCount.ShouldBe(66);
 
-            Tag.TryParse(tagString, out tag).ShouldBeTrue();
+            TagParser.TryParse(tagString, out tag).ShouldBeTrue();
 
             tag.TagId.ShouldBe("E20000165919004418405CBA");
             tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
@@ -185,7 +185,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         public void Tag_parse_with_junk()
         {
             var tagString = "\0E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66\r\n";
-            var tag = Tag.Parse(tagString);
+            var tag = TagParser.Parse(tagString);
             tag.TagId.ShouldBe("E20000165919004418405CBA");
             tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
             tag.LastSeenTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3"));
