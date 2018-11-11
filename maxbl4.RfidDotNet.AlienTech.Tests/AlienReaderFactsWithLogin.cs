@@ -23,7 +23,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             sim = new SimulatorListener();
             proto = new AlienReaderProtocol(baseTimeout, baseTimeout * 2);
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(baseTimeout * 2).ShouldBeTrue();
+            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(5000).ShouldBeTrue();
             reader = proto.Api;
         }
 
