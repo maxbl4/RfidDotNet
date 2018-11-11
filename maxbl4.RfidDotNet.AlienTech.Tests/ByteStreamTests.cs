@@ -47,7 +47,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
                     .Subscribe(x => socket.CloseForce());
                 Assert.ThrowsAny<Exception>(() => socket.Connect("10.0.0.253", 25));
                 sw.Stop();
-                sw.ElapsedMilliseconds.ShouldBeLessThan(2000);
+                sw.ElapsedMilliseconds.ShouldBeLessThan(4000);
             }
         }
     }

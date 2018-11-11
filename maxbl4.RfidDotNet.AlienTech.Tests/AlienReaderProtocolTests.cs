@@ -17,7 +17,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             sim = new SimulatorListener();
             proto = new AlienReaderProtocol();
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(2000).ShouldBeTrue();
+            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(5000).ShouldBeTrue();
         }
         
         [Fact]
