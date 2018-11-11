@@ -23,7 +23,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             sim = new SimulatorListener();
             proto = new AlienReaderProtocol(baseTimeout, baseTimeout * 2);
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(5000).ShouldBeTrue();
+            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(6000).ShouldBeTrue();
             reader = proto.Api;
         }
 
@@ -37,7 +37,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
-                r2.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(baseTimeout).ShouldBeTrue();
+                r2.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(6000).ShouldBeTrue();
                 Logger.Debug("Second client connected");
             }
             Logger.Debug("Second client disconnected");
