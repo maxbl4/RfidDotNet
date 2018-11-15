@@ -50,7 +50,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_serial_raw_multiple_times()
         {
+            // Get Reader Serial Number command
             byte[] command = {0x04, 0x00, 0x4c, 0x3a, 0xd2};
+            // Response from particular hardware reader
             byte[] expectedResponse = {0x09, 0x00, 0x4c, 0x00, 0x17, 0x43, 0x90, 0x15, 0x49, 0xc0};
             for (var i = 0; i < 10; i++)
             {
