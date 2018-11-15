@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace maxbl4.RfidDotNet.AlienTech.Tests.Infrastructure
+namespace maxbl4.RfidDotNet.Infrastructure
 {
     public class Timing
     {

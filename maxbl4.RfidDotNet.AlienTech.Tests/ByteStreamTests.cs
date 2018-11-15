@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Reactive.Linq;
 using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.Net;
+using maxbl4.RfidDotNet.Exceptions;
 using Shouldly;
 using Xunit;
 

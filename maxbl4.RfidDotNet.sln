@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.AlienTech
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.AlienTech.Tests", "maxbl4.RfidDotNet.AlienTech.Tests\maxbl4.RfidDotNet.AlienTech.Tests.csproj", "{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.GenericSerial", "maxbl4.RfidDotNet.GenericSerial\maxbl4.RfidDotNet.GenericSerial.csproj", "{5DFC3FDC-6D78-4BD1-A3B5-A3D92BA464FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.GenericSerial.Tests", "maxbl4.RfidDotNet.GenericSerial.Tests\maxbl4.RfidDotNet.GenericSerial.Tests.csproj", "{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D64A58B8-52EA-4F2E-95F4-C0BD8AC139CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DFC3FDC-6D78-4BD1-A3B5-A3D92BA464FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DFC3FDC-6D78-4BD1-A3B5-A3D92BA464FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DFC3FDC-6D78-4BD1-A3B5-A3D92BA464FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DFC3FDC-6D78-4BD1-A3B5-A3D92BA464FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

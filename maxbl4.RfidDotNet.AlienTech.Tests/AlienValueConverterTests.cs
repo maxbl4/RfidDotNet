@@ -7,6 +7,7 @@ using maxbl4.RfidDotNet.AlienTech.Buffers;
 using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.Exceptions;
 using Shouldly;
 using Xunit;
 

@@ -2,7 +2,7 @@
 using System.Reactive.Disposables;
 using System.Threading;
 
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.Ext
 {
     public static class SemaphoreExt
     {
