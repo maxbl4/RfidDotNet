@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Packets;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Buffers
 {
     public class MessageParser
     {
-        public PacketResult ReadPacket(Stream stream)
+        public static async Task<PacketResult> ReadPacket(Stream stream)
         {
             var packetLength = stream.ReadByte();
             if (packetLength < 0) return PacketResult.WrongSize();
@@ -18,11 +21,16 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
             data[0] = (byte)packetLength;
             while (totalRead < packetLength)
             {
-                totalRead += stream.Read(data, totalRead + 1, packetLength - totalRead);
+                totalRead += await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
             }
             if (!Crc16.CheckCrc16(data)) 
                 return PacketResult.WrongCrc();
             return PacketResult.FromData(data);
+        }
+
+        public static bool ShouldReadMore(ResponseDataPacket responseDataPacket)
+        {
+            return false;
         }
     }
 

@@ -2,6 +2,7 @@
 {
     public enum ReaderCommand : byte
     {
+	    Unrecognized = 0x00,
 	    // ISO18000-6C commands
 		TagInventory = 0x01,
 		ReadData= 0x02,
@@ -28,7 +29,7 @@
 		QtInventory = 0x1b,
 
 	    // Reader defined commands
-	    ObtainReaderInformation = 0x21,
+	    GetReaderInformation = 0x21,
 	    /// <summary>
 	    /// Set region
 	    /// </summary>

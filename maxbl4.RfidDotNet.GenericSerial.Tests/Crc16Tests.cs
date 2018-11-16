@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Shouldly;
 using Xunit;
 
@@ -39,7 +40,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        
         [Fact]
         public void Array_clone_test()
         {
@@ -50,5 +50,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             dst.Length.ShouldBe(3);
             dst[0].ShouldBe((byte)1);
         }
+
     }
 }
