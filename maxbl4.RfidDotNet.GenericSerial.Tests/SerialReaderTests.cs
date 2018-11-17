@@ -36,7 +36,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 info.RFPower.ShouldBe((byte)26);
                 info.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
                 info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
-                info.BuzzerEnabled.ShouldBe(true);
+                info.BuzzerEnabled.ShouldBe(false);
                 info.AntennaCheck.ShouldBe(false);
             }
         }
@@ -64,6 +64,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.GetReaderInfo().Result.RFPower.ShouldBe((byte)0);
                 r.SetRFPower(26).Wait();
                 r.GetReaderInfo().Result.RFPower.ShouldBe((byte)26);
+            }
+        }
+        
+        [Fact]
+        public void Should_read_known_tags()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                var result = r.TagInventory().Result;
+                result.Tags.ShouldContain(x => x.TagId == "03072600000000000000926D");
+                result.Tags.ShouldContain(x => x.TagId == "0307260000000000000092D5");
             }
         }
         

@@ -32,7 +32,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
         public static bool ShouldReadMore(ResponseDataPacket responseDataPacket)
         {
             if (responseDataPacket.Command == ReaderCommand.TagInventory
-                && responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending)
+                && (responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending
+                    || responseDataPacket.Status == ResponseStatusCode.InventoryStatisticDelivery))
                 return true;
             return false;
         }

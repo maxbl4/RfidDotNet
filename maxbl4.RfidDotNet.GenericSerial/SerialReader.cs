@@ -100,6 +100,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
 
+        public async Task<TagInventoryResult> TagInventory(TagInventoryParams args = null)
+        {
+            if (args == null) args = new TagInventoryParams();
+            var responses = await SendReceive(CommandDataPacket.TagInventory(args));
+            return new TagInventoryResult(responses);
+        }
+
         public void Dispose()
         {
             port?.Dispose();
