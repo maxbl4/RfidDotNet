@@ -33,7 +33,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
         {
             if (responseDataPacket.Command == ReaderCommand.TagInventory
                 && (responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending
-                    || responseDataPacket.Status == ResponseStatusCode.InventoryStatisticDelivery))
+                    || responseDataPacket.Status == ResponseStatusCode.InventoryStatisticsDelivery))
                 return true;
             return false;
         }

@@ -13,7 +13,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public const int DataOffset = 4;
         public byte[] RawData { get; }
         public ReaderCommand ExpectedCommand { get; }
-
+        public DateTimeOffset Timestamp { get; }
+        
         /// <summary>
         /// Data.Length + 5
         /// </summary>
@@ -23,10 +24,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public ResponseStatusCode Status => (ResponseStatusCode)RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
-        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData)
+        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null)
         {
             ExpectedCommand = expectedCommand;
             RawData = rawData;
+            Timestamp = timestamp ?? DateTimeOffset.Now;
         }
         
         public Model.ReaderInfo GetReaderInfo()
@@ -44,10 +46,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         uint ReadUInt32(int offset = DataOffset)
         {
             uint result = 0;
-            result += (uint)(RawData[DataOffset] << 24);
-            result += (uint)(RawData[DataOffset + 1] << 16);
-            result += (uint)(RawData[DataOffset + 2] << 8);
-            result += RawData[DataOffset + 3];
+            result += (uint)(RawData[offset] << 24);
+            result += (uint)(RawData[offset + 1] << 16);
+            result += (uint)(RawData[offset + 2] << 8);
+            result += RawData[offset + 3];
             return result;
         }
 
@@ -59,13 +61,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
                 throw new MalformedPacketException();
         }
         
-        static ResponseStatusCode[] inventoryValidStatusCodes = 
+        private static readonly ResponseStatusCode[] InventoryValidStatusCodes = 
         {
             ResponseStatusCode.InventoryComplete,
             ResponseStatusCode.InventoryTimeout,
             ResponseStatusCode.InventoryMoreFramesPending,
             ResponseStatusCode.InventoryBufferOverflow,
-            ResponseStatusCode.InventoryStatisticDelivery
+            ResponseStatusCode.InventoryStatisticsDelivery
         };
 
         public void CheckSuccess()
@@ -74,7 +76,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             switch (Command)
             {
                 case ReaderCommand.TagInventory:
-                    if (!inventoryValidStatusCodes.Contains(Status)) return;
+                    if (!InventoryValidStatusCodes.Contains(Status)) return;
                     break;
                 default:
                     if (Status == ResponseStatusCode.Success) return;

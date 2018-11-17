@@ -1,3 +1,5 @@
+using System;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using Shouldly;
 using Xunit;
@@ -42,6 +44,21 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             buf[2].ShouldBe((byte)ReaderCommand.GetReaderSerialNumber);
             buf[3].ShouldBe((byte)0x3a);
             buf[4].ShouldBe((byte)0xd2);
+        }
+
+        [Fact]
+        public void Deserialize_tag_inventory_result()
+        {
+            var timestamp = DateTimeOffset.Now;
+            var result = new TagInventoryResult(new[]
+                {new ResponseDataPacket(ReaderCommand.TagInventory, SamplesData.TagInventoryResponse, timestamp)});
+            result.Tags.Count.ShouldBe(2);
+            result.Tags.ShouldContain(x => x.TagId == "03072600000000000000926D");
+            result.Tags.ShouldContain(x => x.TagId == "0307260000000000000092D5");
+            result.Tags[0].Antenna.ShouldBe(0);
+            result.Tags[0].Rssi.ShouldBe(224);
+            result.Tags[0].LastSeenTime.ShouldBe(timestamp);
+            result.Tags[0].DiscoveryTime.ShouldBe(timestamp);
         }
     }
 }

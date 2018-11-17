@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
+using maxbl4.RfidDotNet.Infrastructure;
 using RJCP.IO.Ports;
 using Shouldly;
 using Xunit;
@@ -34,7 +37,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 info.Model.ShouldBe(ReaderModel.CF_RU5202);
                 info.SupportedProtocols.ShouldBe(ProtocolType.Gen18000_6C);
                 info.RFPower.ShouldBe((byte)26);
-                info.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
+                info.InventoryScanInterval.ShouldBeInRange(TimeSpan.FromMilliseconds(0), TimeSpan.FromMilliseconds(25500));
                 info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
                 info.BuzzerEnabled.ShouldBe(false);
                 info.AntennaCheck.ShouldBe(false);
@@ -72,9 +75,21 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
             {
-                var result = r.TagInventory().Result;
-                result.Tags.ShouldContain(x => x.TagId == "03072600000000000000926D");
-                result.Tags.ShouldContain(x => x.TagId == "0307260000000000000092D5");
+                r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
+                var tags = new List<Tag>();
+                Timing.StartWait(() =>
+                {
+                    tags.AddRange(r.TagInventory().Result.Tags);
+                    return tags.Select(x => x.TagId).Distinct().Count() >= 2;
+                }).Result.ShouldBeTrue();
+                foreach (var tagId in TestSettings.Instance.GetKnownTagIds)
+                {
+                    tags.ShouldContain(x => x.TagId == tagId);    
+                }
+                tags[0].Rssi.ShouldBeGreaterThan(0);
+                tags[0].ReadCount.ShouldBe(1);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
             }
         }
         

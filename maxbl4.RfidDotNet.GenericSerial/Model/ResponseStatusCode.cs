@@ -7,7 +7,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         InventoryTimeout = 0x2,
         InventoryMoreFramesPending = 0x3,
         InventoryBufferOverflow = 0x4,
-        InventoryStatisticDelivery = 0x26,
+        InventoryStatisticsDelivery = 0x26,
         
         InvalidPassword = 0x5,
         TagKillFailed = 0x9,
