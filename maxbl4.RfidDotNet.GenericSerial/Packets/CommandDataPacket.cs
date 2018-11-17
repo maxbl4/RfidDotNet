@@ -57,9 +57,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return new CommandDataPacket(ReaderCommand.SetAntennaCheck, (byte)(enable ? 1 : 0));
         }
         
-        public static CommandDataPacket TagInventory(TagInventoryParams args)
+        public static CommandDataPacket TagInventory(ReaderCommand command, TagInventoryParams args)
         {
-            return new CommandDataPacket(ReaderCommand.TagInventory, args.Serialize());
+            return new CommandDataPacket(command, args.Serialize());
         }
     }
 }

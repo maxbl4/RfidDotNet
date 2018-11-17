@@ -94,6 +94,19 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         //[Fact]
+        public void Should_run_inventory_with_buffer()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
+                Timing.StartWait(() => r.TagInventoryWithMemoryBuffer().Result.TagsInLastInventory > 0).Result.ShouldBeTrue();
+                var result = r.TagInventoryWithMemoryBuffer().Result;
+                result.Tags.Count.ShouldBe(0);
+                result.TagsInBuffer.ShouldBeGreaterThan((ushort)0);
+            }
+        }
+        
+        //[Fact]
         [Trait("Hardware", "true")]
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_configuration()

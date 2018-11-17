@@ -9,26 +9,43 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 {
     public class TagInventoryResult
     {
+        public ushort TagsInBuffer { get; private set; }
+        public ushort TagsInLastInventory { get; private set;}
         public List<Tag> Tags { get; } = new List<Tag>();
         public TagInventoryResult(IEnumerable<ResponseDataPacket> packets)
         {
             foreach (var packet in packets)
             {
-                switch (packet.Status)
+                switch (packet.Command)
                 {
-                    case ResponseStatusCode.InventoryTimeout:
-                    case ResponseStatusCode.InventoryMoreFramesPending:
-                    case ResponseStatusCode.InventoryBufferOverflow:
-                    case ResponseStatusCode.InventoryComplete:
-                        ReadInventoryResult(packet);
+                    case ReaderCommand.TagInventory:
+                        switch (packet.Status)
+                        {
+                            case ResponseStatusCode.InventoryTimeout:
+                            case ResponseStatusCode.InventoryMoreFramesPending:
+                            case ResponseStatusCode.InventoryBufferOverflow:
+                            case ResponseStatusCode.InventoryComplete:
+                                ReadInventoryResult(packet);
+                                continue;
+                            case ResponseStatusCode.InventoryStatisticsDelivery:
+                                ReadInventoryStatistics(packet);
+                                continue;
+                        }
                         break;
-                    case ResponseStatusCode.InventoryStatisticsDelivery:
-                        ReadInventoryStatistics(packet);
-                        break;
-                    default:
-                        throw new UnexpectedResponseException(packet.Command, packet.Status);
+                    case ReaderCommand.TagInventoryWithMemoryBuffer:
+                        ReadBufferResponse(packet);
+                        continue;
                 }
+                throw new UnexpectedResponseException(packet.Command, packet.Status);
             }
+        }
+
+        void ReadBufferResponse(ResponseDataPacket packet)
+        {
+            TagsInBuffer = packet.RawData[ResponseDataPacket.DataOffset];
+            TagsInBuffer += (ushort)(packet.RawData[ResponseDataPacket.DataOffset + 1] << 8);
+            TagsInLastInventory = packet.RawData[ResponseDataPacket.DataOffset + 2];
+            TagsInLastInventory += (ushort)(packet.RawData[ResponseDataPacket.DataOffset + 3] << 8);
         }
 
         void ReadInventoryStatistics(ResponseDataPacket packet)

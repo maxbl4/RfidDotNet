@@ -23,7 +23,7 @@
 		ModifyMonza4QTWorkingParameters = 0x12,
 		ExtendedDataReadingWithAssignedMask = 0x15,
 		ExtendedDataWritingWithAssignedMask = 0x16,
-		InventoryWithMemoryBuffer = 0x18,
+		TagInventoryWithMemoryBuffer = 0x18,
 		MixInventory = 0x19,
 		InventoryWithEpcNumber = 0x1a,
 		QtInventory = 0x1b,

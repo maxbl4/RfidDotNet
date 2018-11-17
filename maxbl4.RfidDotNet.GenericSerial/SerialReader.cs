@@ -103,7 +103,14 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public async Task<TagInventoryResult> TagInventory(TagInventoryParams args = null)
         {
             if (args == null) args = new TagInventoryParams();
-            var responses = await SendReceive(CommandDataPacket.TagInventory(args));
+            var responses = await SendReceive(CommandDataPacket.TagInventory(ReaderCommand.TagInventory, args));
+            return new TagInventoryResult(responses);
+        }
+
+        public async Task<TagInventoryResult> TagInventoryWithMemoryBuffer(TagInventoryParams args = null)
+        {
+            if (args == null) args = new TagInventoryParams();
+            var responses = await SendReceive(CommandDataPacket.TagInventory(ReaderCommand.TagInventoryWithMemoryBuffer, args));
             return new TagInventoryResult(responses);
         }
 
