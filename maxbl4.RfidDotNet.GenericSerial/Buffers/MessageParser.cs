@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Buffers
@@ -30,6 +31,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
 
         public static bool ShouldReadMore(ResponseDataPacket responseDataPacket)
         {
+            if (responseDataPacket.Command == ReaderCommand.TagInventory
+                && responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending)
+                return true;
             return false;
         }
     }

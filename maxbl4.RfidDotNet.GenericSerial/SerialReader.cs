@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Buffers;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using RJCP.IO.Ports;
 
@@ -65,13 +66,37 @@ namespace maxbl4.RfidDotNet.GenericSerial
         }
         
         /// <summary>
-        /// Value is rounded to 100 ms, should be in 0 - 25500ms
+        /// 
         /// </summary>
-        /// <param name="interval"></param>
+        /// <param name="interval">Value is rounded to 100 ms, should be in 0 - 25500ms</param>
         /// <returns></returns>
         public async Task SetInventoryScanInterval(TimeSpan interval)
         {
             var responses = await SendReceive(CommandDataPacket.SetInventoryScanInterval(interval));
+            responses.First().CheckSuccess();
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rfPower">Radio transmitter power in db. The range is determined by the reader and should be check in the specs.
+        /// The reader my return error</param>
+        /// <returns></returns>
+        public async Task SetRFPower(byte rfPower)
+        {
+            var responses = await SendReceive(CommandDataPacket.SetRFPower(rfPower));
+            responses.First().CheckSuccess();
+        }
+        
+        public async Task SetAntennaConfiguration(AntennaConfiguration configuration)
+        {
+            var responses = await SendReceive(CommandDataPacket.SetAntennaConfiguration(configuration));
+            responses.First().CheckSuccess();
+        }
+        
+        public async Task SetAntennaCheck(bool enable)
+        {
+            var responses = await SendReceive(CommandDataPacket.SetAntennaCheck(enable));
             responses.First().CheckSuccess();
         }
 

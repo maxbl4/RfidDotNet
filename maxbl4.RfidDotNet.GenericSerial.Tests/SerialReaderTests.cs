@@ -52,5 +52,47 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
             }
         }
+        
+        [Fact]
+        public void Should_set_rf_power()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetRFPower(20).Wait();
+                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)20);
+                r.SetRFPower(0).Wait();
+                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)0);
+                r.SetRFPower(26).Wait();
+                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)26);
+            }
+        }
+        
+        //[Fact]
+        [Trait("Hardware", "true")]
+        [Trait("MultiAntenna", "true")]
+        public void Should_set_antenna_configuration()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1).Wait();
+                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
+                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2).Wait();
+                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2);
+            }
+        }
+        
+        //[Fact]
+        [Trait("Hardware", "true")]
+        [Trait("MultiAntenna", "true")]
+        public void Should_set_antenna_check()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetAntennaCheck(true).Wait();
+                r.GetReaderInfo().Result.AntennaCheck.ShouldBeTrue();
+                r.SetAntennaCheck(false).Wait();
+                r.GetReaderInfo().Result.AntennaCheck.ShouldBeFalse();
+            }
+        }
     }
 }

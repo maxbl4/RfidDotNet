@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using maxbl4.RfidDotNet.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Packets
 {
@@ -17,7 +20,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public byte Length => RawData[0];
         public byte Address => RawData[1];
         public ReaderCommand Command => (ReaderCommand)RawData[2];
-        public byte Status => RawData[3];
+        public ResponseStatusCode Status => (ResponseStatusCode)RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
         public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData)
@@ -55,12 +58,29 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             if (expectedDataLength >= 0 && DataLength != expectedDataLength)
                 throw new MalformedPacketException();
         }
+        
+        static ResponseStatusCode[] inventoryValidStatusCodes = 
+        {
+            ResponseStatusCode.InventoryComplete,
+            ResponseStatusCode.InventoryTimeout,
+            ResponseStatusCode.InventoryMoreFramesPending,
+            ResponseStatusCode.InventoryBufferOverflow,
+            ResponseStatusCode.InventoryStatisticDelivery
+        };
 
         public void CheckSuccess()
         {
             ValidatePacket(0);
-            if (Status != 0)
-                throw new CommandExecutionFailedException();
+            switch (Command)
+            {
+                case ReaderCommand.TagInventory:
+                    if (!inventoryValidStatusCodes.Contains(Status)) return;
+                    break;
+                default:
+                    if (Status == ResponseStatusCode.Success) return;
+                    break;
+            }
+            throw new CommandExecutionFailedException(Command, Status);
         }
     }
 }
