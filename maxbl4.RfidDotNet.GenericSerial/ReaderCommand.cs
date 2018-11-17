@@ -35,7 +35,7 @@
 	    /// </summary>
 	    ModifyWorkingFrequency = 0x22,
 	    ModifyReaderAddress = 0x24,
-	    ModifyReaderInventoryTime = 0x25,
+	    SetInventoryScanInterval = 0x25,
 	    ModifySerialBaudRate = 0x28,
 	    ModifyRfPower = 0x2f,
 	    LedOrBuzzerControl = 0x33,

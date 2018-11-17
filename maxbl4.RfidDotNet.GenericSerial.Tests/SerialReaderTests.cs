@@ -34,10 +34,22 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 info.Model.ShouldBe(ReaderModel.CF_RU5202);
                 info.SupportedProtocols.ShouldBe(ProtocolType.Gen18000_6C);
                 info.RFPower.ShouldBe((byte)26);
-                info.InventoryInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
+                info.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
                 info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
                 info.BuzzerEnabled.ShouldBe(true);
                 info.AntennaCheck.ShouldBe(false);
+            }
+        }
+        
+        [Fact]
+        public void Should_set_inventory_scan_interval()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetInventoryScanInterval(TimeSpan.FromMilliseconds(1000)).Wait();
+                r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(1000));
+                r.SetInventoryScanInterval(TimeSpan.FromMilliseconds(300)).Wait();
+                r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
             }
         }
     }

@@ -9,6 +9,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public const byte HeaderLength = 5;
         public const int DataOffset = 4;
         public byte[] RawData { get; }
+        public ReaderCommand ExpectedCommand { get; }
 
         /// <summary>
         /// Data.Length + 5
@@ -19,20 +20,21 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public byte Status => RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
-        public ResponseDataPacket(byte[] rawData)
+        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData)
         {
+            ExpectedCommand = expectedCommand;
             RawData = rawData;
         }
         
         public Model.ReaderInfo GetReaderInfo()
         {
-            ValidatePacket(ReaderCommand.GetReaderInformation, 12);
+            ValidatePacket(12);
             return new Model.ReaderInfo(RawData, DataOffset);
         }
 
         public uint GetReaderSerialNumber()
         {
-            ValidatePacket(ReaderCommand.GetReaderSerialNumber, 4);
+            ValidatePacket(4);
             return ReadUInt32();
         }
 
@@ -46,12 +48,19 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return result;
         }
 
-        void ValidatePacket(ReaderCommand expectedCommand, int expectedDataLength = -1)
+        void ValidatePacket(int expectedDataLength = -1)
         {
-            if (Command != expectedCommand)
-                throw new InvalidOperationException($"Wrong command {Command} != {expectedCommand}");
+            if (Command != ExpectedCommand)
+                throw new InvalidOperationException($"Wrong command {Command} != {ExpectedCommand}");
             if (expectedDataLength >= 0 && DataLength != expectedDataLength)
                 throw new MalformedPacketException();
+        }
+
+        public void CheckSuccess()
+        {
+            ValidatePacket(0);
+            if (Status != 0)
+                throw new CommandExecutionFailedException();
         }
     }
 }

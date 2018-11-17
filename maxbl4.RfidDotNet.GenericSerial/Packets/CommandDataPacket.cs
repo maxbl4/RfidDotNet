@@ -27,5 +27,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             Crc16.SetCrc16(buf, written);
             return written;
         }
+
+        public static CommandDataPacket SetInventoryScanInterval(TimeSpan interval)
+        {
+            var t = (int)interval.TotalMilliseconds / 100;
+            if (t < 0 || t > 255)
+                throw new ArgumentOutOfRangeException(nameof(interval), $"Interval should be in 0 - 25500ms. Was {interval.TotalMilliseconds}");
+            return new CommandDataPacket(ReaderCommand.SetInventoryScanInterval, new []{(byte)t});
+        }
     }
 }

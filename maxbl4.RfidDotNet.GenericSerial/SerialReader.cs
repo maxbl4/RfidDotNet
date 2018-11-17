@@ -45,7 +45,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
                     if (!packet.Success)
                         throw new ReceiveFailedException(
                             $"Failed to read response from {serialPortName} {packet.ResultType}");
-                    responsePackets.Add(lastResponse = new ResponseDataPacket(packet.Data));
+                    responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
                 } while (MessageParser.ShouldReadMore(lastResponse));
                 
                 return responsePackets;
@@ -62,6 +62,17 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetReaderInformation));
             return responses.First().GetReaderInfo();
+        }
+        
+        /// <summary>
+        /// Value is rounded to 100 ms, should be in 0 - 25500ms
+        /// </summary>
+        /// <param name="interval"></param>
+        /// <returns></returns>
+        public async Task SetInventoryScanInterval(TimeSpan interval)
+        {
+            var responses = await SendReceive(CommandDataPacket.SetInventoryScanInterval(interval));
+            responses.First().CheckSuccess();
         }
 
         public void Dispose()
