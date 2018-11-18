@@ -83,6 +83,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         [Fact]
+        public void Should_get_number_of_tags_in_buffer()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.GetNumberOfTagsInBuffer().Wait();
+            }
+        }
+        
+        [Fact]
         public void Should_run_tag_inventory_with_default_params()
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
@@ -131,6 +140,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 }).Result.ShouldBeTrue("Failed to read 50 tags");
                 lastInventoryAgg.ShouldBeGreaterThan(50);
                 buffer.ShouldBeInRange(1, 100);
+                
+                r.GetNumberOfTagsInBuffer().Result.ShouldBe(buffer);
             }
         }
         

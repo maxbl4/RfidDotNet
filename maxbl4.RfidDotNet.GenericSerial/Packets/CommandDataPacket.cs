@@ -49,6 +49,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return new CommandDataPacket(ReaderCommand.SetRFPower, rfPower);
         }
         
+        public static CommandDataPacket GetNumberOfTagsInBuffer()
+        {
+            return new CommandDataPacket(ReaderCommand.GetNumberOfTagsInBuffer);
+        }
+        
         public static CommandDataPacket GetEpcLengthForBufferOperations()
         {
             return new CommandDataPacket(ReaderCommand.GetEpcLengthForBufferOperations);

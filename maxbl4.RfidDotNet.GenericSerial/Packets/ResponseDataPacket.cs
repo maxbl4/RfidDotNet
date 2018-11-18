@@ -48,6 +48,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             ValidatePacket(1);
             return (EpcLength)RawData[DataOffset];
         }
+        
+        public int GetNumberOfTagsInBuffer()
+        {
+            ValidatePacket(2);
+            return ReadUInt16();
+        }
 
         uint ReadUInt32(int offset = DataOffset)
         {
@@ -56,6 +62,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             result += (uint)(RawData[offset + 1] << 16);
             result += (uint)(RawData[offset + 2] << 8);
             result += RawData[offset + 3];
+            return result;
+        }
+        
+        ushort ReadUInt16(int offset = DataOffset)
+        {
+            ushort result = 0;
+            result += (ushort)(RawData[offset] << 8);
+            result += RawData[offset + 1];
             return result;
         }
 

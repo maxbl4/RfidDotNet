@@ -88,6 +88,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
+        public async Task<int> GetNumberOfTagsInBuffer()
+        {
+            var responses = await SendReceive(CommandDataPacket.GetNumberOfTagsInBuffer());
+            return responses.First().GetNumberOfTagsInBuffer();
+        }
+        
         public async Task<EpcLength> GetEpcLengthForBufferOperations()
         {
             var responses = await SendReceive(CommandDataPacket.GetEpcLengthForBufferOperations());

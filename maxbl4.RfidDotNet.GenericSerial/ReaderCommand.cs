@@ -52,7 +52,7 @@
 	    GetEpcLengthForBufferOperations = 0x71,
 	    ObtainDataFromMemoryBuffer = 0x72,
 	    ClearMemoryBuffer = 0x73,
-	    ObtainTotalTagAmountFromMemoryBuffer = 0x74,
+	    GetNumberOfTagsInBuffer = 0x74,
 	    ModifyParametersOfRealTimeInventoryMode = 0x75,
 	    ModifyWorkingMode = 0x76,
 	    LoadRealTimeInventoryModeParameters = 0x77,

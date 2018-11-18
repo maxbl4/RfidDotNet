@@ -48,7 +48,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         void ReadBufferResponse(ResponseDataPacket packet)
         {
             var offset = ResponseDataPacket.DataOffset;
-            // Here our friends have violated the protocol spec. Most significant byte is returned first...
             TagsInBuffer = (ushort)(packet.RawData[offset++] << 8);
             TagsInBuffer += packet.RawData[offset++];
             
