@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
+using maxbl4.RfidDotNet.Exceptions;
 using Shouldly;
 using Xunit;
 

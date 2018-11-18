@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using maxbl4.RfidDotNet.Exceptions;
 
 namespace maxbl4.RfidDotNet.AlienTech.Buffers
 {
@@ -57,9 +58,5 @@ namespace maxbl4.RfidDotNet.AlienTech.Buffers
             }
             return -1;
         }
-    }
-
-    public class OutOfBufferSpace : ApplicationException
-    {
     }
 }

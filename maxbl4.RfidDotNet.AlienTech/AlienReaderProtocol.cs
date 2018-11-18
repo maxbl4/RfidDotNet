@@ -9,6 +9,7 @@ using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.Exceptions;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech
@@ -154,20 +155,6 @@ namespace maxbl4.RfidDotNet.AlienTech
             pollerDisposable.Dispose();
             tagStreamListener?.Dispose();
             base.Dispose();
-        }
-    }
-
-    public class LoginFailedException : ApplicationException
-    {
-        public LoginFailedException(string response) : base(response)
-        {
-        }
-    }
-
-    public class UnexpectedWelcomeMessageException : ApplicationException
-    {
-        public UnexpectedWelcomeMessageException(List<string> msgs): base($"Actual messages: {string.Join("\r\n", msgs)}")
-        {
         }
     }
 }

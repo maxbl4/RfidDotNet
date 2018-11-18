@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.Ext;
 
 namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
 {
