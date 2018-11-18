@@ -33,8 +33,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
                         }
                         break;
                     case ReaderCommand.TagInventoryWithMemoryBuffer:
-                        ReadBufferResponse(packet);
-                        continue;
+                        switch (packet.Status)
+                        {
+                            case ResponseStatusCode.Success:
+                                ReadBufferResponse(packet);
+                                continue;
+                        }
+                        break;
                 }
                 throw new UnexpectedResponseException(packet.Command, packet.Status);
             }
@@ -42,14 +47,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
         void ReadBufferResponse(ResponseDataPacket packet)
         {
-            TagsInBuffer = packet.RawData[ResponseDataPacket.DataOffset];
-            TagsInBuffer += (ushort)(packet.RawData[ResponseDataPacket.DataOffset + 1] << 8);
-            TagsInLastInventory = packet.RawData[ResponseDataPacket.DataOffset + 2];
-            TagsInLastInventory += (ushort)(packet.RawData[ResponseDataPacket.DataOffset + 3] << 8);
+            var offset = ResponseDataPacket.DataOffset;
+            // Here our friends have violated the protocol spec. Most significant byte is returned first...
+            TagsInBuffer = (ushort)(packet.RawData[offset++] << 8);
+            TagsInBuffer += packet.RawData[offset++];
+            
+            TagsInLastInventory = (ushort)(packet.RawData[offset++] << 8);
+            TagsInLastInventory += packet.RawData[offset++];
         }
 
         void ReadInventoryStatistics(ResponseDataPacket packet)
         {
+            throw new NotImplementedException();
         }
 
         void ReadInventoryResult(ResponseDataPacket packet)

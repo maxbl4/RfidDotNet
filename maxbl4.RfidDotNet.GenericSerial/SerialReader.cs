@@ -88,6 +88,18 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
+        public async Task<EpcLength> GetEpcLengthForBufferOperations()
+        {
+            var responses = await SendReceive(CommandDataPacket.GetEpcLengthForBufferOperations());
+            return responses.First().GetEpcLength();
+        }
+        
+        public async Task SetEpcLengthForBufferOperations(EpcLength epcLength)
+        {
+            var responses = await SendReceive(CommandDataPacket.SetEpcLengthForBufferOperations(epcLength));
+            responses.First().CheckSuccess();
+        }
+        
         public async Task SetAntennaConfiguration(AntennaConfiguration configuration)
         {
             var responses = await SendReceive(CommandDataPacket.SetAntennaConfiguration(configuration));

@@ -42,6 +42,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             ValidatePacket(4);
             return ReadUInt32();
         }
+        
+        public EpcLength GetEpcLength()
+        {
+            ValidatePacket(1);
+            return (EpcLength)RawData[DataOffset];
+        }
 
         uint ReadUInt32(int offset = DataOffset)
         {

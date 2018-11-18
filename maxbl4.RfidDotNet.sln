@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.GenericSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.GenericSerial.Tests", "maxbl4.RfidDotNet.GenericSerial.Tests\maxbl4.RfidDotNet.GenericSerial.Tests.csproj", "{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "maxbl4.RfidDotNet.GenericSerial.Demo", "maxbl4.RfidDotNet.GenericSerial.Demo\maxbl4.RfidDotNet.GenericSerial.Demo.csproj", "{1AEACBD3-D0FB-4360-845F-02742F771338}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7FA8E04-F435-4F1E-8E4C-63174FCB204F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1AEACBD3-D0FB-4360-845F-02742F771338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AEACBD3-D0FB-4360-845F-02742F771338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AEACBD3-D0FB-4360-845F-02742F771338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AEACBD3-D0FB-4360-845F-02742F771338}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
