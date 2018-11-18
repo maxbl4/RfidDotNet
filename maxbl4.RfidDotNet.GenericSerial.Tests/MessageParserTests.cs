@@ -14,6 +14,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             var ms = new MemoryStream();
             var resp = MessageParser.ReadPacket(ms).Result;
             resp.Success.ShouldBeFalse();
+            resp.ResultType.ShouldBe(PacketResultType.Timeout);
+        }
+        
+        [Fact]
+        public void Test_less_data_than_expected()
+        {
+            var ms = new MemoryStream(SamplesData.Response1.Take(SamplesData.Response1.Length - 1).ToArray());
+            var resp = MessageParser.ReadPacket(ms).Result;
+            resp.Success.ShouldBeFalse();
             resp.ResultType.ShouldBe(PacketResultType.WrongSize);
         }
         

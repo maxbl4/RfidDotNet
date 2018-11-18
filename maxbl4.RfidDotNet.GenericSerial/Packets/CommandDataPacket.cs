@@ -9,6 +9,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public byte Address { get; }
         public ReaderCommand Command { get; }
         public byte[] Data { get; }
+        public int DataLength => Data?.Length ?? 0;
+        public byte PacketLength => (byte) (BaseLength + DataLength);
+        public int FullPacketLength => PacketLength + 1;
 
         public CommandDataPacket(ReaderCommand command, byte singleByteData, byte address = 0) 
             : this(command, new []{singleByteData}, address)
@@ -22,16 +25,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             Address = address;
         }
 
-        public int Serialize(byte[] buf)
+        public byte[] Serialize()
         {
-            var dataLength = Data?.Length ?? 0;
-            buf[0] = (byte)(BaseLength + dataLength);
+            var buf = new byte[FullPacketLength];
+            buf[0] = PacketLength;
             buf[1] = Address;
             buf[2] = (byte)Command;
-            if (Data != null) Array.Copy(Data, 0, buf, 3, dataLength);
-            var written = BaseLength + dataLength + 1;
-            Crc16.SetCrc16(buf, written);
-            return written;
+            if (Data != null) Array.Copy(Data, 0, buf, 3, DataLength);
+            Crc16.SetCrc16(buf, FullPacketLength);
+            return buf;
         }
 
         public static CommandDataPacket SetInventoryScanInterval(TimeSpan interval)

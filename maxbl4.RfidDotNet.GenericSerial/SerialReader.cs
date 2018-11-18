@@ -19,7 +19,6 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public const int DefaultPortSpeed = 57600;
         private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
         private readonly SerialPortStream port;
-        private readonly byte[] buffer = new byte[260];
 
         public SerialReader(string serialPortName)
         {
@@ -34,15 +33,16 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             using (sendReceiveSemaphore.UseOnce())
             {
-                var length = command.Serialize(buffer);
                 port.DiscardInBuffer();
                 port.DiscardOutBuffer();
-                await port.WriteAsync(buffer, 0, length);
+                var buffer = command.Serialize();
+                await port.WriteAsync(buffer, 0, buffer.Length);
                 var responsePackets = new List<ResponseDataPacket>();
                 ResponseDataPacket lastResponse;
                 do
                 {
                     var packet = await MessageParser.ReadPacket(port);
+                    //TODO: Receive failures should be handled by reopening port.
                     if (!packet.Success)
                         throw new ReceiveFailedException(
                             $"Failed to read response from {serialPortName} {packet.ResultType}");
@@ -107,9 +107,9 @@ namespace maxbl4.RfidDotNet.GenericSerial
             return new TagInventoryResult(responses);
         }
 
-        public async Task<TagInventoryResult> TagInventoryWithMemoryBuffer(TagInventoryParams args = null)
+        public async Task<TagInventoryResult> TagInventoryWithMemoryBuffer(TagInventoryWithBufferParams args = null)
         {
-            if (args == null) args = new TagInventoryParams();
+            if (args == null) args = new TagInventoryWithBufferParams(new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(300)));
             var responses = await SendReceive(CommandDataPacket.TagInventory(ReaderCommand.TagInventoryWithMemoryBuffer, args));
             return new TagInventoryResult(responses);
         }

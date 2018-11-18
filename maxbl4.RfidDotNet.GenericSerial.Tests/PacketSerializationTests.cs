@@ -36,9 +36,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         public void Get_reader_serial_packet_data()
         {
             var pk = new CommandDataPacket(ReaderCommand.GetReaderSerialNumber);
-            var buf = new byte[100];
-            var len = pk.Serialize(buf);
-            len.ShouldBe(5);
+            var buf = pk.Serialize();
+            buf.Length.ShouldBe(5);
             buf[0].ShouldBe((byte)4);
             buf[1].ShouldBe((byte)0);
             buf[2].ShouldBe((byte)ReaderCommand.GetReaderSerialNumber);

@@ -36,7 +36,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 info.FirmwareVersion.ShouldBe(new Version(3,1));
                 info.Model.ShouldBe(ReaderModel.CF_RU5202);
                 info.SupportedProtocols.ShouldBe(ProtocolType.Gen18000_6C);
-                info.RFPower.ShouldBe((byte)26);
+                info.RFPower.ShouldBeInRange((byte)0, (byte)33);
                 info.InventoryScanInterval.ShouldBeInRange(TimeSpan.FromMilliseconds(0), TimeSpan.FromMilliseconds(25500));
                 info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
                 info.BuzzerEnabled.ShouldBe(false);
@@ -71,10 +71,35 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         [Fact]
+        public void Should_run_tag_inventory_with_default_params()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.TagInventory().Wait();
+            }
+        }
+        
+        
+        [Fact]
+        public void Should_run_tag_inventory_with_optional_params()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.TagInventory(new TagInventoryParams
+                {
+                    QValue = 10,
+                    Session = SessionValue.S1,
+                    OptionalParams = new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(1000))
+                }).Wait();
+            }
+        }
+        
+        [Fact]
         public void Should_read_known_tags()
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
             {
+                r.SetRFPower(26).Wait();
                 r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
                 var tags = new List<Tag>();
                 Timing.StartWait(() =>
@@ -82,10 +107,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     tags.AddRange(r.TagInventory().Result.Tags);
                     return tags.Select(x => x.TagId).Distinct().Count() >= 2;
                 }).Result.ShouldBeTrue();
-                foreach (var tagId in TestSettings.Instance.GetKnownTagIds)
-                {
-                    tags.ShouldContain(x => x.TagId == tagId);    
-                }
+                tags.Select(x => x.TagId)
+                    .Intersect(TestSettings.Instance.GetKnownTagIds)
+                    .Count()
+                    .ShouldBeGreaterThanOrEqualTo(1,
+                        $"Should find at least one tag from known tags list. " +
+                        $"Actually found: {string.Join(", ", tags.Select(x => x.TagId))}");
                 tags[0].Rssi.ShouldBeGreaterThan(0);
                 tags[0].ReadCount.ShouldBe(1);
                 tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
@@ -93,16 +120,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        //[Fact]
+        [Fact]
         public void Should_run_inventory_with_buffer()
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
             {
-                r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
-                Timing.StartWait(() => r.TagInventoryWithMemoryBuffer().Result.TagsInLastInventory > 0).Result.ShouldBeTrue();
-                var result = r.TagInventoryWithMemoryBuffer().Result;
-                result.Tags.Count.ShouldBe(0);
-                result.TagsInBuffer.ShouldBeGreaterThan((ushort)0);
+                r.TagInventoryWithMemoryBuffer().Wait();
             }
         }
         

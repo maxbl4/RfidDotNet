@@ -10,6 +10,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         public static byte[] Request3 = { 0x05, 0x00, 0x40, 0x01, 0x99, 0x3a};
         public static byte[] Response3 = { 0x05, 0x00, 0x40, 0x00, 0x10, 0x2b};
 
+        //    09 00 01 04 00 00 80 0b ab cb       
+
         public static byte[] TagInventoryRequest1 = { 0x09, 0x00, 0x01, 0x04, 0x00, 0x00, 0x80, 0x0b, 0xab, 0xcb};
 
         public static byte[] TagInventoryResponse =
