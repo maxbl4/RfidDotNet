@@ -88,6 +88,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
+        public async Task ClearBuffer()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ClearBuffer));
+            responses.First().CheckSuccess();
+        }
+        
         public async Task<int> GetNumberOfTagsInBuffer()
         {
             var responses = await SendReceive(CommandDataPacket.GetNumberOfTagsInBuffer());
@@ -130,6 +136,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
             if (args == null) args = new TagInventoryWithBufferParams(new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(300)));
             var responses = await SendReceive(CommandDataPacket.TagInventory(ReaderCommand.TagInventoryWithMemoryBuffer, args));
             return new TagInventoryResult(responses);
+        }
+
+        public async Task<TagBufferResult> GetTagsFromBuffer()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetTagsFromBuffer));
+            return new TagBufferResult(responses);
         }
 
         public void Dispose()

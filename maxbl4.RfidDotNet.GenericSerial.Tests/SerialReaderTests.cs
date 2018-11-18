@@ -100,7 +100,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        
         [Fact]
         public void Should_run_tag_inventory_with_optional_params()
         {
@@ -125,23 +124,81 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         [Fact]
+        public void Should_clear_buffer()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.ClearBuffer().Wait();
+            }
+        }
+        
+        [Fact]
+        public void Should_get_tags_from_buffer_empty()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.ClearBuffer().Wait();
+                var buffer = r.GetTagsFromBuffer().Result;
+                buffer.Tags.Count.ShouldBe(0);
+            }
+        }
+        
+        [Fact]
+        public void Should_read_known_tags()
+        {
+            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            {
+                r.SetRFPower(26).Wait();
+                r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
+                var tags = new List<Tag>();
+                Timing.StartWait(() =>
+                {
+                    tags.AddRange(r.TagInventory().Result.Tags);
+                    return tags.Select(x => x.TagId).Distinct().Count() >= 2;
+                }).Result.ShouldBeTrue();
+                tags.Select(x => x.TagId)
+                    .Intersect(TestSettings.Instance.GetKnownTagIds)
+                    .Count()
+                    .ShouldBeGreaterThanOrEqualTo(1,
+                        $"Should find at least one tag from known tags list. " +
+                        $"Actually found: {string.Join(", ", tags.Select(x => x.TagId))}");
+                tags[0].Rssi.ShouldBeGreaterThan(0);
+                tags[0].ReadCount.ShouldBe(1);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+            }
+        }
+        
+        [Fact]
         public void Should_run_inventory_with_buffer_and_get_response()
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
             {
-                var buffer = 0;
+                var totalTagsBuffered = 0;
                 var lastInventoryAgg = 0;
                 Timing.StartWait(() =>
                 {
                     var res = r.TagInventoryWithMemoryBuffer().Result;
-                    buffer = res.TagsInBuffer;
+                    totalTagsBuffered = res.TagsInBuffer;
                     lastInventoryAgg += res.TagsInLastInventory;
                     return lastInventoryAgg > 50;
                 }).Result.ShouldBeTrue("Failed to read 50 tags");
                 lastInventoryAgg.ShouldBeGreaterThan(50);
-                buffer.ShouldBeInRange(1, 100);
+                totalTagsBuffered.ShouldBeInRange(1, 100);
                 
-                r.GetNumberOfTagsInBuffer().Result.ShouldBe(buffer);
+                r.GetNumberOfTagsInBuffer().Result.ShouldBe(totalTagsBuffered);
+                var tagInBuffer = r.GetTagsFromBuffer().Result;
+                tagInBuffer.Tags.Count.ShouldBe(totalTagsBuffered);
+                tagInBuffer.Tags.Select(x => x.TagId)
+                    .Intersect(TestSettings.Instance.GetKnownTagIds)
+                    .Count()
+                    .ShouldBeGreaterThanOrEqualTo(1,
+                        $"Should find at least one tag from known tags list. " +
+                        $"Actually found: {string.Join(", ", tagInBuffer.Tags.Select(x => x.TagId))}");
+                tagInBuffer.Tags[0].Antenna.ShouldBe(0);
+                tagInBuffer.Tags[0].Rssi.ShouldBeGreaterThan(0);
+                tagInBuffer.Tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tagInBuffer.Tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
             }
         }
         

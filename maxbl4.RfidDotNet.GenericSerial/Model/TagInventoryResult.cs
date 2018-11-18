@@ -3,10 +3,61 @@ using System.Collections.Generic;
 using System.Text;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Model
 {
+    public class TagBufferResult
+    {
+        public List<Tag> Tags { get; } = new List<Tag>();
+        public TagBufferResult(IEnumerable<ResponseDataPacket> packets)
+        {
+            foreach (var packet in packets)
+            {
+                if (packet.Command == ReaderCommand.GetTagsFromBuffer)
+                {
+                    switch (packet.Status)
+                    {
+                        case ResponseStatusCode.InventoryMoreFramesPending:
+                        case ResponseStatusCode.InventoryComplete:
+                            ReadBufferResult(packet);
+                            continue;
+                    }
+                }
+                throw new UnexpectedResponseException(packet.Command, packet.Status);
+            }
+        }
+        
+        void ReadBufferResult(ResponseDataPacket packet)
+        {
+            var offset = ResponseDataPacket.DataOffset;
+            var epcIdCount = packet.RawData[offset++];
+            for (var i = 0; i < epcIdCount; i++)
+            {
+                var tag = ReadEpcId(packet.RawData, ref offset);
+                tag.LastSeenTime = tag.DiscoveryTime = packet.Timestamp;
+                Tags.Add(tag);
+            }
+        }
+
+        Tag ReadEpcId(byte[] buffer, ref int offset)
+        {
+            var antenna = ((AntennaConfiguration) buffer[offset++]).ToNumber();
+            var epcLength = buffer[offset++];
+            var epc = new StringBuilder(epcLength * 2);
+            for (var i = 0; i < epcLength; i++)
+            {
+                epc.Append(buffer[offset++].ToString("X2"));
+            }
+
+            var rssi = buffer[offset++];
+            var readCount = buffer[offset++];
+            var tag = new Tag{TagId = epc.ToString(), Rssi = rssi, ReadCount = readCount, Antenna = antenna};
+            return tag;
+        }
+    }
+
     public class TagInventoryResult
     {
         public ushort TagsInBuffer { get; private set; }
@@ -62,7 +113,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
         void ReadInventoryResult(ResponseDataPacket packet)
         {
-            var antenna = AntennaConfigurationToNumber((AntennaConfiguration)packet.RawData[ResponseDataPacket.DataOffset]);
+            var antenna = ((AntennaConfiguration) packet.RawData[ResponseDataPacket.DataOffset]).ToNumber();
             var epcIdCount = packet.RawData[ResponseDataPacket.DataOffset + 1];
             var offset = ResponseDataPacket.DataOffset + 2;
             for (var i = 0; i < epcIdCount; i++)
@@ -87,23 +138,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
             var tag = new Tag{TagId = epc.ToString(), Rssi = buffer[offset + length + 1], ReadCount = 1};
             offset += length + 2;
             return tag;
-        }
-
-        int AntennaConfigurationToNumber(AntennaConfiguration config)
-        {
-            switch (config)
-            {
-                case AntennaConfiguration.Antenna1:
-                    return 0;
-                case AntennaConfiguration.Antenna2:
-                    return 1;
-                case AntennaConfiguration.Antenna3:
-                    return 2;
-                case AntennaConfiguration.Antenna4:
-                    return 3;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(config), config, null);
-            }
         }
     }
 }
