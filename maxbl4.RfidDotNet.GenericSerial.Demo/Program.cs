@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using maxbl4.RfidDotNet.GenericSerial;
 using maxbl4.RfidDotNet.Ext;
 using RJCP.IO.Ports;
 
@@ -39,16 +38,23 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                 var tags = new Dictionary<string, int>();
                 while (true)
                 {
-                    var result = r.TagInventory().Result;
-                    foreach (var tag in result.Tags)
+                    try
                     {
-                        tags.AddOrUpdate(tag.TagId, 1, (k,v) => v + 1);
-                    }
+                        var result = r.TagInventory().Result;
+                        foreach (var tag in result.Tags)
+                        {
+                            tags.AddOrUpdate(tag.TagId, 1, (k, v) => v + 1);
+                        }
 
-                    Console.WriteLine($"#################################################");
-                    foreach (var pair in tags.OrderBy(x => x.Key))
+                        Console.WriteLine($"#################################################");
+                        foreach (var pair in tags.OrderBy(x => x.Key))
+                        {
+                            Console.WriteLine($"{pair.Key} {pair.Value}");
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"{pair.Key} {pair.Value}");
+                        Console.WriteLine(ex);
                     }
                 }
             }

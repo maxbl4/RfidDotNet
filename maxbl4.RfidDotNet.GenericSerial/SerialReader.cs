@@ -15,41 +15,77 @@ namespace maxbl4.RfidDotNet.GenericSerial
 {
     public class SerialReader : IDisposable
     {
-        private readonly string serialPortName;
         public const int DefaultPortSpeed = 57600;
+        public const int DefaultDataBits = 8;
+        public const Parity DefaultParity = Parity.None;
+        public const StopBits DefaultStopBits =  StopBits.One;
+        
+        private readonly string serialPortName;
+        private readonly int portSpeed;
+        private readonly int dataBits;
+        private readonly Parity parity;
+        private readonly StopBits stopBits;
         private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
-        private readonly SerialPortStream port;
+        private SerialPortStream port;
 
-        public SerialReader(string serialPortName)
+        public SerialReader(string serialPortName, int portSpeed = DefaultPortSpeed, 
+            int dataBits = DefaultDataBits, Parity parity = DefaultParity, StopBits stopBits = DefaultStopBits)
         {
             this.serialPortName = serialPortName;
-            this.port = new SerialPortStream(serialPortName, DefaultPortSpeed, 8, Parity.None, StopBits.One);
-            port.ReadTimeout = 3000;
-            port.WriteTimeout = 200;
-            port.Open();
+            this.portSpeed = portSpeed;
+            this.dataBits = dataBits;
+            this.parity = parity;
+            this.stopBits = stopBits;
+        }
+
+        void InitSerialPort()
+        {
+            if (port == null)
+            {
+                port = new SerialPortStream(serialPortName, portSpeed, dataBits, parity, stopBits)
+                {
+                    ReadTimeout = 3000, WriteTimeout = 200
+                };
+                port.Open();
+            }
+
+            port.DiscardInBuffer();
+            port.DiscardOutBuffer();
         }
 
         public async Task<IEnumerable<ResponseDataPacket>> SendReceive(CommandDataPacket command)
         {
             using (sendReceiveSemaphore.UseOnce())
             {
-                port.DiscardInBuffer();
-                port.DiscardOutBuffer();
-                var buffer = command.Serialize();
-                await port.WriteAsync(buffer, 0, buffer.Length);
-                var responsePackets = new List<ResponseDataPacket>();
-                ResponseDataPacket lastResponse;
-                do
+                try
                 {
-                    var packet = await MessageParser.ReadPacket(port);
-                    //TODO: Receive failures should be handled by reopening port.
-                    if (!packet.Success)
-                        throw new ReceiveFailedException(
-                            $"Failed to read response from {serialPortName} {packet.ResultType}");
-                    responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
-                } while (MessageParser.ShouldReadMore(lastResponse));
-                
-                return responsePackets;
+                    InitSerialPort();
+                    var buffer = command.Serialize();
+                    await port.WriteAsync(buffer, 0, buffer.Length);
+                    var responsePackets = new List<ResponseDataPacket>();
+                    ResponseDataPacket lastResponse;
+                    do
+                    {
+                        var packet = await MessageParser.ReadPacket(port);
+                        //TODO: Receive failures should be handled by reopening port.
+                        if (!packet.Success)
+                            throw new ReceiveFailedException(
+                                $"Failed to read response from {serialPortName} {packet.ResultType}");
+                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
+                    } while (MessageParser.ShouldReadMore(lastResponse));
+
+                    return responsePackets;
+                }
+                catch (ReceiveFailedException)
+                {
+                    Dispose();
+                    throw;
+                }
+                catch (NotSupportedException)
+                {
+                    Dispose();
+                    throw;
+                }
             }
         }
 
@@ -147,6 +183,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public void Dispose()
         {
             port?.Dispose();
+            port = null;
         }
     }
 }

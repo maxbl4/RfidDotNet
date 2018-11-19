@@ -8,6 +8,7 @@ using Xunit;
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
     [Collection("Hardware")]
+    [Trait("Hardware", "True")]
     public class SerialPortTests
     {
         [Fact]

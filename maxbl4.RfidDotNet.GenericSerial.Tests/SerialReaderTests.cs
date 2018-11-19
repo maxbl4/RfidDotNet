@@ -13,6 +13,7 @@ using Xunit;
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
     [Collection("Hardware")]
+    [Trait("Hardware", "True")]
     public class SerialReaderTests
     {
         [Fact]
@@ -154,7 +155,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 Timing.StartWait(() =>
                 {
                     tags.AddRange(r.TagInventory().Result.Tags);
-                    return tags.Select(x => x.TagId).Distinct().Count() >= 2;
+                    return tags.Select(x => x.TagId).Distinct().Any();
                 }).Result.ShouldBeTrue();
                 tags.Select(x => x.TagId)
                     .Intersect(TestSettings.Instance.GetKnownTagIds)
@@ -203,7 +204,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         //[Fact]
-        [Trait("Hardware", "true")]
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_configuration()
         {
@@ -217,7 +217,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
         
         //[Fact]
-        [Trait("Hardware", "true")]
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_check()
         {
