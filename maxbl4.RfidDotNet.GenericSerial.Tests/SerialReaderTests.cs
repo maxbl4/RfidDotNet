@@ -19,7 +19,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_serial_number()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 for (int i = 0; i < 5; i++)
                 {
@@ -31,7 +31,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_reader_info()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 //r.SetAntennaCheck(false).Wait();
                 r.SetRFPower(20).Wait();
@@ -51,7 +51,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_set_inventory_scan_interval()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetInventoryScanInterval(TimeSpan.FromMilliseconds(1000)).Wait();
                 r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(1000));
@@ -63,7 +63,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_set_rf_power()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetRFPower(20).Wait();
                 r.GetReaderInfo().Result.RFPower.ShouldBe((byte)20);
@@ -77,7 +77,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_and_set_epc_length()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetEpcLengthForBufferOperations(EpcLength.UpTo496Bits).Wait();
                 r.GetEpcLengthForBufferOperations().Result.ShouldBe(EpcLength.UpTo496Bits);
@@ -89,7 +89,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_number_of_tags_in_buffer()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.GetNumberOfTagsInBuffer().Wait();
             }
@@ -98,7 +98,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_run_tag_inventory_with_default_params()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.TagInventory().Wait();
             }
@@ -107,7 +107,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_run_tag_inventory_with_optional_params()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.TagInventory(new TagInventoryParams
                 {
@@ -121,7 +121,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_run_inventory_with_buffer()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.TagInventoryWithMemoryBuffer().Wait();
             }
@@ -130,7 +130,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_clear_buffer()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.ClearBuffer().Wait();
             }
@@ -139,7 +139,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_get_tags_from_buffer_empty()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.ClearBuffer().Wait();
                 var buffer = r.GetTagsFromBuffer().Result;
@@ -150,7 +150,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_read_known_tags()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetRFPower(26).Wait();
                 r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
@@ -176,7 +176,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Should_run_inventory_with_buffer_and_get_response()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 var totalTagsBuffered = 0;
                 var lastInventoryAgg = 0;
@@ -210,7 +210,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_configuration()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetAntennaConfiguration(AntennaConfiguration.Antenna1).Wait();
                 r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
@@ -223,7 +223,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_check()
         {
-            using (var r = new SerialReader(TestSettings.Instance.PortName))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetAntennaCheck(true).Wait();
                 r.GetReaderInfo().Result.AntennaCheck.ShouldBeTrue();

@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.Ext
 {
     public static class SocketExt
     {

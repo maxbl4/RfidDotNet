@@ -11,10 +11,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
     [Trait("Hardware", "True")]
     public class SerialPortTests
     {
-        [Fact]
+        private TestSettings.ReaderConnection serial;
+
+        public SerialPortTests()
+        {
+            serial = TestSettings.Instance.Connections.FirstOrDefault(x => x.Type == TestSettings.ConnectionType.Serial);
+            Skip.If(serial == null);
+        }
+
+        [SkippableFact]
         public void Check_port_timeouts()
         {
-            using (var port = new SerialPortStream(TestSettings.Instance.PortName, 57600, 8, Parity.None, StopBits.One))
+            using (var port = new SerialPortStream(serial.Params, 57600, 8, Parity.None, StopBits.One))
             {
                 port.Open();
                 
@@ -35,10 +43,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        [Fact]
+        [SkippableFact]
         public void Read_should_return_even_when_read_less_then_buffer()
         {
-            using (var port = new SerialPortStream(TestSettings.Instance.PortName, 57600, 8, Parity.None, StopBits.One))
+            using (var port = new SerialPortStream(serial.Params, 57600, 8, Parity.None, StopBits.One))
             {
                 port.Open();
                 port.Write(new byte[]{0x04, 0x00, 0x4c, 0x3a, 0xd2}, 0, 5);
@@ -48,7 +56,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void Should_get_serial_raw_multiple_times()
         {
             // Get Reader Serial Number command
@@ -57,7 +65,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             byte[] expectedResponse = {0x09, 0x00, 0x4c, 0x00, 0x17, 0x43, 0x90, 0x15, 0x49, 0xc0};
             for (var i = 0; i < 10; i++)
             {
-                using (var port = new SerialPortStream(TestSettings.Instance.PortName, 57600, 8, Parity.None, StopBits.One))
+                using (var port = new SerialPortStream(serial.Params, 57600, 8, Parity.None, StopBits.One))
                 {
                     port.Open();
                     port.Write(command, 0, command.Length);
