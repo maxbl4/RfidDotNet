@@ -23,7 +23,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    r.GetSerialNumber().Result.ShouldBe((uint)0x17439015);
+                    r.GetSerialNumber().Result.ShouldBeOneOf((uint)0x17439015, (uint)406196256);
                 }
             }
         }
@@ -33,14 +33,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             using (var r = new SerialReader(TestSettings.Instance.PortName))
             {
+                //r.SetAntennaCheck(false).Wait();
+                r.SetRFPower(20).Wait();
                 var info = r.GetReaderInfo().Result;
-                info.FirmwareVersion.ShouldBe(new Version(3,1));
-                info.Model.ShouldBe(ReaderModel.CF_RU5202);
-                info.SupportedProtocols.ShouldBe(ProtocolType.Gen18000_6C);
-                info.RFPower.ShouldBeInRange((byte)0, (byte)33);
+                info.FirmwareVersion.Major.ShouldBe(3);
+                info.FirmwareVersion.Minor.ShouldBeInRange(1,18);
+                info.Model.ShouldBeOneOf(ReaderModel.CF_RU5202, ReaderModel.UHFReader288MP);
+                info.SupportedProtocols.ShouldBeOneOf(ProtocolType.Gen18000_6C, 
+                    ProtocolType.Gen18000_6B, ProtocolType.Gen18000_6C|ProtocolType.Gen18000_6B);
+                info.RFPower.ShouldBe((byte)20);
                 info.InventoryScanInterval.ShouldBeInRange(TimeSpan.FromMilliseconds(0), TimeSpan.FromMilliseconds(25500));
                 info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
-                info.BuzzerEnabled.ShouldBe(false);
                 info.AntennaCheck.ShouldBe(false);
             }
         }

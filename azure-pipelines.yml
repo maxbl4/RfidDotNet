@@ -1,0 +1,40 @@
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+variables:
+  buildConfiguration: 'Debug'
+  testFilter: 'Hardware!=true'
+  testProjects: '**/*[Tt]ests/*.csproj'
+
+#Your build pipeline references an undefined variable named ‘Parameters.TestProjects’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: test
+    projects: '$(testProjects)'
+
+    arguments: '--configuration $(BuildConfiguration) --filter Hardware!=true'
+
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack'
+  inputs:
+    command: pack
+
+    configuration: Release
+
+    versioningScheme: byBuildNumber
+
+
+- task: NuGetCommand@2
+  displayName: 'NuGet push'
+  inputs:
+    command: push
+
+    nuGetFeedType: external
+
+    publishFeedCredentials: 'nuget 2'
+
+

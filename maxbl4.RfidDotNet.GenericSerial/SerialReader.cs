@@ -1,56 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Buffers;
+using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
+using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using RJCP.IO.Ports;
+using ProtocolType = System.Net.Sockets.ProtocolType;
 
 namespace maxbl4.RfidDotNet.GenericSerial
 {
     public class SerialReader : IDisposable
     {
-        public const int DefaultPortSpeed = 57600;
-        public const int DefaultDataBits = 8;
-        public const Parity DefaultParity = Parity.None;
-        public const StopBits DefaultStopBits =  StopBits.One;
-        
-        private readonly string serialPortName;
-        private readonly int portSpeed;
-        private readonly int dataBits;
-        private readonly Parity parity;
-        private readonly StopBits stopBits;
+        private readonly IDataStreamFactory streamFactory;        
         private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
-        private SerialPortStream port;
+        
+        public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultPortSpeed, 
+            int dataBits = SerialPortFactory.DefaultDataBits, Parity parity = SerialPortFactory.DefaultParity, 
+            StopBits stopBits = SerialPortFactory.DefaultStopBits)
+            : this(new SerialPortFactory(serialPortName, portSpeed, dataBits, parity, stopBits)) {}
 
-        public SerialReader(string serialPortName, int portSpeed = DefaultPortSpeed, 
-            int dataBits = DefaultDataBits, Parity parity = DefaultParity, StopBits stopBits = DefaultStopBits)
+        public SerialReader(IPEndPoint targetEndpoint, int networkTimeout = NetworkStreamFactory.DefaultTimeout)
+            : this(new NetworkStreamFactory(targetEndpoint)) {}
+        
+        public SerialReader(IDataStreamFactory streamFactory)
         {
-            this.serialPortName = serialPortName;
-            this.portSpeed = portSpeed;
-            this.dataBits = dataBits;
-            this.parity = parity;
-            this.stopBits = stopBits;
-        }
-
-        void InitSerialPort()
-        {
-            if (port == null)
-            {
-                port = new SerialPortStream(serialPortName, portSpeed, dataBits, parity, stopBits)
-                {
-                    ReadTimeout = 3000, WriteTimeout = 200
-                };
-                port.Open();
-            }
-
-            port.DiscardInBuffer();
-            port.DiscardOutBuffer();
+            this.streamFactory = streamFactory;
         }
 
         public async Task<IEnumerable<ResponseDataPacket>> SendReceive(CommandDataPacket command)
@@ -59,7 +43,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             {
                 try
                 {
-                    InitSerialPort();
+                    var port = streamFactory.DataStream;
                     var buffer = command.Serialize();
                     await port.WriteAsync(buffer, 0, buffer.Length);
                     var responsePackets = new List<ResponseDataPacket>();
@@ -70,7 +54,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
                         //TODO: Receive failures should be handled by reopening port.
                         if (!packet.Success)
                             throw new ReceiveFailedException(
-                                $"Failed to read response from {serialPortName} {packet.ResultType}");
+                                $"Failed to read response from {streamFactory.Description} {packet.ResultType}");
                         responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
                     } while (MessageParser.ShouldReadMore(lastResponse));
 
@@ -182,8 +166,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public void Dispose()
         {
-            port?.Dispose();
-            port = null;
+            streamFactory.DisposeSafe();
         }
     }
 }
