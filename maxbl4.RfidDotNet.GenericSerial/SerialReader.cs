@@ -29,8 +29,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
             StopBits stopBits = SerialPortFactory.DefaultStopBits)
             : this(new SerialPortFactory(serialPortName, portSpeed, dataBits, parity, stopBits)) {}
 
-        public SerialReader(IPEndPoint targetEndpoint, int networkTimeout = NetworkStreamFactory.DefaultTimeout)
-            : this(new NetworkStreamFactory(targetEndpoint)) {}
+        public SerialReader(string hostname, int port, int networkTimeout = NetworkStreamFactory.DefaultTimeout)
+            : this(new NetworkStreamFactory(hostname, port)) {}
         
         public SerialReader(IDataStreamFactory streamFactory)
         {

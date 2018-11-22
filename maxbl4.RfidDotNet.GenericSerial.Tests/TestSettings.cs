@@ -4,31 +4,53 @@ using System.Linq;
 using System.Net;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using Microsoft.Extensions.Configuration;
+using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
     public class TestSettings
     {
-        public List<ReaderConnection> Connections { get; set; }
+        public string ConnectionStrings { get; set; }
         public string KnownTagIds { get; set; }
 
-        public IDataStreamFactory GetConnection()
+        public IDataStreamFactory GetConnection(ConnectionType type = ConnectionType.Any)
         {
-            var c = Connections.FirstOrDefault(x => x.Type == ConnectionType.Serial);
-            if (c != null) return new SerialPortFactory(c.Params); 
-            c = Connections.FirstOrDefault(x => x.Type == ConnectionType.Network);
-            if (c != null)
+            ConnectionString cs = null;
+            switch (type)
             {
-                var ind = c.Params.LastIndexOf(':');
-                var ep = new IPEndPoint(IPAddress.Parse(c.Params.Substring(0, ind)), int.Parse(c.Params.Substring(ind + 1)));
-                return new NetworkStreamFactory(ep);
+                case ConnectionType.Any:
+                    cs = GetConnectionStrings().FirstOrDefault();
+                    break;
+                case ConnectionType.Network:
+                case ConnectionType.Serial:
+                    cs = GetConnectionStrings().FirstOrDefault(x => x.Type == type);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
+
+            if (cs != null)
+            {
+                switch (cs.Type)
+                {
+                    case ConnectionType.Serial:
+                        return new SerialPortFactory(cs.SerialPort);
+                    case ConnectionType.Network:
+                        return new NetworkStreamFactory(cs.Hostname, cs.TcpPort);
+                }
+            }
+            
+            Skip.If(true);
+
             return null;
         }
 
+        public IEnumerable<ConnectionString> GetConnectionStrings() =>
+            ConnectionStrings.Split(new []{';'}, StringSplitOptions.RemoveEmptyEntries).Select(ConnectionString.Parse);
+
         public IEnumerable<string> GetKnownTagIds => string.IsNullOrWhiteSpace(KnownTagIds)
             ? new string[0]
-            : KnownTagIds.Split(new char[]{',', ' ', ';'}, StringSplitOptions.RemoveEmptyEntries); 
+            : KnownTagIds.Split(new []{',', ' ', ';'}, StringSplitOptions.RemoveEmptyEntries); 
 
         private TestSettings()
         {
@@ -49,12 +71,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             public ConnectionType Type {get;set;}
             public string Params {get;set;}
-        }
-
-        public enum ConnectionType
-        {
-            Serial,
-            Network
         }
     }
 }

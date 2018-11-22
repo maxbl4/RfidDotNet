@@ -9,6 +9,7 @@ using maxbl4.RfidDotNet.Infrastructure;
 using RJCP.IO.Ports;
 using Shouldly;
 using Xunit;
+using Xunit.Sdk;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
@@ -147,12 +148,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        [Fact]
-        public void Should_read_known_tags()
+        [SkippableTheory]
+        [InlineData(ConnectionType.Serial)]
+        [InlineData(ConnectionType.Network)]
+        public void Should_read_known_tags(ConnectionType connectionType)
         {
-            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
-                r.SetRFPower(26).Wait();
+                r.SetRFPower(10).Wait();
                 r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
                 var tags = new List<Tag>();
                 Timing.StartWait(() =>
@@ -173,10 +176,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        [Fact]
-        public void Should_run_inventory_with_buffer_and_get_response()
+        [SkippableTheory]
+        [InlineData(ConnectionType.Serial)]
+        [InlineData(ConnectionType.Network)]
+        public void Should_run_inventory_with_buffer_and_get_response(ConnectionType connectionType)
         {
-            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
                 var totalTagsBuffered = 0;
                 var lastInventoryAgg = 0;
@@ -206,24 +211,26 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        //[Fact]
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
         [Trait("MultiAntenna", "true")]
-        public void Should_set_antenna_configuration()
+        public void Should_set_antenna_configuration(ConnectionType connectionType)
         {
-            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
-                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1).Wait();
-                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
                 r.SetAntennaConfiguration(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2).Wait();
                 r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2);
+                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1).Wait();
+                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
             }
         }
         
-        //[Fact]
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
         [Trait("MultiAntenna", "true")]
-        public void Should_set_antenna_check()
+        public void Should_set_antenna_check(ConnectionType connectionType)
         {
-            using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
                 r.SetAntennaCheck(true).Wait();
                 r.GetReaderInfo().Result.AntennaCheck.ShouldBeTrue();

@@ -50,5 +50,20 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 }).Serialize();
             res.ShouldBe(SamplesData.TagInventoryWithBufferRequest1);
         }
+
+        [Fact]
+        public void Connection_string_should_work()
+        {
+            var c = ConnectionString.Parse("serial://COM4");
+            c.Type.ShouldBe(ConnectionType.Serial);
+            c.SerialPort.ShouldBe("COM4");
+            c = ConnectionString.Parse("serial:///dev/ttyS2");
+            c.Type.ShouldBe(ConnectionType.Serial);
+            c.SerialPort.ShouldBe("/dev/ttyS2");
+            c = ConnectionString.Parse("tcp://host:123");
+            c.Type.ShouldBe(ConnectionType.Network);
+            c.Hostname.ShouldBe("host");
+            c.TcpPort.ShouldBe(123);
+        }
     }
 }
