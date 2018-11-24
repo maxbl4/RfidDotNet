@@ -45,6 +45,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return ReadUInt32();
         }
         
+        public int GetReaderTemperature()
+        {
+            ValidatePacket(2);
+            var offset = DataOffset;
+            var positive = RawData[offset++] > 0;
+            var temp = RawData[offset++] * (positive ? 1 : -1);
+            return temp;
+        }
+        
         public EpcLength GetEpcLength()
         {
             ValidatePacket(1);

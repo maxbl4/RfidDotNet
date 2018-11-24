@@ -81,6 +81,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetReaderSerialNumber));
             return responses.First().GetReaderSerialNumber();
         }
+
+        public async Task<int> GetReaderTemperature()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetReaderTemperature));
+            return responses.First().GetReaderTemperature();
+        }
         
         public async Task<Model.ReaderInfo> GetReaderInfo()
         {

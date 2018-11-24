@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
@@ -53,7 +54,9 @@ tcp://host:123");
                 }
 
                 Console.WriteLine("Performing inventory. Ctrl+C to stop");
-                
+                var temp = 0;
+                var temperatureSubject = new Subject<int>();
+                temperatureSubject.Subscribe(x => temp = x);
                 var tags = new Subject<TagInventoryResult>();
                 tags.Buffer(TimeSpan.FromMilliseconds(1000))
                     .Where(x => x.Count > 0)
@@ -68,6 +71,7 @@ tcp://host:123");
                         var histogram = bufferedTags.GroupBy(x => x.TagId).Select(x => new {TagId = x.Key, Count = x.Count()})
                             .OrderBy(x => x.TagId)
                             .ToList();
+                        Console.WriteLine($"Reader Temp={temp}");
                         Console.WriteLine($"TagIds={histogram.Count}, RPS={bufferedTags.Count}, InventoryPS={buf.Count}");
                         Console.WriteLine($"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAverageTimeMs}, Max={inventoryQueryMaxTimeMs}");
                         foreach (var h in histogram)
@@ -79,10 +83,18 @@ tcp://host:123");
                 {
                     try
                     {
+                        temperatureSubject.OnNext(r.GetReaderTemperature().Result);
+                        var sw = Stopwatch.StartNew();
                         while (true)
                         {
                             var res = await r.TagInventory();
                             tags.OnNext(res);
+
+                            if (sw.ElapsedMilliseconds > 10000)
+                            {
+                                temperatureSubject.OnNext(r.GetReaderTemperature().Result);
+                                sw.Restart();
+                            }
                         }
                     }
                     catch (Exception ex)

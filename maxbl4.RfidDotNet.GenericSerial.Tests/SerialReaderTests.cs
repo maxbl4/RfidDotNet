@@ -227,6 +227,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         
         [SkippableTheory]
         [InlineData(ConnectionType.Network)]
+        public void Should_get_reader_temperature(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                //Assume we run tests at home :)
+                r.GetReaderTemperature().Result.ShouldBeInRange(10, 50);
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_check(ConnectionType connectionType)
         {
