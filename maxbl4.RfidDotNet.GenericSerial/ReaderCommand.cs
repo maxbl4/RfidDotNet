@@ -53,8 +53,8 @@
 	    GetTagsFromBuffer = 0x72,
 	    ClearBuffer = 0x73,
 	    GetNumberOfTagsInBuffer = 0x74,
-	    ModifyParametersOfRealTimeInventoryMode = 0x75,
-	    ModifyWorkingMode = 0x76,
+	    SetRealTimeInventoryParameters = 0x75,
+	    SetWorkingMode = 0x76,
 	    LoadRealTimeInventoryModeParameters = 0x77,
 	    LoadOrModifyHeartbeatPacketTimeBreakOfRealTimeInventory = 0x78,
 	    ModifyRfPowerConfigurationSeparatelyForWriteOperations = 0x79,
@@ -70,5 +70,6 @@
 	    ModifyOrloadDrmConfiguration = 0x90,
 	    MeasureAntennaReturnLoss = 0x91,
 	    GetReaderTemperature = 0x92,
+	    RealtimeInventoryResponse = 0xEE,
     }
 }

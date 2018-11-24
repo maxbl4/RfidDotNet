@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -45,17 +46,19 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 {
                     var port = streamFactory.DataStream;
                     var buffer = command.Serialize();
+                    var sw = Stopwatch.StartNew();
                     await port.WriteAsync(buffer, 0, buffer.Length);
                     var responsePackets = new List<ResponseDataPacket>();
                     ResponseDataPacket lastResponse;
                     do
                     {
-                        var packet = await MessageParser.ReadPacket(port);
+                        var packet = await MessageParser.ReadPacket(port, sw);
+                        sw = null;
                         //TODO: Receive failures should be handled by reopening port.
                         if (!packet.Success)
                             throw new ReceiveFailedException(
                                 $"Failed to read response from {streamFactory.Description} {packet.ResultType}");
-                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
+                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
                     } while (MessageParser.ShouldReadMore(lastResponse));
 
                     return responsePackets;
@@ -114,6 +117,29 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
+        /// <summary>
+        /// Try to put reader into Query/Answer mode
+        /// </summary>
+        public async Task ActivateOnDemandInventoryMode()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
+            // If reader is in realtime mode, it may send arbitrary number notification packets.
+            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+            if (resp == null)
+                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+            resp.CheckSuccess();
+        }
+
+        public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, 
+                (byte)(withGpioTrigger ? ReaderWorkingMode.RealtimeGPIOTriggered : ReaderWorkingMode.Realtime)));
+            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+            if (resp == null)
+                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+            resp.CheckSuccess();
+        }
+
         public async Task<int> GetNumberOfTagsInBuffer()
         {
             var responses = await SendReceive(CommandDataPacket.GetNumberOfTagsInBuffer());
@@ -162,6 +188,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetTagsFromBuffer));
             return new TagBufferResult(responses);
+        }
+        
+        public async Task SetRealTimeInventoryParameters(RealtimeInventoryParams args = null)
+        {
+            if (args == null) args = new RealtimeInventoryParams();
+            var responses = await SendReceive(CommandDataPacket.SetRealTimeInventoryParameters(args));
+            responses.First().CheckSuccess();
         }
 
         public void Dispose()

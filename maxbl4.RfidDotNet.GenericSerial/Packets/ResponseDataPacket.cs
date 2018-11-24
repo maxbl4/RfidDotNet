@@ -14,6 +14,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public byte[] RawData { get; }
         public ReaderCommand ExpectedCommand { get; }
         public DateTimeOffset Timestamp { get; }
+        public TimeSpan Elapsed { get; }
         
         /// <summary>
         /// Data.Length + 5
@@ -24,10 +25,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public ResponseStatusCode Status => (ResponseStatusCode)RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
-        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null)
+        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null, TimeSpan? elapsed = null)
         {
             ExpectedCommand = expectedCommand;
             RawData = rawData;
+            Elapsed = elapsed ?? TimeSpan.Zero;
             Timestamp = timestamp ?? DateTimeOffset.Now;
         }
         

@@ -78,5 +78,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         {
             return new CommandDataPacket(command, args.Serialize());
         }
+        
+        public static CommandDataPacket SetRealTimeInventoryParameters(RealtimeInventoryParams args)
+        {
+            return new CommandDataPacket(ReaderCommand.SetRealTimeInventoryParameters, args.Serialize());
+        }
     }
 }

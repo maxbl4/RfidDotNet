@@ -26,15 +26,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             var res = new TagInventoryParams
             {
                 QValue = 15,
-                QFlags = TagInventoryQFlags.SpecialStrategy|TagInventoryQFlags.ImpinjFastId|TagInventoryQFlags.RequestStatisticsPacket,
+                QFlags = QFlags.SpecialStrategy|QFlags.ImpinjFastId|QFlags.RequestStatisticsPacket,
                 Session = SessionValue.S1,
             }.Serialize();
             TagInventoryParams.BaseSize.ShouldBe(2);
             res.Length.ShouldBe(TagInventoryParams.BaseSize);
             (res[0] & 0b0001_1111).ShouldBe(15);
-            ((TagInventoryQFlags)res[0] & TagInventoryQFlags.SpecialStrategy).ShouldBe(TagInventoryQFlags.SpecialStrategy);
-            ((TagInventoryQFlags)res[0] & TagInventoryQFlags.ImpinjFastId).ShouldBe(TagInventoryQFlags.ImpinjFastId);
-            ((TagInventoryQFlags)res[0] & TagInventoryQFlags.RequestStatisticsPacket).ShouldBe(TagInventoryQFlags.RequestStatisticsPacket);
+            ((QFlags)res[0] & QFlags.SpecialStrategy).ShouldBe(QFlags.SpecialStrategy);
+            ((QFlags)res[0] & QFlags.ImpinjFastId).ShouldBe(QFlags.ImpinjFastId);
+            ((QFlags)res[0] & QFlags.RequestStatisticsPacket).ShouldBe(QFlags.RequestStatisticsPacket);
             ((SessionValue)res[1]).ShouldBe(SessionValue.S1);
         }
         
