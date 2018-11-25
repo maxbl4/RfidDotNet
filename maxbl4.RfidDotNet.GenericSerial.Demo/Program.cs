@@ -14,6 +14,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 {
     class Program
     {
+        public const int TemperatureLimit = 60;
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -71,7 +72,7 @@ tcp://host:123");
                         var histogram = bufferedTags.GroupBy(x => x.TagId).Select(x => new {TagId = x.Key, Count = x.Count()})
                             .OrderBy(x => x.TagId)
                             .ToList();
-                        Console.WriteLine($"Reader Temp={temp}");
+                        Console.WriteLine($"Reader Temp={temp}, Limit={TemperatureLimit}");
                         Console.WriteLine($"TagIds={histogram.Count}, RPS={bufferedTags.Count}, InventoryPS={buf.Count}");
                         Console.WriteLine($"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAverageTimeMs}, Max={inventoryQueryMaxTimeMs}");
                         foreach (var h in histogram)
@@ -92,7 +93,14 @@ tcp://host:123");
 
                             if (sw.ElapsedMilliseconds > 10000)
                             {
-                                temperatureSubject.OnNext(r.GetReaderTemperature().Result);
+                                var t = r.GetReaderTemperature().Result;
+                                if (t > TemperatureLimit)
+                                {
+                                    Console.WriteLine($"Reader is overheating, temperature is {t}. To prevent damage, stopping inventory.");
+                                    Environment.Exit(t);
+                                }
+
+                                temperatureSubject.OnNext(t);
                                 sw.Restart();
                             }
                         }
