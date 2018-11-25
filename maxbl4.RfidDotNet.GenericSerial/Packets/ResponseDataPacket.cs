@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Packets
@@ -54,6 +56,31 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return temp;
         }
         
+        public Tag GetRealtimeTag(out bool isHeartbeat)
+        {
+            const int baseDataLength = 3;
+            ValidatePacket(minimumDataLength: baseDataLength);
+            isHeartbeat = Status == ResponseStatusCode.HeartBeatDelivered;
+            if (isHeartbeat) return null;
+            if (Status != ResponseStatusCode.Success)
+                throw new MalformedPacketException($"Got realtime tag report with unexpected status {Status}, " +
+                                                   $"expected {ResponseStatusCode.Success}", RawData);
+
+            var offset = DataOffset;
+            var ant = ((AntennaConfiguration)RawData[offset++]).ToNumber();
+            var epcLength = RawData[offset++];
+            if (DataLength != baseDataLength + epcLength)
+                throw new MalformedPacketException($"Got realtime tag report with inconsistent epc length {epcLength}, " +
+                                                   $"expected {DataLength - baseDataLength}", RawData);
+            var epc = new StringBuilder(epcLength * 2);
+            for (var i = 0; i < epcLength; i++)
+            {
+                epc.Append(RawData[offset++].ToString("X2"));
+            }
+            var rssi = RawData[offset++];
+            return new Tag{Antenna = ant, TagId = epc.ToString(), Rssi = rssi, LastSeenTime = Timestamp, DiscoveryTime = Timestamp, ReadCount = 1};
+        }
+        
         public EpcLength GetEpcLength()
         {
             ValidatePacket(1);
@@ -84,12 +111,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return result;
         }
 
-        void ValidatePacket(int expectedDataLength = -1)
+        void ValidatePacket(int expectedDataLength = -1, int minimumDataLength = -1)
         {
             if (Command != ExpectedCommand)
                 throw new InvalidOperationException($"Wrong command {Command} != {ExpectedCommand}");
             if (expectedDataLength >= 0 && DataLength != expectedDataLength)
-                throw new MalformedPacketException();
+                throw new MalformedPacketException($"Got packet with unexpected length {DataLength}, expected {expectedDataLength}", RawData);
+            if (minimumDataLength >= 0 && DataLength < minimumDataLength)
+                throw new MalformedPacketException($"Got packet with data length less then expected {DataLength} < {minimumDataLength}", RawData);
         }
         
         private static readonly ResponseStatusCode[] InventoryValidStatusCodes = 

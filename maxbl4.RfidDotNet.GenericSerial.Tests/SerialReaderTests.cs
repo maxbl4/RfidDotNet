@@ -249,5 +249,51 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.GetReaderInfo().Result.AntennaCheck.ShouldBeFalse();
             }
         }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_read_tags_in_realtime_mode(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                var errors = new List<Exception>();
+                r.Errors.Subscribe(errors.Add);
+                var tags = new List<Tag>();
+                r.Tags.Subscribe(tags.Add);
+                r.ActivateOnDemandInventoryMode().Wait();
+                r.SetRealTimeInventoryParameters(new RealtimeInventoryParams
+                {
+                    TagDebounceTime = TimeSpan.Zero
+                }).Wait();
+                r.ActivateRealtimeInventoryMode().Wait();
+                Timing.StartWait(() => tags.Count > 50).Result.ShouldBeTrue("Could not read 50 tags in 10 seconds");
+                try
+                {
+                    r.ActivateOnDemandInventoryMode().Wait();
+                }
+                catch
+                {
+                }
+
+                if (errors.Count > 0)
+                    throw errors[0];
+                
+                tags[0].Antenna.ShouldBe(0);
+                tags[0].Rssi.ShouldBeGreaterThan(0);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+
+                var aggTags = tags.GroupBy(x => x.TagId)
+                    .Select(x => new Tag {TagId = x.Key, ReadCount = x.Count()})
+                    .ToList();
+                
+                aggTags.Select(x => x.TagId)
+                    .Intersect(TestSettings.Instance.GetKnownTagIds)
+                    .Count()
+                    .ShouldBeGreaterThanOrEqualTo(1,
+                        $"Should find at least one tag from known tags list. " +
+                        $"Actually found: {string.Join(", ", aggTags.Select(x => x.TagId))}");
+            }
+        }
     }
 }

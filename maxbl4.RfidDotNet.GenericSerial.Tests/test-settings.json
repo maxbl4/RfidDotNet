@@ -1,6 +1,6 @@
 {
-  "ConnectionStrings": "serial://COM4;tcp://opi:20002",
-//  "ConnectionStrings": "tcp://opi:20002",
+//  "ConnectionStrings": "serial://COM4;tcp://opi:20002",
+  "ConnectionStrings": "tcp://opi:20002",
 //  "ConnectionStrings": "serial://COM4;",  
   "KnownTagIds": "03072600000000000000926D, 0307260000000000000092D5, 030726000000000000009483, 0307260000000000000093E7, 0307260000000000000095B8, 030726000000000000009301, 03072600000000000000909E"
 }

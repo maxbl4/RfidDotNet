@@ -1,0 +1,62 @@
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using maxbl4.RfidDotNet.Ext;
+using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
+using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.RfidDotNet.GenericSerial.Packets;
+
+namespace maxbl4.RfidDotNet.GenericSerial.Buffers
+{
+    public class RealtimeInventoryListener : IDisposable
+    {
+        private readonly IDataStreamFactory dataStreamFactory;
+        private readonly SemaphoreSlim semaphore;
+        private readonly IObserver<Tag> tags;
+        private readonly IObserver<Exception> errors;
+        private Task loop;
+        private bool run = true;
+
+        public RealtimeInventoryListener(IDataStreamFactory dataStreamFactory, SemaphoreSlim semaphore, IObserver<Tag> tags, IObserver<Exception> errors)
+        {
+            this.dataStreamFactory = dataStreamFactory;
+            this.semaphore = semaphore;
+            this.tags = tags;
+            this.errors = errors;
+            loop = ListenLoop();
+        }
+
+        async Task ListenLoop()
+        {
+            using (semaphore.UseOnce())
+            {
+                try
+                {
+                    while (run)
+                    {
+                        var packet = await MessageParser.ReadPacket(dataStreamFactory.DataStream);
+                        var msg = new ResponseDataPacket(ReaderCommand.RealtimeInventoryResponse, packet.Data,
+                            elapsed: packet.Elapsed);
+                        if (msg.Status == ResponseStatusCode.Success)
+                        {
+                            var t = msg.GetRealtimeTag(out var isHeartbeat);
+                            if (t != null)
+                                tags.OnNext(t);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.OnNext(ex);
+                }
+            }
+        }
+
+
+        public void Dispose()
+        {
+            run = false;
+        }
+    }
+}

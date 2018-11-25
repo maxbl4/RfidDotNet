@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
     {
         private readonly IDataStreamFactory streamFactory;        
         private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
+        
+        private readonly Subject<Tag> tags = new Subject<Tag>();
+        public IObservable<Tag> Tags => tags;
+        private readonly Subject<Exception> errors = new Subject<Exception>();
+        public IObservable<Exception> Errors => errors;
+
+        private RealtimeInventoryListener realtimeInventoryListener;
         
         public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultPortSpeed, 
             int dataBits = SerialPortFactory.DefaultDataBits, Parity parity = SerialPortFactory.DefaultParity, 
@@ -128,6 +136,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         /// </summary>
         public async Task ActivateOnDemandInventoryMode()
         {
+            realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
             var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
@@ -138,12 +147,14 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
         {
+            realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, 
                 (byte)(withGpioTrigger ? ReaderWorkingMode.RealtimeGPIOTriggered : ReaderWorkingMode.Realtime)));
             var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
             if (resp == null)
                 throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
             resp.CheckSuccess();
+            realtimeInventoryListener = new RealtimeInventoryListener(streamFactory, sendReceiveSemaphore, tags, errors);
         }
 
         public async Task<int> GetNumberOfTagsInBuffer()
@@ -205,6 +216,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public void Dispose()
         {
+            realtimeInventoryListener.DisposeSafe();
             streamFactory.DisposeSafe();
         }
     }
