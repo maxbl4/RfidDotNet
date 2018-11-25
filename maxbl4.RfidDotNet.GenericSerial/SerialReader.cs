@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
@@ -123,6 +124,21 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             var responses = await SendReceive(CommandDataPacket.SetRFPower(rfPower));
             responses.First().CheckSuccess();
+        }
+        
+        public async Task<bool> GetDrmEnabled()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ModifyOrloadDrmConfiguration, (byte)DrmMode.Read));
+            return responses.First().GetDrmEnabled() == DrmMode.On;
+        }
+        
+        public async Task<DrmMode> SetDrmEnabled(bool enabled)
+        {
+            var mode = enabled ? DrmMode.On : DrmMode.Off;
+            mode |= DrmMode.Write;
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ModifyOrloadDrmConfiguration, 
+                (byte)mode));
+            return responses.First().GetDrmEnabled();
         }
         
         public async Task ClearBuffer()

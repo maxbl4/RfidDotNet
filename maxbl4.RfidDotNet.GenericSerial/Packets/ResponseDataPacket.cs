@@ -56,6 +56,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return temp;
         }
         
+        public DrmMode GetDrmEnabled()
+        {
+            ValidatePacket(1);
+            return (DrmMode)RawData[DataOffset];
+        }
+        
         public Tag GetRealtimeTag(out bool isHeartbeat)
         {
             const int baseDataLength = 3;

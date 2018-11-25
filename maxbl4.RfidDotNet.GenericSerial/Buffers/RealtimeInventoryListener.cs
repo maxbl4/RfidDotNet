@@ -44,7 +44,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
                             var t = msg.GetRealtimeTag(out var isHeartbeat);
                             if (t != null)
                                 tags.OnNext(t);
-                        }
+                        }else
+                            Console.WriteLine(packet.ResultType);
                     }
                 }
                 catch (Exception ex)

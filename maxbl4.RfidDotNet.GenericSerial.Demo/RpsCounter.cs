@@ -30,12 +30,19 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                     report.Add(ord[ord.Count * 9 / 10]);
                     report.Add(ord.Last());
                 }
+            
+                var aggTags = list.GroupBy(x => x.TagId)
+                    .Select(x => new Tag{TagId = x.Key, ReadCount = x.Count()})
+                    .OrderBy(x => x.TagId)
+                    .ToList();
 
                 var rps = new RpsStats {
                     Histogram = report, 
+                    AggTags = aggTags,
                     Average = (diffs.Any() ? diffs.Average(x => x)*1000/ samplingIntervalMs : 0),
                     RPS = list.Sum(x => x.ReadCount)*1000/ samplingIntervalMs,
-                    Reads = list.Sum(x => x.ReadCount)
+                    Reads = list.Sum(x => x.ReadCount),
+                    TagIds = list.Select(x => x.TagId).Distinct().Count()
                 };
             return rps;
         }
@@ -48,5 +55,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         public double Average { get; set; }
         public int RPS { get; set; }
         public int Reads { get; set; }
+        public int TagIds { get; set; }
+        public List<Tag> AggTags { get; set; }
     }
 }

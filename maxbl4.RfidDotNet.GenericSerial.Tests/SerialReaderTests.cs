@@ -295,5 +295,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                         $"Actually found: {string.Join(", ", aggTags.Select(x => x.TagId))}");
             }
         }
+
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_read_and_write_drm_mode(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                r.SetDrmEnabled(true).Result.ShouldBe(DrmMode.On);
+                r.GetDrmEnabled().Result.ShouldBe(true);
+                r.SetDrmEnabled(false).Result.ShouldBe(DrmMode.Off);
+                r.GetDrmEnabled().Result.ShouldBe(false);
+            }
+        }
     }
 }

@@ -39,6 +39,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         public int ScanInterval { get; set; }
         [ArgDefaultValue(1000)]
         public int StatsSamplingInterval { get; set; }
+        [ArgDefaultValue(false)]
+        public bool EnableDrmMode { get; set; }
     }
 
     public enum InventoryType

@@ -21,6 +21,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         static readonly Subject<Exception> tagStreamErrors = new Subject<Exception>();
         static readonly BehaviorSubject<int> temperatureSubject = new BehaviorSubject<int>(0);
         private static ConnectionString connectionString;
+        private static int updateNumber = 0;
 
         static void Main(string[] args)
         {
@@ -63,6 +64,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
         {
+            reader.SetDrmEnabled(demoArgs.EnableDrmMode).Wait();
             reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
             {
                 QValue = demoArgs.QValue,
@@ -136,7 +138,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                 .Subscribe(buf =>
                 {
                     var rpsStats = RpsCounter.Count(buf, demoArgs.StatsSamplingInterval);
-                    DisplayInventoryInfo(demoArgs, buf, buf.Count, 0, 0, 0, 0);
+                    DisplayInventoryInfo(demoArgs, rpsStats, 0, 0, 0, 0);
                 });
         }
 
@@ -151,27 +153,30 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                     var inventoryQueryMaxTimeMs = (int) buf.Max(x => x.Elapsed.TotalMilliseconds);
                     var inventoryQueryMinTimeMs = (int) buf.Min(x => x.Elapsed.TotalMilliseconds);
                     
-                    DisplayInventoryInfo(demoArgs, bufferedTags, bufferedTags.Count, buf.Count, inventoryQueryMinTimeMs,
+                    var rpsStats = RpsCounter.Count(bufferedTags, demoArgs.StatsSamplingInterval);
+                    
+                    DisplayInventoryInfo(demoArgs, rpsStats, buf.Count*1000/demoArgs.StatsSamplingInterval, inventoryQueryMinTimeMs,
                         inventoryQueryAvgTimeMs, inventoryQueryMaxTimeMs);
                 });
         }
 
-        static void DisplayInventoryInfo(DemoArgs demoArgs, IEnumerable<Tag> tags, int rps, int inventoryPs, 
+        static void DisplayInventoryInfo(DemoArgs demoArgs, RpsStats rpsStats, int inventoryPs, 
             int inventoryQueryMinTimeMs,
             int inventoryQueryAvgTimeMs,
             int inventoryQueryMaxTimeMs)
         {
             Console.Clear();
-            var histogram = tags.GroupBy(x => x.TagId)
-                .Select(x => new Tag{TagId = x.Key, ReadCount = x.Count()})
-                .OrderBy(x => x.TagId)
-                .ToList();
-            Console.WriteLine($"Connected to: {connectionString}, {demoArgs.Inventory} mode");
+            Console.WriteLine($"Connected to: {connectionString}, {demoArgs.Inventory} mode, update {updateNumber++}");
             Console.WriteLine($"Reader Temp={temperatureSubject.Value}, Limit={demoArgs.ThermalLimit}");
-            Console.WriteLine($"TagIds={histogram.Count}, RPS={rps}, InventoryPS={inventoryPs}");
+            Console.WriteLine($"TagIds={rpsStats.TagIds}, RPS={rpsStats.RPS}, InventoryPS={inventoryPs}");
             Console.WriteLine(
                 $"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAvgTimeMs}, Max={inventoryQueryMaxTimeMs}");
-            foreach (var h in histogram)
+            foreach (var h in rpsStats.Histogram)
+            {
+                Console.Write("{0,6:F1}", h);
+            }
+            Console.WriteLine($" Avg={rpsStats.Average:F1}");
+            foreach (var h in rpsStats.AggTags)
             {
                 Console.WriteLine($"{h.TagId} {h.ReadCount}");
             }
