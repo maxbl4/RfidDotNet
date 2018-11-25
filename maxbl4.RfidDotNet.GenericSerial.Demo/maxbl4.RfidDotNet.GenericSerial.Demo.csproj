@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="PowerArgs" Version="3.5.0" />
       <PackageReference Include="SerialPortStream" Version="2.1.4" />
     </ItemGroup>
 

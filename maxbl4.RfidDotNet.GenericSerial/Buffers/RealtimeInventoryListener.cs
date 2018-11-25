@@ -36,10 +36,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
                     while (run)
                     {
                         var packet = await MessageParser.ReadPacket(dataStreamFactory.DataStream);
-                        var msg = new ResponseDataPacket(ReaderCommand.RealtimeInventoryResponse, packet.Data,
-                            elapsed: packet.Elapsed);
-                        if (msg.Status == ResponseStatusCode.Success)
+                        if (packet.Success)
                         {
+                            var msg = new ResponseDataPacket(ReaderCommand.RealtimeInventoryResponse, packet.Data,
+                                elapsed: packet.Elapsed);
+                        
                             var t = msg.GetRealtimeTag(out var isHeartbeat);
                             if (t != null)
                                 tags.OnNext(t);

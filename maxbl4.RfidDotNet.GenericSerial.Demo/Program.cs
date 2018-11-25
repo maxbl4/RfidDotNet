@@ -8,6 +8,7 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
+using PowerArgs;
 using RJCP.IO.Ports;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Demo
@@ -15,103 +16,203 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
     class Program
     {
         public const int TemperatureLimit = 60;
+        static readonly Subject<TagInventoryResult> pollingResults = new Subject<TagInventoryResult>();
+        static readonly Subject<Tag> tagStream = new Subject<Tag>();
+        static readonly Subject<Exception> tagStreamErrors = new Subject<Exception>();
+        static readonly BehaviorSubject<int> temperatureSubject = new BehaviorSubject<int>(0);
+        private static ConnectionString connectionString;
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
             {
-                Console.WriteLine(@"Generic serial reader test app. Supply connection string in either format:
-serial://COM4
-serial:///dev/ttyS2
-tcp://host:123");
-                Console.WriteLine("Available serial ports:");
-                var names = SerialPortStream.GetPortNames();
-                foreach (var name in names)
-                {
-                    Console.WriteLine(name);
-                }
-                return;
+                ShowUsageAndExit();
             }
 
-            var connectionString = ConnectionString.Parse(args[0]);
-            using (var r = new SerialReader(connectionString.Connect()))
+            try
             {
-                if (args.Length > 1)
-                    r.SetRFPower(byte.Parse(args[1])).Wait();
-                
-                Console.WriteLine("Serial number: {0}", r.GetSerialNumber().Result);
-                var info = r.GetReaderInfo().Result;
-                Console.WriteLine("Model: {0}", info.Model);
-                Console.WriteLine("FirmwareVersion: {0}", info.FirmwareVersion);
-                Console.WriteLine("AntennaConfiguration: {0}", info.AntennaConfiguration);
-                Console.WriteLine("SupportedProtocols: {0}", info.SupportedProtocols);
-                Console.WriteLine("RFPower: {0}", info.RFPower);
-                Console.WriteLine("InventoryScanInterval: {0}", info.InventoryScanInterval);
-
-
-                if (args.Length < 3)
+                var demoArgs = Args.Parse<DemoArgs>(args);
+                if (string.IsNullOrEmpty(demoArgs.ConnectionString))
+                    ShowUsageAndExit();
+                connectionString = ConnectionString.Parse(demoArgs.ConnectionString);
+                using (var reader = new SerialReader(connectionString.Connect()))
                 {
-                    Console.WriteLine("Press enter to start inventory cycle");
-                    Console.ReadLine();
-                }
-
-                Console.WriteLine("Performing inventory. Ctrl+C to stop");
-                var temp = 0;
-                var temperatureSubject = new Subject<int>();
-                temperatureSubject.Subscribe(x => temp = x);
-                var tags = new Subject<TagInventoryResult>();
-                tags.Buffer(TimeSpan.FromMilliseconds(1000))
-                    .Where(x => x.Count > 0)
-                    .Subscribe(buf =>
+                    reader.ActivateOnDemandInventoryMode().Wait();
+                    ShowBasicReaderInfo(reader, demoArgs);
+                    SubscribeToInventoryResults(reader, demoArgs);
+                    SetInventoryOptions(reader, demoArgs);
+                    switch (demoArgs.Inventory)
                     {
-                        Console.Clear();
-                        Console.WriteLine($"Connected to: {connectionString}");
-                        var bufferedTags = buf.SelectMany(x => x.Tags).ToList();
-                        var inventoryQueryAverageTimeMs = (int)buf.Average(x => x.Elapsed.TotalMilliseconds);
-                        var inventoryQueryMaxTimeMs = (int)buf.Max(x => x.Elapsed.TotalMilliseconds);
-                        var inventoryQueryMinTimeMs = (int)buf.Min(x => x.Elapsed.TotalMilliseconds);
-                        var histogram = bufferedTags.GroupBy(x => x.TagId).Select(x => new {TagId = x.Key, Count = x.Count()})
-                            .OrderBy(x => x.TagId)
-                            .ToList();
-                        Console.WriteLine($"Reader Temp={temp}, Limit={TemperatureLimit}");
-                        Console.WriteLine($"TagIds={histogram.Count}, RPS={bufferedTags.Count}, InventoryPS={buf.Count}");
-                        Console.WriteLine($"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAverageTimeMs}, Max={inventoryQueryMaxTimeMs}");
-                        foreach (var h in histogram)
-                        {
-                            Console.WriteLine($"{h.TagId} {h.Count}");
-                        }
-                    });
-                Task.Run(async () =>
+                        case InventoryType.Poll:
+                            StartPolling(reader, demoArgs);
+                            break;
+                        case InventoryType.Realtime:
+                            StartStreaming(reader);
+                            break;
+                    }
+                    Console.ReadLine();
+                    reader.ActivateOnDemandInventoryMode().Wait();
+                }
+            }
+            catch (ArgException ex)
+            {
+                Console.WriteLine(ex.Message);
+                ShowUsageAndExit();
+            }
+        }
+
+        static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
+        {
+            reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
+            {
+                QValue = demoArgs.QValue,
+                Session = (SessionValue)demoArgs.Session,
+                TagDebounceTime = TimeSpan.Zero
+            }).Wait();
+            reader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(demoArgs.ScanInterval)).Wait();
+        }
+
+        static void StartStreaming(SerialReader reader)
+        {
+            reader.Tags.Subscribe(tagStream);
+            reader.Errors.Subscribe(tagStreamErrors);
+            reader.ActivateRealtimeInventoryMode().Wait();
+        }
+
+        static void StartPolling(SerialReader reader, DemoArgs demoArgs)
+        {
+            Task.Run(async () =>
+            {
+                temperatureSubject.OnNext(reader.GetReaderTemperature().Result);
+                var sw = Stopwatch.StartNew();
+                while (true)
                 {
                     try
                     {
-                        temperatureSubject.OnNext(r.GetReaderTemperature().Result);
-                        var sw = Stopwatch.StartNew();
-                        while (true)
+                        var res = await reader.TagInventory(new TagInventoryParams
                         {
-                            var res = await r.TagInventory();
-                            tags.OnNext(res);
+                            QValue = demoArgs.QValue,
+                            Session = (SessionValue)demoArgs.Session
+                        });
+                        pollingResults.OnNext(res);
 
-                            if (sw.ElapsedMilliseconds > 10000)
+                        if (sw.ElapsedMilliseconds > 10000)
+                        {
+                            var t = reader.GetReaderTemperature().Result;
+                            if (t > TemperatureLimit)
                             {
-                                var t = r.GetReaderTemperature().Result;
-                                if (t > TemperatureLimit)
-                                {
-                                    Console.WriteLine($"Reader is overheating, temperature is {t}. To prevent damage, stopping inventory.");
-                                    Environment.Exit(t);
-                                }
-
-                                temperatureSubject.OnNext(t);
-                                sw.Restart();
+                                Console.WriteLine(
+                                    $"Reader is overheating, temperature is {t}. To prevent damage, stopping inventory.");
+                                Environment.Exit(t);
                             }
+
+                            temperatureSubject.OnNext(t);
+                            sw.Restart();
                         }
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex);
                     }
-                });
+                }
+            });
+        }
 
+        static void SubscribeToInventoryResults(SerialReader reader, DemoArgs demoArgs)
+        {
+            SubscribeToPollingResults(demoArgs);
+            SubscribeToStreamingResults(demoArgs);
+        }
+
+        static void SubscribeToStreamingResults(DemoArgs demoArgs)
+        {
+            tagStreamErrors.Subscribe(x =>
+            {
+                Console.WriteLine(x);
+                Environment.Exit(0);
+            });
+            tagStream.Buffer(TimeSpan.FromMilliseconds(demoArgs.StatsSamplingInterval))
+                .Where(x => x.Count > 0)
+                .Subscribe(buf =>
+                {
+                    var rpsStats = RpsCounter.Count(buf, demoArgs.StatsSamplingInterval);
+                    DisplayInventoryInfo(demoArgs, buf, buf.Count, 0, 0, 0, 0);
+                });
+        }
+
+        static void SubscribeToPollingResults(DemoArgs demoArgs)
+        {
+            pollingResults.Buffer(TimeSpan.FromMilliseconds(demoArgs.StatsSamplingInterval))
+                .Where(x => x.Count > 0)
+                .Subscribe(buf =>
+                {
+                    var bufferedTags = buf.SelectMany(x => x.Tags).ToList();
+                    var inventoryQueryAvgTimeMs = (int) buf.Average(x => x.Elapsed.TotalMilliseconds);
+                    var inventoryQueryMaxTimeMs = (int) buf.Max(x => x.Elapsed.TotalMilliseconds);
+                    var inventoryQueryMinTimeMs = (int) buf.Min(x => x.Elapsed.TotalMilliseconds);
+                    
+                    DisplayInventoryInfo(demoArgs, bufferedTags, bufferedTags.Count, buf.Count, inventoryQueryMinTimeMs,
+                        inventoryQueryAvgTimeMs, inventoryQueryMaxTimeMs);
+                });
+        }
+
+        static void DisplayInventoryInfo(DemoArgs demoArgs, IEnumerable<Tag> tags, int rps, int inventoryPs, 
+            int inventoryQueryMinTimeMs,
+            int inventoryQueryAvgTimeMs,
+            int inventoryQueryMaxTimeMs)
+        {
+            Console.Clear();
+            var histogram = tags.GroupBy(x => x.TagId)
+                .Select(x => new Tag{TagId = x.Key, ReadCount = x.Count()})
+                .OrderBy(x => x.TagId)
+                .ToList();
+            Console.WriteLine($"Connected to: {connectionString}, {demoArgs.Inventory} mode");
+            Console.WriteLine($"Reader Temp={temperatureSubject.Value}, Limit={demoArgs.ThermalLimit}");
+            Console.WriteLine($"TagIds={histogram.Count}, RPS={rps}, InventoryPS={inventoryPs}");
+            Console.WriteLine(
+                $"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAvgTimeMs}, Max={inventoryQueryMaxTimeMs}");
+            foreach (var h in histogram)
+            {
+                Console.WriteLine($"{h.TagId} {h.ReadCount}");
+            }
+        }
+
+        static void ShowBasicReaderInfo(SerialReader reader, DemoArgs args)
+        {
+            reader.SetRFPower(args.RFPower).Wait();
+            Console.WriteLine("Serial number: {0}", reader.GetSerialNumber().Result);
+            var info = reader.GetReaderInfo().Result;
+            Console.WriteLine("Model: {0}", info.Model);
+            Console.WriteLine("FirmwareVersion: {0}", info.FirmwareVersion);
+            Console.WriteLine("AntennaConfiguration: {0}", info.AntennaConfiguration);
+            Console.WriteLine("SupportedProtocols: {0}", info.SupportedProtocols);
+            Console.WriteLine("RFPower: {0}", info.RFPower);
+            Console.WriteLine("InventoryScanInterval: {0}", info.InventoryScanInterval);
+
+
+            if (args.Confirm)
+            {
+                Console.WriteLine("Press enter to start inventory cycle");
                 Console.ReadLine();
+            }
+
+            Console.WriteLine("Performing inventory. Ctrl+C to stop");
+        }
+
+        static void ShowUsageAndExit()
+        {
+            Console.WriteLine(ArgUsage.GenerateUsageFromTemplate<DemoArgs>());
+            ListSerialPorts();
+            Environment.Exit(0);
+        }
+
+        static void ListSerialPorts()
+        {
+            Console.WriteLine("Available serial ports:");
+            var names = SerialPortStream.GetPortNames();
+            foreach (var name in names)
+            {
+                Console.WriteLine(name);
             }
         }
     }
