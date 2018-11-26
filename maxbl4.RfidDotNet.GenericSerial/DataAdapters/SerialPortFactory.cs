@@ -1,29 +1,30 @@
 using System.IO;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 using RJCP.IO.Ports;
 
 namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
 {
     public class SerialPortFactory : IDataStreamFactory
     {
-        public const int DefaultPortSpeed = 57600;
+        public const int DefaultBaudRate = 57600;
         public const int DefaultDataBits = 8;
         public const Parity DefaultParity = Parity.None;
         public const StopBits DefaultStopBits =  StopBits.One;
         
         public string SerialPortName { get; }
-        public int PortSpeed { get; }
+        public int BaudRate { get; private set; }
         public int DataBits { get; }
         public Parity Parity { get; }
         public StopBits StopBits { get; }
         
         private SerialPortStream stream = null;
 
-        public SerialPortFactory(string serialPortName, int portSpeed = DefaultPortSpeed,
+        public SerialPortFactory(string serialPortName, int baudRate = DefaultBaudRate,
             int dataBits = DefaultDataBits, Parity parity = DefaultParity, StopBits stopBits = DefaultStopBits)
         {
             SerialPortName = serialPortName;
-            PortSpeed = portSpeed;
+            BaudRate = baudRate;
             DataBits = dataBits;
             Parity = parity;
             StopBits = stopBits;
@@ -35,7 +36,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
             {
                 if (stream == null)
                 {
-                    stream = new SerialPortStream(SerialPortName, PortSpeed, DataBits, Parity, StopBits)
+                    stream = new SerialPortStream(SerialPortName, BaudRate, DataBits, Parity, StopBits)
                     {
                         ReadTimeout = 3000, WriteTimeout = 200
                     };
@@ -53,6 +54,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
         {
             stream.DisposeSafe();
             stream = null;
+        }
+
+        public void UpdateBaudRate(int baudRate)
+        {
+            BaudRate = baudRate;
+            Invalidate();
         }
 
         public void Dispose()

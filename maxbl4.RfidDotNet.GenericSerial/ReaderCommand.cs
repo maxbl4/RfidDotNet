@@ -36,7 +36,7 @@
 	    ModifyWorkingFrequency = 0x22,
 	    ModifyReaderAddress = 0x24,
 	    SetInventoryScanInterval = 0x25,
-	    ModifySerialBaudRate = 0x28,
+	    SetSerialBaudRate = 0x28,
 	    SetRFPower = 0x2f,
 	    LedOrBuzzerControl = 0x33,
 	    SetAntennaConfiguration = 0x3f,

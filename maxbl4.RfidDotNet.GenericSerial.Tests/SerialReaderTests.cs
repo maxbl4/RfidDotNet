@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using maxbl4.RfidDotNet.Infrastructure;
@@ -306,6 +307,32 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.GetDrmEnabled().Result.ShouldBe(true);
                 r.SetDrmEnabled(false).Result.ShouldBe(DrmMode.Off);
                 r.GetDrmEnabled().Result.ShouldBe(false);
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Serial)]
+        public void Should_change_serial_baud_and_update_connection(ConnectionType connectionType)
+        {
+            var connection = (SerialPortFactory)TestSettings.Instance.GetConnection(connectionType, 
+                BaudRates.Baud57600);
+            using (var r = new SerialReader(connection))
+            {
+                var info = r.GetReaderInfo().Result;
+                r.SetSerialBaudRate(BaudRates.Baud115200).Wait();
+                info = r.GetReaderInfo().Result;
+                r.SetSerialBaudRate(BaudRates.Baud57600).Wait();
+                info = r.GetReaderInfo().Result;
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_not_allow_to_change_baud_on_network_reader(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                Assert.ThrowsAsync<InvalidOperationException>(() => r.SetSerialBaudRate(BaudRates.Baud115200)).Wait();
             }
         }
     }

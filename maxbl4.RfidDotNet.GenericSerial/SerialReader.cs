@@ -34,7 +34,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         private RealtimeInventoryListener realtimeInventoryListener;
         
-        public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultPortSpeed, 
+        public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultBaudRate, 
             int dataBits = SerialPortFactory.DefaultDataBits, Parity parity = SerialPortFactory.DefaultParity, 
             StopBits stopBits = SerialPortFactory.DefaultStopBits)
             : this(new SerialPortFactory(serialPortName, portSpeed, dataBits, parity, stopBits)) {}
@@ -139,6 +139,23 @@ namespace maxbl4.RfidDotNet.GenericSerial
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ModifyOrloadDrmConfiguration, 
                 (byte)mode));
             return responses.First().GetDrmEnabled();
+        }
+        
+        /// <summary>
+        /// Change reader serial baud rate. After calling this method, you should reconnect using new baud
+        /// </summary>
+        /// <param name="baud"></param>
+        /// <returns></returns>
+        public async Task SetSerialBaudRate(BaudRates baud)
+        {
+            if (streamFactory is NetworkStreamFactory)
+                throw new InvalidOperationException($"You should not change baud rate of the reader connected over the network. " +
+                                                    $"While this is possible, most probably you will loose connectivity to reader" +
+                                                    $"until you make manual changes on the network host");
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetSerialBaudRate, 
+                (byte)baud));
+            responses.First().CheckSuccess();
+            streamFactory.UpdateBaudRate(baud.ToNumber());
         }
         
         public async Task ClearBuffer()
