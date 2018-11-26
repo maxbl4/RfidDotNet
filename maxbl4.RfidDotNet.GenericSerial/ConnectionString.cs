@@ -47,6 +47,19 @@ namespace maxbl4.RfidDotNet.GenericSerial
             
             return result;
         }
+
+        public override string ToString()
+        {
+            switch (Type)
+            {
+                case ConnectionType.Network:
+                    return $"tcp://{Hostname}:{TcpPort}";
+                case ConnectionType.Serial:
+                    return $"tcp://{SerialPort}";
+            }
+
+            return "invalid://connection/string";
+        }
     }
     
     public enum ConnectionType

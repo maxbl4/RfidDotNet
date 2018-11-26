@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
+using maxbl4.RfidDotNet.GenericSerial.Ext;
+using maxbl4.RfidDotNet.GenericSerial.Model;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -13,7 +15,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         public string ConnectionStrings { get; set; }
         public string KnownTagIds { get; set; }
 
-        public IDataStreamFactory GetConnection(ConnectionType type = ConnectionType.Any)
+        public IDataStreamFactory GetConnection(ConnectionType type = ConnectionType.Any, BaudRates baudRate = BaudRates.Baud57600)
         {
             ConnectionString cs = null;
             switch (type)
@@ -34,7 +36,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 switch (cs.Type)
                 {
                     case ConnectionType.Serial:
-                        return new SerialPortFactory(cs.SerialPort);
+                        return new SerialPortFactory(cs.SerialPort, baudRate.ToNumber());
                     case ConnectionType.Network:
                         return new NetworkStreamFactory(cs.Hostname, cs.TcpPort);
                 }

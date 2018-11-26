@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Exceptions;
@@ -24,7 +27,14 @@ namespace maxbl4.RfidDotNet.GenericSerial
         private readonly IDataStreamFactory streamFactory;        
         private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
         
-        public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultPortSpeed, 
+        private readonly Subject<Tag> tags = new Subject<Tag>();
+        public IObservable<Tag> Tags => tags;
+        private readonly Subject<Exception> errors = new Subject<Exception>();
+        public IObservable<Exception> Errors => errors;
+
+        private RealtimeInventoryListener realtimeInventoryListener;
+        
+        public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultBaudRate, 
             int dataBits = SerialPortFactory.DefaultDataBits, Parity parity = SerialPortFactory.DefaultParity, 
             StopBits stopBits = SerialPortFactory.DefaultStopBits)
             : this(new SerialPortFactory(serialPortName, portSpeed, dataBits, parity, stopBits)) {}
@@ -45,17 +55,19 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 {
                     var port = streamFactory.DataStream;
                     var buffer = command.Serialize();
+                    var sw = Stopwatch.StartNew();
                     await port.WriteAsync(buffer, 0, buffer.Length);
                     var responsePackets = new List<ResponseDataPacket>();
                     ResponseDataPacket lastResponse;
                     do
                     {
-                        var packet = await MessageParser.ReadPacket(port);
+                        var packet = await MessageParser.ReadPacket(port, sw);
+                        sw = null;
                         //TODO: Receive failures should be handled by reopening port.
                         if (!packet.Success)
                             throw new ReceiveFailedException(
                                 $"Failed to read response from {streamFactory.Description} {packet.ResultType}");
-                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data));
+                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
                     } while (MessageParser.ShouldReadMore(lastResponse));
 
                     return responsePackets;
@@ -77,6 +89,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetReaderSerialNumber));
             return responses.First().GetReaderSerialNumber();
+        }
+
+        public async Task<int> GetReaderTemperature()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetReaderTemperature));
+            return responses.First().GetReaderTemperature();
         }
         
         public async Task<Model.ReaderInfo> GetReaderInfo()
@@ -108,12 +126,70 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
+        public async Task<bool> GetDrmEnabled()
+        {
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ModifyOrloadDrmConfiguration, (byte)DrmMode.Read));
+            return responses.First().GetDrmEnabled() == DrmMode.On;
+        }
+        
+        public async Task<DrmMode> SetDrmEnabled(bool enabled)
+        {
+            var mode = enabled ? DrmMode.On : DrmMode.Off;
+            mode |= DrmMode.Write;
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ModifyOrloadDrmConfiguration, 
+                (byte)mode));
+            return responses.First().GetDrmEnabled();
+        }
+        
+        /// <summary>
+        /// Change reader serial baud rate. After calling this method, you should reconnect using new baud
+        /// </summary>
+        /// <param name="baud"></param>
+        /// <returns></returns>
+        public async Task SetSerialBaudRate(BaudRates baud)
+        {
+            if (streamFactory is NetworkStreamFactory)
+                throw new InvalidOperationException($"You should not change baud rate of the reader connected over the network. " +
+                                                    $"While this is possible, most probably you will loose connectivity to reader" +
+                                                    $"until you make manual changes on the network host");
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetSerialBaudRate, 
+                (byte)baud));
+            responses.First().CheckSuccess();
+            streamFactory.UpdateBaudRate(baud.ToNumber());
+        }
+        
         public async Task ClearBuffer()
         {
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.ClearBuffer));
             responses.First().CheckSuccess();
         }
         
+        /// <summary>
+        /// Try to put reader into Query/Answer mode
+        /// </summary>
+        public async Task ActivateOnDemandInventoryMode()
+        {
+            realtimeInventoryListener.DisposeSafe();
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
+            // If reader is in realtime mode, it may send arbitrary number notification packets.
+            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+            if (resp == null)
+                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+            resp.CheckSuccess();
+        }
+
+        public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
+        {
+            realtimeInventoryListener.DisposeSafe();
+            var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, 
+                (byte)(withGpioTrigger ? ReaderWorkingMode.RealtimeGPIOTriggered : ReaderWorkingMode.Realtime)));
+            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+            if (resp == null)
+                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+            resp.CheckSuccess();
+            realtimeInventoryListener = new RealtimeInventoryListener(streamFactory, sendReceiveSemaphore, tags, errors);
+        }
+
         public async Task<int> GetNumberOfTagsInBuffer()
         {
             var responses = await SendReceive(CommandDataPacket.GetNumberOfTagsInBuffer());
@@ -163,9 +239,17 @@ namespace maxbl4.RfidDotNet.GenericSerial
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.GetTagsFromBuffer));
             return new TagBufferResult(responses);
         }
+        
+        public async Task SetRealTimeInventoryParameters(RealtimeInventoryParams args = null)
+        {
+            if (args == null) args = new RealtimeInventoryParams();
+            var responses = await SendReceive(CommandDataPacket.SetRealTimeInventoryParameters(args));
+            responses.First().CheckSuccess();
+        }
 
         public void Dispose()
         {
+            realtimeInventoryListener.DisposeSafe();
             streamFactory.DisposeSafe();
         }
     }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Packets
@@ -14,6 +16,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public byte[] RawData { get; }
         public ReaderCommand ExpectedCommand { get; }
         public DateTimeOffset Timestamp { get; }
+        public TimeSpan Elapsed { get; }
         
         /// <summary>
         /// Data.Length + 5
@@ -24,10 +27,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public ResponseStatusCode Status => (ResponseStatusCode)RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
-        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null)
+        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null, TimeSpan? elapsed = null)
         {
             ExpectedCommand = expectedCommand;
             RawData = rawData;
+            Elapsed = elapsed ?? TimeSpan.Zero;
             Timestamp = timestamp ?? DateTimeOffset.Now;
         }
         
@@ -41,6 +45,46 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         {
             ValidatePacket(4);
             return ReadUInt32();
+        }
+        
+        public int GetReaderTemperature()
+        {
+            ValidatePacket(2);
+            var offset = DataOffset;
+            var positive = RawData[offset++] > 0;
+            var temp = RawData[offset++] * (positive ? 1 : -1);
+            return temp;
+        }
+        
+        public DrmMode GetDrmEnabled()
+        {
+            ValidatePacket(1);
+            return (DrmMode)RawData[DataOffset];
+        }
+        
+        public Tag GetRealtimeTag(out bool isHeartbeat)
+        {
+            const int baseDataLength = 3;
+            ValidatePacket(minimumDataLength: baseDataLength);
+            isHeartbeat = Status == ResponseStatusCode.HeartBeatDelivered;
+            if (isHeartbeat) return null;
+            if (Status != ResponseStatusCode.Success)
+                throw new MalformedPacketException($"Got realtime tag report with unexpected status {Status}, " +
+                                                   $"expected {ResponseStatusCode.Success}", RawData);
+
+            var offset = DataOffset;
+            var ant = ((AntennaConfiguration)RawData[offset++]).ToNumber();
+            var epcLength = RawData[offset++];
+            if (DataLength != baseDataLength + epcLength)
+                throw new MalformedPacketException($"Got realtime tag report with inconsistent epc length {epcLength}, " +
+                                                   $"expected {DataLength - baseDataLength}", RawData);
+            var epc = new StringBuilder(epcLength * 2);
+            for (var i = 0; i < epcLength; i++)
+            {
+                epc.Append(RawData[offset++].ToString("X2"));
+            }
+            var rssi = RawData[offset++];
+            return new Tag{Antenna = ant, TagId = epc.ToString(), Rssi = rssi, LastSeenTime = Timestamp, DiscoveryTime = Timestamp, ReadCount = 1};
         }
         
         public EpcLength GetEpcLength()
@@ -73,12 +117,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return result;
         }
 
-        void ValidatePacket(int expectedDataLength = -1)
+        void ValidatePacket(int expectedDataLength = -1, int minimumDataLength = -1)
         {
             if (Command != ExpectedCommand)
                 throw new InvalidOperationException($"Wrong command {Command} != {ExpectedCommand}");
             if (expectedDataLength >= 0 && DataLength != expectedDataLength)
-                throw new MalformedPacketException();
+                throw new MalformedPacketException($"Got packet with unexpected length {DataLength}, expected {expectedDataLength}", RawData);
+            if (minimumDataLength >= 0 && DataLength < minimumDataLength)
+                throw new MalformedPacketException($"Got packet with data length less then expected {DataLength} < {minimumDataLength}", RawData);
         }
         
         private static readonly ResponseStatusCode[] InventoryValidStatusCodes = 

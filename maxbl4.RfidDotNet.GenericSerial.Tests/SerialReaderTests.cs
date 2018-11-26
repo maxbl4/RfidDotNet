@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using maxbl4.RfidDotNet.Infrastructure;
@@ -227,6 +228,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         
         [SkippableTheory]
         [InlineData(ConnectionType.Network)]
+        public void Should_get_reader_temperature(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                //Assume we run tests at home :)
+                r.GetReaderTemperature().Result.ShouldBeInRange(10, 50);
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
         [Trait("MultiAntenna", "true")]
         public void Should_set_antenna_check(ConnectionType connectionType)
         {
@@ -236,6 +248,91 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.GetReaderInfo().Result.AntennaCheck.ShouldBeTrue();
                 r.SetAntennaCheck(false).Wait();
                 r.GetReaderInfo().Result.AntennaCheck.ShouldBeFalse();
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_read_tags_in_realtime_mode(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                var errors = new List<Exception>();
+                r.Errors.Subscribe(errors.Add);
+                var tags = new List<Tag>();
+                r.Tags.Subscribe(tags.Add);
+                r.ActivateOnDemandInventoryMode().Wait();
+                r.SetRealTimeInventoryParameters(new RealtimeInventoryParams
+                {
+                    TagDebounceTime = TimeSpan.Zero
+                }).Wait();
+                r.ActivateRealtimeInventoryMode().Wait();
+                Timing.StartWait(() => tags.Count > 50).Result.ShouldBeTrue("Could not read 50 tags in 10 seconds");
+                try
+                {
+                    r.ActivateOnDemandInventoryMode().Wait();
+                }
+                catch
+                {
+                }
+
+                if (errors.Count > 0)
+                    throw errors[0];
+                
+                tags[0].Antenna.ShouldBe(0);
+                tags[0].Rssi.ShouldBeGreaterThan(0);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+
+                var aggTags = tags.GroupBy(x => x.TagId)
+                    .Select(x => new Tag {TagId = x.Key, ReadCount = x.Count()})
+                    .ToList();
+                
+                aggTags.Select(x => x.TagId)
+                    .Intersect(TestSettings.Instance.GetKnownTagIds)
+                    .Count()
+                    .ShouldBeGreaterThanOrEqualTo(1,
+                        $"Should find at least one tag from known tags list. " +
+                        $"Actually found: {string.Join(", ", aggTags.Select(x => x.TagId))}");
+            }
+        }
+
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_read_and_write_drm_mode(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                r.SetDrmEnabled(true).Result.ShouldBe(DrmMode.On);
+                r.GetDrmEnabled().Result.ShouldBe(true);
+                r.SetDrmEnabled(false).Result.ShouldBe(DrmMode.Off);
+                r.GetDrmEnabled().Result.ShouldBe(false);
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Serial)]
+        public void Should_change_serial_baud_and_update_connection(ConnectionType connectionType)
+        {
+            var connection = (SerialPortFactory)TestSettings.Instance.GetConnection(connectionType, 
+                BaudRates.Baud57600);
+            using (var r = new SerialReader(connection))
+            {
+                var info = r.GetReaderInfo().Result;
+                r.SetSerialBaudRate(BaudRates.Baud115200).Wait();
+                info = r.GetReaderInfo().Result;
+                r.SetSerialBaudRate(BaudRates.Baud57600).Wait();
+                info = r.GetReaderInfo().Result;
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_not_allow_to_change_baud_on_network_reader(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                Assert.ThrowsAsync<InvalidOperationException>(() => r.SetSerialBaudRate(BaudRates.Baud115200)).Wait();
             }
         }
     }

@@ -46,6 +46,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
             socket = null;
         }
 
+        public void UpdateBaudRate(int baudRate)
+        {
+            throw new System.NotSupportedException();
+        }
+
         public void Dispose()
         {
             Invalidate();

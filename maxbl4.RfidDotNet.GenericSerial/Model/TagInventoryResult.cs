@@ -60,44 +60,53 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
     public class TagInventoryResult
     {
+        public TimeSpan Elapsed { get; private set; } = TimeSpan.Zero;
+        public bool IsHeartbeat { get; private set; }
         public ushort TagsInBuffer { get; private set; }
         public ushort TagsInLastInventory { get; private set;}
         public List<Tag> Tags { get; } = new List<Tag>();
+
         public TagInventoryResult(IEnumerable<ResponseDataPacket> packets)
         {
             foreach (var packet in packets)
             {
-                switch (packet.Command)
-                {
-                    case ReaderCommand.TagInventory:
-                        switch (packet.Status)
-                        {
-                            case ResponseStatusCode.InventoryTimeout:
-                            case ResponseStatusCode.InventoryMoreFramesPending:
-                            case ResponseStatusCode.InventoryBufferOverflow:
-                            case ResponseStatusCode.InventoryComplete:
-                                ReadInventoryResult(packet);
-                                continue;
-                            case ResponseStatusCode.InventoryStatisticsDelivery:
-                                ReadInventoryStatistics(packet);
-                                continue;
-                        }
-                        break;
-                    case ReaderCommand.TagInventoryWithMemoryBuffer:
-                        switch (packet.Status)
-                        {
-                            case ResponseStatusCode.Success:
-                                ReadBufferResponse(packet);
-                                continue;
-                        }
-                        break;
-                }
-                throw new UnexpectedResponseException(packet.Command, packet.Status);
+                RoutePacket(packet);
             }
+        }
+
+        void RoutePacket(ResponseDataPacket packet)
+        {
+            switch (packet.Command)
+            {
+                case ReaderCommand.TagInventory:
+                    switch (packet.Status)
+                    {
+                        case ResponseStatusCode.InventoryTimeout:
+                        case ResponseStatusCode.InventoryMoreFramesPending:
+                        case ResponseStatusCode.InventoryBufferOverflow:
+                        case ResponseStatusCode.InventoryComplete:
+                            ReadInventoryResult(packet);
+                            return;
+                        case ResponseStatusCode.InventoryStatisticsDelivery:
+                            ReadInventoryStatistics(packet);
+                            return;
+                    }
+                    break;
+                case ReaderCommand.TagInventoryWithMemoryBuffer:
+                    switch (packet.Status)
+                    {
+                        case ResponseStatusCode.Success:
+                            ReadBufferResponse(packet);
+                            return;
+                    }
+                    break;
+            }
+            throw new UnexpectedResponseException(packet.Command, packet.Status);
         }
 
         void ReadBufferResponse(ResponseDataPacket packet)
         {
+            Elapsed += packet.Elapsed;
             var offset = ResponseDataPacket.DataOffset;
             TagsInBuffer = (ushort)(packet.RawData[offset++] << 8);
             TagsInBuffer += packet.RawData[offset++];
@@ -113,6 +122,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
         void ReadInventoryResult(ResponseDataPacket packet)
         {
+            Elapsed += packet.Elapsed;
             var antenna = ((AntennaConfiguration) packet.RawData[ResponseDataPacket.DataOffset]).ToNumber();
             var epcIdCount = packet.RawData[ResponseDataPacket.DataOffset + 1];
             var offset = ResponseDataPacket.DataOffset + 2;

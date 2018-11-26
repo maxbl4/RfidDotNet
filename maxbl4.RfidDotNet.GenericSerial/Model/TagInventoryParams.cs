@@ -18,7 +18,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         /// <summary>
         /// Reader specific flags
         /// </summary>
-        public TagInventoryQFlags QFlags { get; set; }
+        public QFlags QFlags { get; set; }
 
         public SessionValue Session { get; set; } = DefaultSession;
 
@@ -81,22 +81,5 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
     {
         A = 0x0,
         B = 0x1
-    }
-
-    [Flags]
-    public enum TagInventoryQFlags : byte
-    {
-        RequestStatisticsPacket = 0b1000_0000,
-        SpecialStrategy = 0b0100_0000,
-        ImpinjFastId = 0b0010_0000
-    }
-
-    public enum SessionValue : byte
-    {
-        S0 = 0x0,
-        S1 = 0x1,
-        S2 = 0x2,
-        S3 = 0x3,
-        UseSmartConfiguration = 0xff
     }
 }

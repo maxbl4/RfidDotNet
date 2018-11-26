@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,9 +17,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
     public class MessageParser
     {
         private static readonly ILogger Logger = Log.ForContext<MessageParser>();
-        public static async Task<PacketResult> ReadPacket(Stream stream)
+        public static async Task<PacketResult> ReadPacket(Stream stream, Stopwatch sw = null)
         {
             Logger.Debug("ReadPacket read packet length (1 byte)");
+            if (sw == null)
+                sw = Stopwatch.StartNew();
             var packetLength = stream.ReadByte();
             Logger.Debug("ReadPacket packetLength={packetLength}", packetLength);
             if (packetLength < 0)
@@ -40,6 +43,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
 
                 totalRead += read;
             }
+            sw.Stop();
 
             if (!Crc16.CheckCrc16(data))
             {
@@ -48,14 +52,22 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
             }
             
             Logger.Debug($"ReadPacket success: {data.ToHexString(" ")}");
-            return PacketResult.FromData(data);
+            return PacketResult.FromData(data, sw.Elapsed);
         }
 
         public static bool ShouldReadMore(ResponseDataPacket responseDataPacket)
         {
-            var response = responseDataPacket.Command == ReaderCommand.TagInventory
-                && (responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending
-                    || responseDataPacket.Status == ResponseStatusCode.InventoryStatisticsDelivery);
+            bool response = false;
+            switch (responseDataPacket.Command)
+            {
+                case ReaderCommand.TagInventory:
+                    response = responseDataPacket.Status == ResponseStatusCode.InventoryMoreFramesPending
+                               || responseDataPacket.Status == ResponseStatusCode.InventoryStatisticsDelivery;
+                    break;
+                case ReaderCommand.RealtimeInventoryResponse:
+                    response = true;
+                    break;
+            }
             Logger.Debug("{ShouldReadMore}", response);
             return response;
         }
