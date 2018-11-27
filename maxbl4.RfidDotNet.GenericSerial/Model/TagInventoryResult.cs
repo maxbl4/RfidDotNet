@@ -60,9 +60,21 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
     public class TagInventoryResult
     {
+        /// <summary>
+        /// Cumulative time it took to receive all responses from reader.
+        /// </summary>
         public TimeSpan Elapsed { get; private set; } = TimeSpan.Zero;
-        public bool IsHeartbeat { get; private set; }
+        /// <summary>
+        /// Count of packets received from reader in response to TagInventory command
+        /// </summary>
+        public int PacketCount { get; private set; }
+        /// <summary>
+        /// Number of tags in buffer returned by TagInventoryWithMemoryBuffer command
+        /// </summary>
         public ushort TagsInBuffer { get; private set; }
+        /// <summary>
+        /// Number of tags in last inventory returned by TagInventoryWithMemoryBuffer command
+        /// </summary>
         public ushort TagsInLastInventory { get; private set;}
         public List<Tag> Tags { get; } = new List<Tag>();
 
@@ -85,6 +97,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
                         case ResponseStatusCode.InventoryMoreFramesPending:
                         case ResponseStatusCode.InventoryBufferOverflow:
                         case ResponseStatusCode.InventoryComplete:
+                            PacketCount++;
                             ReadInventoryResult(packet);
                             return;
                         case ResponseStatusCode.InventoryStatisticsDelivery:
@@ -117,7 +130,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
         void ReadInventoryStatistics(ResponseDataPacket packet)
         {
-            throw new NotImplementedException();
+            
         }
 
         void ReadInventoryResult(ResponseDataPacket packet)
