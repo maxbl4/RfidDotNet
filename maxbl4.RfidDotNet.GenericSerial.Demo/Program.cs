@@ -65,6 +65,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
         {
+            reader.SetAntennaCheck(false).Wait();
+            reader.SetAntennaConfiguration((AntennaConfiguration)demoArgs.Antenna).Wait();
             reader.SetDrmEnabled(demoArgs.EnableDrmMode).Wait();
             reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
             {

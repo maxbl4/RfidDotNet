@@ -46,6 +46,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         public bool EnableDrmMode { get; set; }
         [ArgDefaultValue("")]
         public string TagIdFilter { get; set; }
+        [ArgDefaultValue(1)]
+        public byte Antenna { get; set; }
     }
 
     public enum InventoryType
