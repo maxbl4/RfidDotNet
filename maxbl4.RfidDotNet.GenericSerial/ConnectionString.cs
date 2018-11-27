@@ -11,6 +11,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public string Hostname { get; set; }
         public int TcpPort { get; set; }
         public string SerialPort { get; set; }
+        public int SerialBaudRate { get; set; } = 57600;
         public ConnectionType Type { get; set; }
 
         public IDataStreamFactory Connect()
@@ -18,7 +19,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             switch (Type)
             {
                 case ConnectionType.Serial:
-                    return new SerialPortFactory(SerialPort);
+                    return new SerialPortFactory(SerialPort, SerialBaudRate);
                 case ConnectionType.Network:
                     return new NetworkStreamFactory(Hostname, TcpPort);
                 default:

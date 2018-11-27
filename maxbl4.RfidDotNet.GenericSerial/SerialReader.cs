@@ -140,15 +140,16 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 (byte)mode));
             return responses.First().GetDrmEnabled();
         }
-        
+
         /// <summary>
         /// Change reader serial baud rate. After calling this method, you should reconnect using new baud
         /// </summary>
         /// <param name="baud"></param>
+        /// <param name="forceOverNetwork"></param>
         /// <returns></returns>
-        public async Task SetSerialBaudRate(BaudRates baud)
+        public async Task SetSerialBaudRate(BaudRates baud, bool forceOverNetwork = false)
         {
-            if (streamFactory is NetworkStreamFactory)
+            if (!forceOverNetwork && streamFactory is NetworkStreamFactory)
                 throw new InvalidOperationException($"You should not change baud rate of the reader connected over the network. " +
                                                     $"While this is possible, most probably you will loose connectivity to reader" +
                                                     $"until you make manual changes on the network host");

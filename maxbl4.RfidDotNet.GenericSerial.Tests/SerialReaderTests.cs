@@ -320,9 +320,23 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 var info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud115200).Wait();
+                connection.BaudRate.ShouldBe(115200);
                 info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud57600).Wait();
+                connection.BaudRate.ShouldBe(57600);
                 info = r.GetReaderInfo().Result;
+            }
+        }
+        
+        [SkippableTheory]
+        [InlineData(ConnectionType.Network)]
+        public void Should_change_serial_baud_and_update_connection_over_network(ConnectionType connectionType)
+        {
+            using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
+            {
+                var info = r.GetReaderInfo().Result;
+                r.SetSerialBaudRate(BaudRates.Baud115200, true).Wait();
+                Assert.ThrowsAnyAsync<Exception>(() => r.GetReaderInfo()).Wait();
             }
         }
         

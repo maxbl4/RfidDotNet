@@ -30,6 +30,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         [ArgDescription("Temperature in celsius above which inventory will be stopped to prevent thermal damage")]
         [ArgDefaultValue(60)]
         public int ThermalLimit { get; set; }
+        
+        [ArgDefaultValue(57600)]
+        public int SerialBaudRate { get; set; }
 
         [ArgDefaultValue(4)]
         public byte QValue { get; set; }
@@ -41,6 +44,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         public int StatsSamplingInterval { get; set; }
         [ArgDefaultValue(false)]
         public bool EnableDrmMode { get; set; }
+        [ArgDefaultValue("")]
+        public string TagIdFilter { get; set; }
     }
 
     public enum InventoryType
