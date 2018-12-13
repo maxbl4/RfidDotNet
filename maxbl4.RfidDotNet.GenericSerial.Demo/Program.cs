@@ -66,7 +66,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
         {
             reader.SetAntennaCheck(false).Wait();
-            reader.SetAntennaConfiguration((AntennaConfiguration)demoArgs.Antenna).Wait();
+            reader.SetAntennaConfiguration((GenAntennaConfiguration)demoArgs.Antenna).Wait();
             reader.SetDrmEnabled(demoArgs.EnableDrmMode).Wait();
             reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
             {
@@ -198,7 +198,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
             var info = reader.GetReaderInfo().Result;
             Console.WriteLine("Model: {0}", info.Model);
             Console.WriteLine("FirmwareVersion: {0}", info.FirmwareVersion);
-            Console.WriteLine("AntennaConfiguration: {0}", info.AntennaConfiguration);
+            Console.WriteLine("AntennaConfiguration: {0}", info.GenAntennaConfiguration);
             Console.WriteLine("SupportedProtocols: {0}", info.SupportedProtocols);
             Console.WriteLine("RFPower: {0}", info.RFPower);
             Console.WriteLine("InventoryScanInterval: {0}", info.InventoryScanInterval);

@@ -73,7 +73,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
                                                    $"expected {ResponseStatusCode.Success}", RawData);
 
             var offset = DataOffset;
-            var ant = ((AntennaConfiguration)RawData[offset++]).ToNumber();
+            var ant = ((GenAntennaConfiguration)RawData[offset++]).ToNumber();
             var epcLength = RawData[offset++];
             if (DataLength != baseDataLength + epcLength)
                 throw new MalformedPacketException($"Got realtime tag report with inconsistent epc length {epcLength}, " +

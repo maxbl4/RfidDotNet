@@ -209,7 +209,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
-        public async Task SetAntennaConfiguration(AntennaConfiguration configuration)
+        public async Task SetAntennaConfiguration(GenAntennaConfiguration configuration)
         {
             var responses = await SendReceive(CommandDataPacket.SetAntennaConfiguration(configuration));
             responses.First().CheckSuccess();

@@ -64,7 +64,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return new CommandDataPacket(ReaderCommand.SetEpcLengthForBufferOperations, (byte)epcLength);
         }
         
-        public static CommandDataPacket SetAntennaConfiguration(AntennaConfiguration configuration)
+        public static CommandDataPacket SetAntennaConfiguration(GenAntennaConfiguration configuration)
         {
             return new CommandDataPacket(ReaderCommand.SetAntennaConfiguration, (byte)configuration);
         }

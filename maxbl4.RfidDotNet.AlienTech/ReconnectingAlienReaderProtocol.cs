@@ -4,6 +4,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
@@ -11,10 +12,11 @@ using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech
 {
-    public class ReconnectingAlienReaderProtocol : IDisposable
+    public class ReconnectingAlienReaderProtocol : IUniversalTagStream
     {
+        private readonly ConnectionString connectionString;
         static readonly ILogger Logger = Log.ForContext<ReconnectingAlienReaderProtocol>();
-        private readonly IPEndPoint endpoint;
+        private readonly DnsEndPoint endpoint;
         private readonly Func<IAlienReaderApi, Task> onConnected;
         private readonly int keepAliveTimeout;
         private readonly int receiveTimeout;
@@ -22,16 +24,69 @@ namespace maxbl4.RfidDotNet.AlienTech
         public bool AutoReconnect { get; set; }
         private Subject<Tag> tags = new Subject<Tag>();
         public IObservable<Tag> Tags => tags;
+        private Subject<Exception> errors = new Subject<Exception>();
+        public IObservable<Exception> Errors => errors;
+        private BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
+        public IObservable<bool> Connected => connected;
+        public Task Start()
+        {
+            return Connect();
+        }
+
+        public Task Stop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> QValue(int? newValue = null)
+        {
+            return Current.Api.AcqG2Q(newValue);
+        }
+
+        public Task<int> Session(int? newValue = null)
+        {
+            return Current.Api.AcqG2Session(newValue);
+        }
+
+        public Task<int> RFPower(int? newValue = null)
+        {
+            return Current.Api.RFLevel(newValue);
+        }
+
+        public async Task<AntennaConfiguration> AntennaConfiguration(AntennaConfiguration? newValue = null)
+        {
+            return (await Current.Api.AntennaSequence(newValue.ToAlienAntennaSequence())).ParseAlienAntennaSequence();
+        }
+
         private AlienReaderProtocol proto = null;
         public AlienReaderProtocol Current => proto;
         public int ReconnectTimeout { get; set; } = 2000;
         readonly SerialDisposable reconnectDisposable = new SerialDisposable();
 
-        private readonly Subject<ConnectionStatus> connectionStatus = new Subject<ConnectionStatus>();
-        public IObservable<ConnectionStatus> ConnectionStatus => connectionStatus;
+        private string login = "alien";
+        private string password = "password";
         public bool IsConnected => proto?.IsConnected == true;
-        
-        public ReconnectingAlienReaderProtocol(IPEndPoint endpoint, Func<IAlienReaderApi, Task> onConnected,
+
+        public ReconnectingAlienReaderProtocol(ConnectionString connectionString)
+        {
+            this.connectionString = connectionString;
+            endpoint = this.connectionString.EndPoint;
+            keepAliveTimeout = AlienReaderProtocol.DefaultKeepaliveTimeout;
+            receiveTimeout = AlienReaderProtocol.DefaultReceiveTimeout;
+            usePolling = true;
+            login = connectionString.Login;
+            password = connectionString.Password;
+            onConnected = async api =>
+            {
+                await api.AcqG2Q(this.connectionString.QValue);
+                await api.AcqG2Session(this.connectionString.Session);
+                await api.RFModulation(RFModulation.HS);
+                await api.RFLevel(this.connectionString.RFPower);
+                await api.AntennaSequence(this.connectionString.AntennaConfiguration.ToAlienAntennaSequence());
+            };
+        }
+
+        public ReconnectingAlienReaderProtocol(DnsEndPoint endpoint, Func<IAlienReaderApi, Task> onConnected,
             int keepAliveTimeout = AlienReaderProtocol.DefaultKeepaliveTimeout, 
             int receiveTimeout = AlienReaderProtocol.DefaultReceiveTimeout, bool usePolling = true)
         {
@@ -50,7 +105,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             {
                 proto?.Dispose();
                 var arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
-                await arp.ConnectAndLogin(endpoint.Address.ToString(), endpoint.Port, "alien", "password");
+                await arp.ConnectAndLogin(endpoint.Host, endpoint.Port, login, password);
                 if (usePolling)
                     await arp.StartTagPolling(tags);
                 else
@@ -61,14 +116,15 @@ namespace maxbl4.RfidDotNet.AlienTech
                 else
                 {
                     proto = arp;
-                    Logger.Swallow(() => connectionStatus.OnNext(new ConnectedEvent()));
+                    Logger.Swallow(() => connected.OnNext(true));
                 }
             }
             catch (Exception ex)
             {
                 Logger.Warning("Could not connect to {endpoint} {ex}", endpoint, ex);
                 ScheduleReconnect();
-                Logger.Swallow(() => connectionStatus.OnNext(new FailedToConnect(ex)));
+                errors.OnNext(ex);
+                Logger.Swallow(() => connected.OnNext(false));
             }
 
             try
@@ -79,14 +135,15 @@ namespace maxbl4.RfidDotNet.AlienTech
             catch (Exception ex)
             {
                 Logger.Warning(ex, "OnConnected handler failed {ex}");
-                Logger.Swallow(() => connectionStatus.OnNext(new FailedToConnect(ex)));
+                errors.OnNext(ex);
+                Logger.Swallow(() => connected.OnNext(false));
             }
         }
 
         private void ScheduleReconnect(bool report = false)
         {
             if (report)
-                Logger.Swallow(() => connectionStatus.OnNext(new DisconnectedEvent()));
+                Logger.Swallow(() => connected.OnNext(false));
             reconnectDisposable.Disposable = Observable.Timer(TimeSpan.FromMilliseconds(ReconnectTimeout))
                 .Subscribe(x => Connect());
         }

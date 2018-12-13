@@ -43,7 +43,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 
         Tag ReadEpcId(byte[] buffer, ref int offset)
         {
-            var antenna = ((AntennaConfiguration) buffer[offset++]).ToNumber();
+            var antenna = ((GenAntennaConfiguration) buffer[offset++]).ToNumber();
             var epcLength = buffer[offset++];
             var epc = new StringBuilder(epcLength * 2);
             for (var i = 0; i < epcLength; i++)
@@ -136,7 +136,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         void ReadInventoryResult(ResponseDataPacket packet)
         {
             Elapsed += packet.Elapsed;
-            var antenna = ((AntennaConfiguration) packet.RawData[ResponseDataPacket.DataOffset]).ToNumber();
+            var antenna = ((GenAntennaConfiguration) packet.RawData[ResponseDataPacket.DataOffset]).ToNumber();
             var epcIdCount = packet.RawData[ResponseDataPacket.DataOffset + 1];
             var offset = ResponseDataPacket.DataOffset + 2;
             for (var i = 0; i < epcIdCount; i++)

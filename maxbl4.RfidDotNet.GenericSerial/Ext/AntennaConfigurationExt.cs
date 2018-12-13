@@ -5,17 +5,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Ext
 {
     public static class AntennaConfigurationExt
     {
-        public static int ToNumber(this AntennaConfiguration config)
+        public static int ToNumber(this GenAntennaConfiguration config)
         {
             switch (config)
             {
-                case AntennaConfiguration.Antenna1:
+                case GenAntennaConfiguration.Antenna1:
                     return 0;
-                case AntennaConfiguration.Antenna2:
+                case GenAntennaConfiguration.Antenna2:
                     return 1;
-                case AntennaConfiguration.Antenna3:
+                case GenAntennaConfiguration.Antenna3:
                     return 2;
-                case AntennaConfiguration.Antenna4:
+                case GenAntennaConfiguration.Antenna4:
                     return 3;
                 default:
                     return (int)config;
