@@ -29,6 +29,41 @@ namespace maxbl4.RfidDotNet.Tests
         }
         
         [Fact]
+        public void Should_validate_unknown_protocol()
+        {
+            var cs = ConnectionString.Parse(@"");
+            cs.IsValid(out var msg).ShouldBeFalse();
+            msg.ShouldStartWith("Unknown protocol type");
+        }
+        
+        [Fact]
+        public void Should_validate_alien_protocol()
+        {
+            var cs = ConnectionString.Parse(@"protocoltype=alien");
+            cs.ProtocolType.ShouldBe(ReaderProtocolType.Alien);
+            cs.IsValid(out var msg).ShouldBeFalse();
+            msg.ShouldBe(@"Alien protocol requires TcpHost
+Alien protocol requires valid TcpPort");
+        }
+        
+        [Fact]
+        public void Should_validate_generic_protocol()
+        {
+            var cs = ConnectionString.Parse(@"protocoltype=genericSerial");
+            cs.ProtocolType.ShouldBe(ReaderProtocolType.GenericSerial);
+            cs.IsValid(out var msg).ShouldBeFalse();
+            msg.ShouldBe(@"Generic protocol requires SerialPortName or TcpHost");
+            cs.SerialPortName = "COM4";
+            cs.SerialBaudRate = 0;
+            cs.IsValid(out msg).ShouldBeFalse();
+            msg.ShouldBe(@"Generic protocol requires SerialBaudRate with SerialPortName");
+            cs.SerialPortName = null;
+            cs.TcpHost = "host";
+            cs.IsValid(out msg).ShouldBeFalse();
+            msg.ShouldBe(@"Generic protocol requires TcpPort with TcpHost");
+        }
+        
+        [Fact]
         public void Enum_should_parse_or_values()
         {
             AntennaConfiguration res;

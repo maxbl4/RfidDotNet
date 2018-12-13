@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,12 +10,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Ext
     {
         public static string ToAlienAntennaSequence(this AntennaConfiguration conf)
         {
-            var sb = new StringBuilder(10);
-            if ((conf & AntennaConfiguration.Antenna1) != 0) sb.Append("0 ");
-            if ((conf & AntennaConfiguration.Antenna2) != 0) sb.Append("1 ");
-            if ((conf & AntennaConfiguration.Antenna3) != 0) sb.Append("2 ");
-            if ((conf & AntennaConfiguration.Antenna4) != 0) sb.Append("3 ");
-            return sb.ToString();
+            var sb = new List<char>(4);
+            if ((conf & AntennaConfiguration.Antenna1) != 0) sb.Add('0');
+            if ((conf & AntennaConfiguration.Antenna2) != 0) sb.Add('1');
+            if ((conf & AntennaConfiguration.Antenna3) != 0) sb.Add('2');
+            if ((conf & AntennaConfiguration.Antenna4) != 0) sb.Add('3');
+            return string.Join(" ", sb);
         }
         
         public static string ToAlienAntennaSequence(this AntennaConfiguration? conf)

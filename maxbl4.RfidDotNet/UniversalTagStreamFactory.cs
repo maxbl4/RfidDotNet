@@ -23,6 +23,8 @@ namespace maxbl4.RfidDotNet
         {
             if (!implementations.ContainsKey(connectionString.ProtocolType))
                 throw new ArgumentOutOfRangeException(nameof(connectionString), $"No implementation for {connectionString.ProtocolType} registered");
+            if (!connectionString.IsValid(out var msg))
+                throw new ArgumentException(msg, nameof(connectionString));
             var implType = implementations[connectionString.ProtocolType];
             return (IUniversalTagStream)Activator.CreateInstance(implType, connectionString);
         }
