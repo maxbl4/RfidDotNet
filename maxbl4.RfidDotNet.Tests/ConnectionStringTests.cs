@@ -71,5 +71,16 @@ Alien protocol requires valid TcpPort");
                 .ShouldBe(true);
             res.ShouldBe(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2);
         }
+        
+        [Fact]
+        public void Should_clone_connection_string()
+        {
+            var cs1 = new ConnectionString{ProtocolType = ReaderProtocolType.Alien, TcpHost = "host", TcpPort = 111};
+            var cs2 = cs1.Clone();
+            cs2.ShouldNotBeSameAs(cs1);
+            cs2.ProtocolType.ShouldBe(ReaderProtocolType.Alien);
+            cs2.TcpHost.ShouldBe("host");
+            cs2.TcpPort.ShouldBe(111);
+        }
     }
 }

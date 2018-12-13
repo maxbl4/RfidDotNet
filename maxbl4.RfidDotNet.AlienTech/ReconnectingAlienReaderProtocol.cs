@@ -40,21 +40,25 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         public Task<int> QValue(int? newValue = null)
         {
+            if (newValue != null) connectionString.QValue = newValue.Value;
             return Current.Api.AcqG2Q(newValue);
         }
 
         public Task<int> Session(int? newValue = null)
         {
+            if (newValue != null) connectionString.Session = newValue.Value;
             return Current.Api.AcqG2Session(newValue);
         }
 
         public Task<int> RFPower(int? newValue = null)
         {
+            if (newValue != null) connectionString.RFPower = newValue.Value;
             return Current.Api.RFLevel(newValue);
         }
 
         public async Task<AntennaConfiguration> AntennaConfiguration(AntennaConfiguration? newValue = null)
         {
+            if (newValue != null) connectionString.AntennaConfiguration = newValue.Value;
             return (await Current.Api.AntennaSequence(newValue.ToAlienAntennaSequence())).ParseAlienAntennaSequence();
         }
 
@@ -67,10 +71,11 @@ namespace maxbl4.RfidDotNet.AlienTech
         private string password = "password";
         public bool IsConnected => proto?.IsConnected == true;
 
-        public ReconnectingAlienReaderProtocol(ConnectionString connectionString)
+        // ReSharper disable once UnusedMember.Global
+        public ReconnectingAlienReaderProtocol(ConnectionString cs)
         {
-            this.connectionString = connectionString;
-            endpoint = this.connectionString.EndPoint;
+            connectionString = cs.Clone();
+            endpoint = connectionString.EndPoint;
             keepAliveTimeout = AlienReaderProtocol.DefaultKeepaliveTimeout;
             receiveTimeout = AlienReaderProtocol.DefaultReceiveTimeout;
             usePolling = true;
@@ -78,11 +83,11 @@ namespace maxbl4.RfidDotNet.AlienTech
             password = connectionString.Password;
             onConnected = async api =>
             {
-                await api.AcqG2Q(this.connectionString.QValue);
-                await api.AcqG2Session(this.connectionString.Session);
+                await api.AcqG2Q(connectionString.QValue);
+                await api.AcqG2Session(connectionString.Session);
                 await api.RFModulation(RFModulation.HS);
-                await api.RFLevel(this.connectionString.RFPower);
-                await api.AntennaSequence(this.connectionString.AntennaConfiguration.ToAlienAntennaSequence());
+                await api.RFLevel(connectionString.RFPower);
+                await api.AntennaSequence(connectionString.AntennaConfiguration.ToAlienAntennaSequence());
             };
         }
 

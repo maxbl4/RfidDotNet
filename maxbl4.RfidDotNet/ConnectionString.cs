@@ -143,5 +143,10 @@ namespace maxbl4.RfidDotNet
             message = string.Join(Environment.NewLine, errors);
             return string.IsNullOrEmpty(message);
         }
+
+        public ConnectionString Clone()
+        {
+            return (ConnectionString)this.MemberwiseClone();
+        }
     }
 }
