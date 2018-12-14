@@ -9,7 +9,6 @@ namespace maxbl4.RfidDotNet
         IObservable<Exception> Errors { get; }
         IObservable<bool> Connected { get; }
         Task Start();
-        Task Stop();
         Task<int> QValue(int? newValue = null);
         Task<int> Session(int? newValue = null);
         Task<int> RFPower(int? newValue = null);

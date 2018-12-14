@@ -8,7 +8,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
     {
         [ArgPosition(0)]
         [ArgDescription("How to connect to reader: " +
-                        "\tserial://COM4 or serial:///dev/ttyS2" +
+                        "\tprotocolType=GenericSerial;SerialPortName=COM4 or protocolType=GenericSerial;SerialPortName=/dev/ttyS2" +
                         "\ttcp://my_host:1234")]
         public string ConnectionString { get; set; }
         
@@ -18,11 +18,6 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         [ArgDefaultValue(InventoryType.Poll)]
         public InventoryType Inventory { get; set; }
         
-        [ArgDescription("Set RF power for inventory. Valid range depends on reader model, typical range 0 to 30")]
-        [ArgRange(0, 30)]
-        [ArgDefaultValue(10)]
-        public byte RFPower { get; set; }
-        
         [ArgDescription("Wait for user confirmation before starting inventory")]
         [ArgDefaultValue(false)]
         public bool Confirm { get; set; }
@@ -31,23 +26,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         [ArgDefaultValue(60)]
         public int ThermalLimit { get; set; }
         
-        [ArgDefaultValue(57600)]
-        public int SerialBaudRate { get; set; }
-
-        [ArgDefaultValue(4)]
-        public byte QValue { get; set; }
-        [ArgDefaultValue((byte)0)]
-        public byte Session { get; set; }
-        [ArgDefaultValue(2000)]
-        public int ScanInterval { get; set; }
         [ArgDefaultValue(1000)]
         public int StatsSamplingInterval { get; set; }
         [ArgDefaultValue(false)]
         public bool EnableDrmMode { get; set; }
         [ArgDefaultValue("")]
         public string TagIdFilter { get; set; }
-        [ArgDefaultValue(1)]
-        public byte Antenna { get; set; }
     }
 
     public enum InventoryType

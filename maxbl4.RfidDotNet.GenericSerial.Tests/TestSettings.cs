@@ -17,7 +17,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
 
         public IDataStreamFactory GetConnection(ConnectionType type = ConnectionType.Any, BaudRates baudRate = BaudRates.Baud57600)
         {
-            ConnectionString cs = null;
+            SerialConnectionString cs = null;
             switch (type)
             {
                 case ConnectionType.Any:
@@ -33,13 +33,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
 
             if (cs != null)
             {
-                switch (cs.Type)
-                {
-                    case ConnectionType.Serial:
-                        return new SerialPortFactory(cs.SerialPort, baudRate.ToNumber());
-                    case ConnectionType.Network:
-                        return new NetworkStreamFactory(cs.Hostname, cs.TcpPort);
-                }
+                return cs.Connect();
             }
             
             Skip.If(true);
@@ -47,8 +41,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             return null;
         }
 
-        public IEnumerable<ConnectionString> GetConnectionStrings() =>
-            ConnectionStrings.Split(new []{';'}, StringSplitOptions.RemoveEmptyEntries).Select(ConnectionString.Parse);
+        public IEnumerable<SerialConnectionString> GetConnectionStrings() =>
+            ConnectionStrings.Split(new []{'|'}, StringSplitOptions.RemoveEmptyEntries).Select(x => new SerialConnectionString(ConnectionString.Parse(x)));
 
         public IEnumerable<string> GetKnownTagIds => string.IsNullOrWhiteSpace(KnownTagIds)
             ? new string[0]

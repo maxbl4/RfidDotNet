@@ -10,7 +10,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         public FrequencyConfiguration FrequencyConfiguration { get; }
         public byte RFPower { get; }
         public TimeSpan InventoryScanInterval { get; }
-        public GenAntennaConfiguration GenAntennaConfiguration { get; }
+        public GenAntennaConfiguration AntennaConfiguration { get; }
         public bool BuzzerEnabled { get; }
         public bool AntennaCheck { get; }
 
@@ -23,7 +23,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
             FrequencyConfiguration = new FrequencyConfiguration(data, offset + 4);
             RFPower = data[offset + 6];
             InventoryScanInterval = TimeSpan.FromMilliseconds(data[offset + 7] * 100);
-            GenAntennaConfiguration = (GenAntennaConfiguration)data[offset + 8];
+            AntennaConfiguration = (GenAntennaConfiguration)data[offset + 8];
             BuzzerEnabled = data[offset + 9] > 0;
             // 10 is reserved
             AntennaCheck = (data[offset + 11] & 1) > 0;

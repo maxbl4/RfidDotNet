@@ -10,6 +10,7 @@ namespace maxbl4.RfidDotNet
         public const int DefaultQValue = 3;
         public const int DefaultSession = 0;
         public const int DefaultRFPower = 10;
+        public const int DefaultInventoryIntervalMs = 2000;
         public const AntennaConfiguration DefaultAntenna = AntennaConfiguration.Antenna1;
         public const string DefaultLogin = "alien";
         public const string DefaultPassword = "password";
@@ -26,6 +27,7 @@ namespace maxbl4.RfidDotNet
         public string SerialPortName { get; set; }
         public int SerialBaudRate { get; set; } = DefaultBaudRate;
         
+        public int InventoryDuration { get; set; } = DefaultInventoryIntervalMs;
         public int QValue { get; set; } = DefaultQValue;
         public int Session { get; set; } = DefaultSession;
         public int RFPower { get; set; } = DefaultRFPower;
@@ -77,6 +79,13 @@ namespace maxbl4.RfidDotNet
                 }
 
 
+                if (name.Equals(nameof(InventoryDuration), StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!int.TryParse(value, out parsedInt))
+                        throw new FormatException($"Could not parse value {value} for {name}");
+                    cs.QValue = parsedInt;
+                }
+                
                 if (name.Equals(nameof(QValue), StringComparison.OrdinalIgnoreCase))
                 {
                     if (!int.TryParse(value, out parsedInt))
@@ -135,6 +144,7 @@ namespace maxbl4.RfidDotNet
                     message = $"Unknown protocol type {ProtocolType}";
                     return false;
             }
+            if (InventoryDuration < 1 || QValue > 25000) errors.Add($"InventoryDuration must be in range 1-25000 ms, was {InventoryDuration}");
             if (QValue < 1 || QValue > 16) errors.Add($"QValue must be in range 1-16, was {QValue}");
             if (Session < 0 || Session > 4) errors.Add($"Session must be in range 0-4, was {Session}");
             if (RFPower < 0 || RFPower > 33) errors.Add($"RFPower must be in range 0-33, was {RFPower}");

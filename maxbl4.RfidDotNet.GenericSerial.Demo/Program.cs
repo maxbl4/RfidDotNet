@@ -33,11 +33,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
             try
             {
                 var demoArgs = Args.Parse<DemoArgs>(args);
-                if (string.IsNullOrEmpty(demoArgs.ConnectionString))
-                    ShowUsageAndExit();
                 connectionString = ConnectionString.Parse(demoArgs.ConnectionString);
-                connectionString.SerialBaudRate = demoArgs.SerialBaudRate;
-                using (var reader = new SerialReader(connectionString.Connect()))
+                if (!connectionString.IsValid(out var msg))
+                {
+                    Console.WriteLine($"Connection string is invalid: {msg}");
+                    ShowUsageAndExit();
+                }
+
+                using (var reader = new SerialReader(new SerialConnectionString(connectionString).Connect()))
                 {
                     reader.ActivateOnDemandInventoryMode().Wait();
                     ShowBasicReaderInfo(reader, demoArgs);
@@ -65,16 +68,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
         {
+            var cs = ConnectionString.Parse(demoArgs.ConnectionString);
             reader.SetAntennaCheck(false).Wait();
-            reader.SetAntennaConfiguration((GenAntennaConfiguration)demoArgs.Antenna).Wait();
+            reader.SetAntennaConfiguration((GenAntennaConfiguration)cs.AntennaConfiguration).Wait();
             reader.SetDrmEnabled(demoArgs.EnableDrmMode).Wait();
             reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
             {
-                QValue = demoArgs.QValue,
-                Session = (SessionValue)demoArgs.Session,
+                QValue = (byte)cs.QValue,
+                Session = (SessionValue)cs.Session,
                 TagDebounceTime = TimeSpan.Zero
             }).Wait();
-            reader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(demoArgs.ScanInterval)).Wait();
+            reader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(cs.InventoryDuration)).Wait();
         }
 
         static void StartStreaming(SerialReader reader)
@@ -86,6 +90,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void StartPolling(SerialReader reader, DemoArgs demoArgs)
         {
+            var cs = ConnectionString.Parse(demoArgs.ConnectionString);
             Task.Run(async () =>
             {
                 temperatureSubject.OnNext(reader.GetReaderTemperature().Result);
@@ -99,8 +104,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                         var pTime = processingTime.Elapsed;
                         var res = await reader.TagInventory(new TagInventoryParams
                         {
-                            QValue = demoArgs.QValue,
-                            Session = (SessionValue)demoArgs.Session
+                            QValue = (byte)cs.QValue,
+                            Session = (SessionValue)cs.Session
                         });
                         processingTime.Restart();
                         
@@ -193,12 +198,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void ShowBasicReaderInfo(SerialReader reader, DemoArgs args)
         {
-            reader.SetRFPower(args.RFPower).Wait();
+            reader.SetRFPower((byte)ConnectionString.Parse(args.ConnectionString).RFPower).Wait();
             Console.WriteLine("Serial number: {0}", reader.GetSerialNumber().Result);
             var info = reader.GetReaderInfo().Result;
             Console.WriteLine("Model: {0}", info.Model);
             Console.WriteLine("FirmwareVersion: {0}", info.FirmwareVersion);
-            Console.WriteLine("AntennaConfiguration: {0}", info.GenAntennaConfiguration);
+            Console.WriteLine("AntennaConfiguration: {0}", info.AntennaConfiguration);
             Console.WriteLine("SupportedProtocols: {0}", info.SupportedProtocols);
             Console.WriteLine("RFPower: {0}", info.RFPower);
             Console.WriteLine("InventoryScanInterval: {0}", info.InventoryScanInterval);

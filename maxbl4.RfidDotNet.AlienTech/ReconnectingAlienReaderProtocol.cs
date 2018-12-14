@@ -33,11 +33,6 @@ namespace maxbl4.RfidDotNet.AlienTech
             return Connect();
         }
 
-        public Task Stop()
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<int> QValue(int? newValue = null)
         {
             if (newValue != null) connectionString.QValue = newValue.Value;
