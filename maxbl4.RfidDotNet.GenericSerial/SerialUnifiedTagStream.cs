@@ -28,9 +28,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public IObservable<Exception> Errors => errors;
         readonly BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
         public IObservable<bool> Connected => connected;
-        public Task Start()
+        public async Task Start()
         {
-            throw new NotImplementedException();
+            await serialReader.ActivateOnDemandInventoryMode();
+            await serialReader.SetAntennaConfiguration((GenAntennaConfiguration) connectionString.AntennaConfiguration);
+            await serialReader.SetRFPower((byte)connectionString.RFPower);
+            serialReader.Errors.Subscribe(errors);
+            connected.OnNext(true);
         }
 
         public Task<int> QValue(int? newValue = null)

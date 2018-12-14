@@ -4,6 +4,6 @@ namespace maxbl4.RfidDotNet
     {
         None = 0,
         Alien = 1,
-        GenericSerial = 2
+        Serial = 2
     }
 }

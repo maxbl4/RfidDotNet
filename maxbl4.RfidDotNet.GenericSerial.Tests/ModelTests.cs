@@ -1,4 +1,5 @@
 using System;
+using System.Net.NetworkInformation;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using Shouldly;
@@ -49,6 +50,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     OptionalParams = new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(300))
                 }).Serialize();
             res.ShouldBe(SamplesData.TagInventoryWithBufferRequest1);
+        }
+
+        [Fact]
+        public void Should_check_type_of_connection_string()
+        {
+            new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Serial=COM4"))
+                .Type.ShouldBe(ConnectionType.Serial);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Network=host"))
+                .Type.ShouldBe(ConnectionType.Network);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Alien;Network=host"))
+                .Type.ShouldBe(ConnectionType.None);
         }
     }
 }

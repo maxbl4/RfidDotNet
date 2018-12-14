@@ -70,7 +70,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         public ReconnectingAlienReaderProtocol(ConnectionString cs)
         {
             connectionString = cs.Clone();
-            endpoint = connectionString.EndPoint;
+            endpoint = connectionString.Network;
             keepAliveTimeout = AlienReaderProtocol.DefaultKeepaliveTimeout;
             receiveTimeout = AlienReaderProtocol.DefaultReceiveTimeout;
             usePolling = true;
@@ -78,6 +78,8 @@ namespace maxbl4.RfidDotNet.AlienTech
             password = connectionString.Password;
             onConnected = async api =>
             {
+                await api.AcqG2AntennaCombine(true);
+                await api.AcqTime(connectionString.InventoryDuration);
                 await api.AcqG2Q(connectionString.QValue);
                 await api.AcqG2Session(connectionString.Session);
                 await api.RFModulation(RFModulation.HS);

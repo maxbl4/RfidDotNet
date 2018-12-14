@@ -16,12 +16,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             get
             {
-                if (ConnectionString.IsValid(out var msg))
+                if (ConnectionString.IsValid(out var msg) && ConnectionString.Protocol == ReaderProtocolType.Serial)
                 {
-                    if (!string.IsNullOrEmpty(ConnectionString.TcpHost))
+                    if (ConnectionString.Network != null)
                         return ConnectionType.Network;
-                    if (!string.IsNullOrEmpty(ConnectionString.SerialPortName))
-                        return ConnectionType.Network;
+                    if (ConnectionString.Serial != null)
+                        return ConnectionType.Serial;
                 }
                 return ConnectionType.None;
             }
@@ -32,9 +32,9 @@ namespace maxbl4.RfidDotNet.GenericSerial
             switch (Type)
             {
                 case ConnectionType.Serial:
-                    return new SerialPortFactory(ConnectionString.SerialPortName, ConnectionString.SerialBaudRate);
+                    return new SerialPortFactory(ConnectionString.Serial.Port, ConnectionString.Serial.BaudRate);
                 case ConnectionType.Network:
-                    return new NetworkStreamFactory(ConnectionString.TcpHost, ConnectionString.TcpPort);
+                    return new NetworkStreamFactory(ConnectionString.Network);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
