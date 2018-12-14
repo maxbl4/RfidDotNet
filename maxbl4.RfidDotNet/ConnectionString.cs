@@ -8,10 +8,10 @@ namespace maxbl4.RfidDotNet
 {
     public class ConnectionString
     {
-        public const int DefaultNetworkPort = 25;
+        public const int DefaultNetworkPort = 23;
         public const int DefaultBaudRate = 57600;
         public const int DefaultQValue = 3;
-        public const int DefaultSession = 1;
+        public const int DefaultSession = 0;
         public const int DefaultThermalLimit = 60;
         public const int DefaultRFPower = 10;
         public const int DefaultInventoryIntervalMs = 3000;
@@ -140,7 +140,7 @@ namespace maxbl4.RfidDotNet
             if (InventoryDuration < 1 || QValue > 25000) errors.Add($"InventoryDuration must be in range 1-25000 ms, was {InventoryDuration}");
             if (QValue < 1 || QValue > 16) errors.Add($"QValue must be in range 1-16, was {QValue}");
             if (Session < 0 || Session > 4) errors.Add($"Session must be in range 0-4, was {Session}");
-            if (RFPower < 0 || RFPower > 33) errors.Add($"RFPower must be in range 0-33, was {RFPower}");
+            if (RFPower <= 0 ) errors.Add($"RFPower must be greater than 0");
             if (AntennaConfiguration == AntennaConfiguration.Nothing) errors.Add($"AntennaConfiguration must set at least one antenna");
 
             message = string.Join(Environment.NewLine, errors);
@@ -157,7 +157,7 @@ namespace maxbl4.RfidDotNet
             var sb = new StringBuilder();
             sb.Append($"{nameof(Protocol)}={Protocol};");
             if (Network != null)
-                sb.Append($"{nameof(Network)}={Network};");
+                sb.Append($"{nameof(Network)}={Network.Host}:{Network.Port};");
             if (Serial != null)
                 sb.Append($"{nameof(Serial)}={Serial};");
             if (Login != DefaultLogin)
@@ -171,7 +171,5 @@ namespace maxbl4.RfidDotNet
             sb.Append($"{nameof(InventoryDuration)}={InventoryDuration};");
             return sb.ToString();
         }
-        
-        
     }
 }
