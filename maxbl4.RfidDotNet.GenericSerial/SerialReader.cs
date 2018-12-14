@@ -168,15 +168,22 @@ namespace maxbl4.RfidDotNet.GenericSerial
         /// <summary>
         /// Try to put reader into Query/Answer mode
         /// </summary>
-        public async Task ActivateOnDemandInventoryMode()
+        public async Task ActivateOnDemandInventoryMode(bool ignoreError = false)
         {
             realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
-            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
-            if (resp == null)
-                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
-            resp.CheckSuccess();
+            try
+            {
+                var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+                if (resp == null)
+                    throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+                resp.CheckSuccess();
+            }
+            catch
+            {
+                if (!ignoreError) throw;
+            }
         }
 
         public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)

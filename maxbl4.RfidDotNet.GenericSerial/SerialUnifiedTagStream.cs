@@ -12,9 +12,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
 {
     public class SerialUnifiedTagStream : IUniversalTagStream
     {
-        private ConnectionString connectionString;
-        private SerialReader serialReader;
-        ConcurrentQueue<TagInventoryResult> inventoryResults = new ConcurrentQueue<TagInventoryResult>();
+        private readonly ConnectionString connectionString;
+        private readonly SerialReader serialReader;
+        readonly ConcurrentQueue<TagInventoryResult> inventoryResults = new ConcurrentQueue<TagInventoryResult>();
+
+        public const int DefaultTemperatureLimitCheckInterval = 30000;
+        public int TemperatureLimitCheckInterval { get; set; } = DefaultTemperatureLimitCheckInterval;
 
         public SerialUnifiedTagStream(ConnectionString cs)
         {
@@ -39,9 +42,15 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public IObservable<bool> Connected => connected;
         public async Task Start()
         {
-            await serialReader.ActivateOnDemandInventoryMode();
-            await serialReader.SetAntennaConfiguration((GenAntennaConfiguration) connectionString.AntennaConfiguration);
+            await serialReader.ActivateOnDemandInventoryMode(true);
+            try
+            {
+                await serialReader.SetAntennaConfiguration(
+                    (GenAntennaConfiguration) connectionString.AntennaConfiguration);
+            }catch{}
+
             await serialReader.SetRFPower((byte)connectionString.RFPower);
+            await serialReader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(connectionString.InventoryDuration));
             serialReader.Errors.Subscribe(e =>
             {
                 connected.OnNext(false);
@@ -52,38 +61,42 @@ namespace maxbl4.RfidDotNet.GenericSerial
             connected.OnNext(true);
         }
 
-        private async Task StartPolling()
+        private Task StartPolling()
         {
-            var sw = new Stopwatch();
-            if (connectionString.TemperatureLimit > 0)
-                sw.Start();
-            while (doInventory)
-            {
-                try
+            var task = new Task(async () => { 
+                var sw = new Stopwatch();
+                if (connectionString.TemperatureLimit > 0)
+                    sw.Start();
+                while (doInventory)
                 {
-                    var res = await serialReader.TagInventory(new TagInventoryParams
+                    try
                     {
-                        QValue = (byte)connectionString.QValue,
-                        Session = (SessionValue)connectionString.Session
-                    });
-                    inventoryResults.Enqueue(res);
-                    if (sw.ElapsedMilliseconds > 30000)
-                    {
-                        var t = await serialReader.GetReaderTemperature();
-                        if (t > connectionString.TemperatureLimit)
+                        var res = await serialReader.TagInventory(new TagInventoryParams
                         {
-                            errors.OnNext(new TemperatureLimitExceededException(connectionString.TemperatureLimit, t));
-                            Dispose();
-                            return;
+                            QValue = (byte)connectionString.QValue,
+                            Session = (SessionValue)connectionString.Session
+                        });
+                        inventoryResults.Enqueue(res);
+                        if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
+                        {
+                            var t = await serialReader.GetReaderTemperature();
+                            if (t > connectionString.TemperatureLimit)
+                            {
+                                errors.OnNext(new TemperatureLimitExceededException(connectionString.TemperatureLimit, t));
+                                Dispose();
+                                return;
+                            }
+                            sw.Restart();
                         }
-                        sw.Restart();
+                    }
+                    catch (Exception e)
+                    {
+                        errors.OnNext(e);
                     }
                 }
-                catch (Exception e)
-                {
-                    errors.OnNext(e);
-                }
-            }
+            }, TaskCreationOptions.LongRunning);
+            task.Start();
+            return task;
         }
         
         private Task StartStreamingTags()

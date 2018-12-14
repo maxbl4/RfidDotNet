@@ -14,12 +14,12 @@ namespace maxbl4.RfidDotNet
             implementations[protocolType] = typeof(T);
         }
 
-        public IUniversalTagStream Create(string connectionString)
+        public IUniversalTagStream CreateStream(string connectionString)
         {
-            return Create(ConnectionString.Parse(connectionString));
+            return CreateStream(ConnectionString.Parse(connectionString));
         }
 
-        public IUniversalTagStream Create(ConnectionString connectionString)
+        public IUniversalTagStream CreateStream(ConnectionString connectionString)
         {
             if (!implementations.ContainsKey(connectionString.Protocol))
                 throw new ArgumentOutOfRangeException(nameof(connectionString), $"No implementation for {connectionString.Protocol} registered");

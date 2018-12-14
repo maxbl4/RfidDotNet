@@ -40,6 +40,32 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
 
             return null;
         }
+        
+        public ConnectionString GetConnectionString(ConnectionType type)
+        {
+            SerialConnectionString cs = null;
+            switch (type)
+            {
+                case ConnectionType.Any:
+                    cs = GetConnectionStrings().FirstOrDefault();
+                    break;
+                case ConnectionType.Network:
+                case ConnectionType.Serial:
+                    cs = GetConnectionStrings().FirstOrDefault(x => x.Type == type);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+
+            if (cs != null)
+            {
+                return cs.ConnectionString;
+            }
+            
+            Skip.If(true);
+
+            return null;
+        }
 
         public IEnumerable<SerialConnectionString> GetConnectionStrings() =>
             ConnectionStrings.Split(new []{'|'}, StringSplitOptions.RemoveEmptyEntries).Select(x => new SerialConnectionString(ConnectionString.Parse(x)));

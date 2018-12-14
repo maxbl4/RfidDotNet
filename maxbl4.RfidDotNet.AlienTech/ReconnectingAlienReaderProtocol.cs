@@ -147,7 +147,10 @@ namespace maxbl4.RfidDotNet.AlienTech
             if (report)
                 Logger.Swallow(() => connected.OnNext(false));
             reconnectDisposable.Disposable = Observable.Timer(TimeSpan.FromMilliseconds(ReconnectTimeout))
-                .Subscribe(x => Connect());
+                .Subscribe(x =>
+                {
+                    var t = Connect();
+                });
         }
 
         public void Dispose()
