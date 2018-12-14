@@ -23,6 +23,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             connectionString = cs.Clone();
             serialReader = new SerialReader(new SerialConnectionString(connectionString).Connect());
+            serialReader.ThrowOnIllegalCommandError = false;
         }
 
         public void Dispose()
@@ -43,12 +44,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public async Task Start()
         {
             await serialReader.ActivateOnDemandInventoryMode(true);
-            try
-            {
-                await serialReader.SetAntennaConfiguration(
-                    (GenAntennaConfiguration) connectionString.AntennaConfiguration);
-            }catch{}
-
+            await serialReader.SetAntennaConfiguration((GenAntennaConfiguration) connectionString.AntennaConfiguration);
             await serialReader.SetRFPower((byte)connectionString.RFPower);
             await serialReader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(connectionString.InventoryDuration));
             serialReader.Errors.Subscribe(e =>
@@ -65,7 +61,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             var task = new Task(async () => { 
                 var sw = new Stopwatch();
-                if (connectionString.TemperatureLimit > 0)
+                if (connectionString.ThermalLimit > 0)
                     sw.Start();
                 while (doInventory)
                 {
@@ -80,9 +76,9 @@ namespace maxbl4.RfidDotNet.GenericSerial
                         if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
                         {
                             var t = await serialReader.GetReaderTemperature();
-                            if (t > connectionString.TemperatureLimit)
+                            if (t > connectionString.ThermalLimit)
                             {
-                                errors.OnNext(new TemperatureLimitExceededException(connectionString.TemperatureLimit, t));
+                                errors.OnNext(new TemperatureLimitExceededException(connectionString.ThermalLimit, t));
                                 Dispose();
                                 return;
                             }

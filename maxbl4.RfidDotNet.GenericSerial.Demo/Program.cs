@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -9,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.RfidDotNet.Infrastructure;
 using PowerArgs;
 using RJCP.IO.Ports;
 
@@ -42,7 +42,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
                 using (var reader = new SerialReader(new SerialConnectionString(connectionString).Connect()))
                 {
-                    reader.ActivateOnDemandInventoryMode().Wait();
+                    reader.Errors.Subscribe(e => Console.WriteLine(e.Message));
+                    reader.ThrowOnIllegalCommandError = false;
+                    reader.ActivateOnDemandInventoryMode(true).Wait();
                     ShowBasicReaderInfo(reader, demoArgs);
                     SubscribeToInventoryResults(reader, demoArgs);
                     SetInventoryOptions(reader, demoArgs);
@@ -56,7 +58,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                             break;
                     }
                     Console.ReadLine();
-                    reader.ActivateOnDemandInventoryMode().Wait();
+                    reader.ActivateOnDemandInventoryMode(true).Wait();
                 }
             }
             catch (ArgException ex)
@@ -240,27 +242,5 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
     {
         public TagInventoryResult Result { get; set; }
         public TimeSpan ProcessingTime { get; set; }
-    }
-
-    class Triple
-    {
-        public static readonly Triple Empty = new Triple(new []{0d});
-        public Triple(IEnumerable<double> source)
-        {
-            Min = (int)source.Min();
-            Avg = (int)source.Average();
-            Max = (int)source.Max();
-            Sum = (int)source.Sum();
-        }
-
-        public int Max { get; }
-        public int Avg { get; }
-        public int Min { get; }
-        public int Sum { get; }
-
-        public override string ToString()
-        {
-            return $"Min={Min}, Avg={Avg}, Max={Max}, Sum={Sum}";
-        }
     }
 }

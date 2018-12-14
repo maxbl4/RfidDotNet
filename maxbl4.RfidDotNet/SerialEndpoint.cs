@@ -12,5 +12,10 @@ namespace maxbl4.RfidDotNet
 
         public string Port { get; }
         public int BaudRate { get; }
+
+        public override string ToString()
+        {
+            return $"{Port}@{BaudRate}";
+        }
     }
 }

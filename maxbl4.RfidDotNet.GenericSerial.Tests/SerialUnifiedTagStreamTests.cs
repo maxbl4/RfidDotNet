@@ -8,6 +8,8 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
+    [Collection("Hardware")]
+    [Trait("Hardware", "True")]
     public class SerialUnifiedTagStreamTests
     {
         private readonly List<Tag> tags = new List<Tag>();
@@ -29,7 +31,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 errors.Count.ShouldBe(0);
 
                 stream.Start().Wait();
-                Timing.StartWait(() => tags.Count > 20).Result.ShouldBeTrue("Could not read 100 tags before timeout expired");
+                stream.RFPower(25).Result.ShouldBe(25);
+                Timing.StartWait(() => tags.Count > 20).Result.ShouldBeTrue("Could not read 20 tags before timeout expired");
             }
         }
 

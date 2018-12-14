@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace maxbl4.RfidDotNet.GenericSerial.Demo
+namespace maxbl4.RfidDotNet.Infrastructure
 {
-    public class RpsCounter
+    public static class RpsCounter
     {
         public static RpsStats Count(IList<Tag> list, int samplingIntervalMs)
         {

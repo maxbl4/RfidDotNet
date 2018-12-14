@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using maxbl4.RfidDotNet.Ext;
 
 namespace maxbl4.RfidDotNet
@@ -11,9 +12,9 @@ namespace maxbl4.RfidDotNet
         public const int DefaultBaudRate = 57600;
         public const int DefaultQValue = 3;
         public const int DefaultSession = 1;
-        public const int DefaultTemperatureLimit = 60;
+        public const int DefaultThermalLimit = 60;
         public const int DefaultRFPower = 10;
-        public const int DefaultInventoryIntervalMs = 2000;
+        public const int DefaultInventoryIntervalMs = 3000;
         public const AntennaConfiguration DefaultAntenna = AntennaConfiguration.Antenna1;
         public const string DefaultLogin = "alien";
         public const string DefaultPassword = "password";
@@ -28,12 +29,11 @@ namespace maxbl4.RfidDotNet
         /// </summary>
         public string Password { get; set; } = DefaultPassword;
         
-        
         public int InventoryDuration { get; set; } = DefaultInventoryIntervalMs;
         public int QValue { get; set; } = DefaultQValue;
         public int Session { get; set; } = DefaultSession;
         public int RFPower { get; set; } = DefaultRFPower;
-        public int TemperatureLimit { get; set; } = DefaultTemperatureLimit;
+        public int ThermalLimit { get; set; } = DefaultThermalLimit;
         public AntennaConfiguration AntennaConfiguration { get; set; } = DefaultAntenna;
         
         public static ConnectionString Parse(string connectionString)
@@ -93,11 +93,11 @@ namespace maxbl4.RfidDotNet
                     cs.RFPower = parsedInt;
                 }
 
-                if (name.Equals(nameof(TemperatureLimit), StringComparison.OrdinalIgnoreCase))
+                if (name.Equals(nameof(ThermalLimit), StringComparison.OrdinalIgnoreCase))
                 {
                     if (!int.TryParse(value, out parsedInt))
                         throw new FormatException($"Could not parse value {value} for {name}");
-                    cs.TemperatureLimit = parsedInt;
+                    cs.ThermalLimit = parsedInt;
                 }
 
                 if (name.Equals(nameof(AntennaConfiguration), StringComparison.OrdinalIgnoreCase))
@@ -151,5 +151,27 @@ namespace maxbl4.RfidDotNet
         {
             return (ConnectionString)this.MemberwiseClone();
         }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{nameof(Protocol)}={Protocol};");
+            if (Network != null)
+                sb.Append($"{nameof(Network)}={Network};");
+            if (Serial != null)
+                sb.Append($"{nameof(Serial)}={Serial};");
+            if (Login != DefaultLogin)
+                sb.Append($"{nameof(Login)}={Login};");
+            if (Password != DefaultPassword)
+                sb.Append($"{nameof(Password)}={Password};");
+            sb.Append($"{nameof(QValue)}={QValue};");
+            sb.Append($"{nameof(Session)}={Session};");
+            sb.Append($"{nameof(RFPower)}={RFPower};");
+            sb.Append($"{nameof(ThermalLimit)}={ThermalLimit};");
+            sb.Append($"{nameof(InventoryDuration)}={InventoryDuration};");
+            return sb.ToString();
+        }
+        
+        
     }
 }

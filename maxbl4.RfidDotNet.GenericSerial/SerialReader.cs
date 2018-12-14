@@ -32,6 +32,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
         private readonly Subject<Exception> errors = new Subject<Exception>();
         public IObservable<Exception> Errors => errors;
 
+        public bool ThrowOnIllegalCommandError { get; set; } = true;
+
         private RealtimeInventoryListener realtimeInventoryListener;
         
         public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultBaudRate, 
@@ -67,7 +69,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
                         if (!packet.Success)
                             throw new ReceiveFailedException(
                                 $"Failed to read response from {streamFactory.Description} {packet.ResultType}");
-                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
+                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed,
+                            errorsObserver: ThrowOnIllegalCommandError ? null : errors));
                     } while (MessageParser.ShouldReadMore(lastResponse));
 
                     return responsePackets;
@@ -173,16 +176,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
             realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
-            try
+            
+            var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
+            if (!ignoreError)
             {
-                var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
                 if (resp == null)
                     throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
                 resp.CheckSuccess();
-            }
-            catch
-            {
-                if (!ignoreError) throw;
             }
         }
 
