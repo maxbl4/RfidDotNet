@@ -11,6 +11,7 @@ namespace maxbl4.RfidDotNet
         public const int DefaultBaudRate = 57600;
         public const int DefaultQValue = 3;
         public const int DefaultSession = 1;
+        public const int DefaultTemperatureLimit = 60;
         public const int DefaultRFPower = 10;
         public const int DefaultInventoryIntervalMs = 2000;
         public const AntennaConfiguration DefaultAntenna = AntennaConfiguration.Antenna1;
@@ -32,6 +33,7 @@ namespace maxbl4.RfidDotNet
         public int QValue { get; set; } = DefaultQValue;
         public int Session { get; set; } = DefaultSession;
         public int RFPower { get; set; } = DefaultRFPower;
+        public int TemperatureLimit { get; set; } = DefaultTemperatureLimit;
         public AntennaConfiguration AntennaConfiguration { get; set; } = DefaultAntenna;
         
         public static ConnectionString Parse(string connectionString)
@@ -89,6 +91,13 @@ namespace maxbl4.RfidDotNet
                     if (!int.TryParse(value, out parsedInt))
                         throw new FormatException($"Could not parse value {value} for {name}");
                     cs.RFPower = parsedInt;
+                }
+
+                if (name.Equals(nameof(TemperatureLimit), StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!int.TryParse(value, out parsedInt))
+                        throw new FormatException($"Could not parse value {value} for {name}");
+                    cs.TemperatureLimit = parsedInt;
                 }
 
                 if (name.Equals(nameof(AntennaConfiguration), StringComparison.OrdinalIgnoreCase))
