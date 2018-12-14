@@ -25,7 +25,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         public async Task Reconnection_check()
         {
             if (!sim.UsePhysicalDevice) return;
-            var r = new ReconnectingAlienReaderProtocol(new IPEndPoint(IPAddress.Parse(sim.Host), sim.Port),
+            var r = new ReconnectingAlienReaderProtocol(new DnsEndPoint(sim.Host, sim.Port),
                 async api => {
                     await api.AntennaSequence("0");
                     await api.RFModulation(RFModulation.HS);
@@ -34,9 +34,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                     await api.RFAttenuation(100);
                 });
             r.ReconnectTimeout = 2000;
-            var status = new List<ConnectionStatus>();
+            var status = new List<bool>();
             var tags = new List<Tag>();
-            r.ConnectionStatus.Subscribe(status.Add);
+            r.Connected.Subscribe(status.Add);
             r.Tags.Subscribe(tags.Add);
             Timing.StartWait(() => tags.Count > 0).Result.ShouldBeTrue();
             status.OfType<DisconnectedEvent>().Count().ShouldBe(0);

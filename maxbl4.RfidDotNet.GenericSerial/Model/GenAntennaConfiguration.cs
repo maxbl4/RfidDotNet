@@ -3,7 +3,7 @@ using System;
 namespace maxbl4.RfidDotNet.GenericSerial.Model
 {
     [Flags]
-    public enum AntennaConfiguration: byte
+    public enum GenAntennaConfiguration: byte
     {
         Nothing = 0,
         Antenna1 = 0b0000_0001,

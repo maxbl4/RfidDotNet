@@ -1,4 +1,5 @@
 using System;
+using System.Net.NetworkInformation;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using Shouldly;
@@ -52,18 +53,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         }
 
         [Fact]
-        public void Connection_string_should_work()
+        public void Should_check_type_of_connection_string()
         {
-            var c = ConnectionString.Parse("serial://COM4");
-            c.Type.ShouldBe(ConnectionType.Serial);
-            c.SerialPort.ShouldBe("COM4");
-            c = ConnectionString.Parse("serial:///dev/ttyS2");
-            c.Type.ShouldBe(ConnectionType.Serial);
-            c.SerialPort.ShouldBe("/dev/ttyS2");
-            c = ConnectionString.Parse("tcp://host:123");
-            c.Type.ShouldBe(ConnectionType.Network);
-            c.Hostname.ShouldBe("host");
-            c.TcpPort.ShouldBe(123);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Serial=COM4"))
+                .Type.ShouldBe(ConnectionType.Serial);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Network=host"))
+                .Type.ShouldBe(ConnectionType.Network);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Alien;Network=host"))
+                .Type.ShouldBe(ConnectionType.None);
         }
     }
 }

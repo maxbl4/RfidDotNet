@@ -11,6 +11,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
 {
     public class ResponseDataPacket
     {
+        private readonly IObserver<Exception> errorsObserver;
         public const byte HeaderLength = 5;
         public const int DataOffset = 4;
         public byte[] RawData { get; }
@@ -27,8 +28,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public ResponseStatusCode Status => (ResponseStatusCode)RawData[3];
         public byte DataLength => (byte)(Length - HeaderLength);
 
-        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null, TimeSpan? elapsed = null)
+        public ResponseDataPacket(ReaderCommand expectedCommand, byte[] rawData, DateTimeOffset? timestamp = null, 
+            TimeSpan? elapsed = null, IObserver<Exception> errorsObserver = null)
         {
+            this.errorsObserver = errorsObserver;
             ExpectedCommand = expectedCommand;
             RawData = rawData;
             Elapsed = elapsed ?? TimeSpan.Zero;
@@ -37,19 +40,19 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         
         public Model.ReaderInfo GetReaderInfo()
         {
-            ValidatePacket(12);
+            if (!ValidatePacket(12)) return null;
             return new Model.ReaderInfo(RawData, DataOffset);
         }
 
         public uint GetReaderSerialNumber()
         {
-            ValidatePacket(4);
+            if (!ValidatePacket(4)) return 0;
             return ReadUInt32();
         }
         
         public int GetReaderTemperature()
         {
-            ValidatePacket(2);
+            if (!ValidatePacket(2)) return 0;
             var offset = DataOffset;
             var positive = RawData[offset++] > 0;
             var temp = RawData[offset++] * (positive ? 1 : -1);
@@ -58,7 +61,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         
         public DrmMode GetDrmEnabled()
         {
-            ValidatePacket(1);
+            if (!ValidatePacket(1)) return DrmMode.Off;
             return (DrmMode)RawData[DataOffset];
         }
         
@@ -73,7 +76,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
                                                    $"expected {ResponseStatusCode.Success}", RawData);
 
             var offset = DataOffset;
-            var ant = ((AntennaConfiguration)RawData[offset++]).ToNumber();
+            var ant = ((GenAntennaConfiguration)RawData[offset++]).ToNumber();
             var epcLength = RawData[offset++];
             if (DataLength != baseDataLength + epcLength)
                 throw new MalformedPacketException($"Got realtime tag report with inconsistent epc length {epcLength}, " +
@@ -89,13 +92,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         
         public EpcLength GetEpcLength()
         {
-            ValidatePacket(1);
+            if (!ValidatePacket(1)) return EpcLength.UpTo128Bits;
             return (EpcLength)RawData[DataOffset];
         }
         
         public int GetNumberOfTagsInBuffer()
         {
-            ValidatePacket(2);
+            if (!ValidatePacket(2)) return 0;
             return ReadUInt16();
         }
 
@@ -117,14 +120,23 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
             return result;
         }
 
-        void ValidatePacket(int expectedDataLength = -1, int minimumDataLength = -1)
+        bool ValidatePacket(int expectedDataLength = -1, int minimumDataLength = -1)
         {
+            if (Status == ResponseStatusCode.IllegalCommand)
+            {
+                if (errorsObserver == null) 
+                    throw new IllegalCommandException(Command, Status);
+                errorsObserver.OnNext(new IllegalCommandException(Command, Status));
+                return false;
+            }
+
             if (Command != ExpectedCommand)
                 throw new InvalidOperationException($"Wrong command {Command} != {ExpectedCommand}");
             if (expectedDataLength >= 0 && DataLength != expectedDataLength)
                 throw new MalformedPacketException($"Got packet with unexpected length {DataLength}, expected {expectedDataLength}", RawData);
             if (minimumDataLength >= 0 && DataLength < minimumDataLength)
                 throw new MalformedPacketException($"Got packet with data length less then expected {DataLength} < {minimumDataLength}", RawData);
+            return true;
         }
         
         private static readonly ResponseStatusCode[] InventoryValidStatusCodes = 
@@ -138,7 +150,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
 
         public void CheckSuccess()
         {
-            ValidatePacket(0);
+            if (!ValidatePacket(0)) return;
             switch (Command)
             {
                 case ReaderCommand.TagInventory:

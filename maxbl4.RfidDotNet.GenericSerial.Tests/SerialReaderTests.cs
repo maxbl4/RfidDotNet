@@ -45,7 +45,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     ProtocolType.Gen18000_6B, ProtocolType.Gen18000_6C|ProtocolType.Gen18000_6B);
                 info.RFPower.ShouldBe((byte)20);
                 info.InventoryScanInterval.ShouldBeInRange(TimeSpan.FromMilliseconds(0), TimeSpan.FromMilliseconds(25500));
-                info.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
+                info.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1);
                 info.AntennaCheck.ShouldBe(false);
             }
         }
@@ -219,10 +219,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
-                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2).Wait();
-                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1|AntennaConfiguration.Antenna2);
-                r.SetAntennaConfiguration(AntennaConfiguration.Antenna1).Wait();
-                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(AntennaConfiguration.Antenna1);
+                r.SetAntennaConfiguration(GenAntennaConfiguration.Antenna1|GenAntennaConfiguration.Antenna2).Wait();
+                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1|GenAntennaConfiguration.Antenna2);
+                r.SetAntennaConfiguration(GenAntennaConfiguration.Antenna1).Wait();
+                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1);
             }
         }
         
@@ -251,7 +251,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             }
         }
         
-        [SkippableTheory]
+        [SkippableTheory(Skip = "Require reimplementing")]
         [InlineData(ConnectionType.Network)]
         public void Should_read_tags_in_realtime_mode(ConnectionType connectionType)
         {
@@ -320,8 +320,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 var info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud115200).Wait();
+                connection.BaudRate.ShouldBe(115200);
                 info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud57600).Wait();
+                connection.BaudRate.ShouldBe(57600);
                 info = r.GetReaderInfo().Result;
             }
         }

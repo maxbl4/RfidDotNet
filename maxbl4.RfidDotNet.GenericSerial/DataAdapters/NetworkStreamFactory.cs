@@ -8,16 +8,14 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
     public class NetworkStreamFactory : IDataStreamFactory
     {
         public const int DefaultTimeout = 2000;
-        public string Hostname { get; }
-        public int Port { get; }
+        public DnsEndPoint EndPoint { get; }
         public int NetworkTimeout { get; }
         private NetworkStream stream = null;
         private Socket socket;
 
-        public NetworkStreamFactory(string hostname, int port, int networkTimeout = DefaultTimeout)
+        public NetworkStreamFactory(DnsEndPoint endPoint, int networkTimeout = DefaultTimeout)
         {
-            Hostname = hostname;
-            Port = port;
+            EndPoint = endPoint;
             NetworkTimeout = networkTimeout;
         }
 
@@ -30,13 +28,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
                 {
                     SendTimeout = NetworkTimeout, ReceiveTimeout = NetworkTimeout
                 };
-                socket.Connect(Hostname, Port);
+                socket.Connect(EndPoint);
                 stream = new NetworkStream(socket);
                 return stream;
             }
         }
 
-        public string Description => $"{Hostname}:{Port}";
+        public string Description => $"{EndPoint}";
 
         public void Invalidate()
         {

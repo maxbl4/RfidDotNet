@@ -32,6 +32,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
         private readonly Subject<Exception> errors = new Subject<Exception>();
         public IObservable<Exception> Errors => errors;
 
+        public bool ThrowOnIllegalCommandError { get; set; } = true;
+
         private RealtimeInventoryListener realtimeInventoryListener;
         
         public SerialReader(string serialPortName, int portSpeed = SerialPortFactory.DefaultBaudRate, 
@@ -39,8 +41,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
             StopBits stopBits = SerialPortFactory.DefaultStopBits)
             : this(new SerialPortFactory(serialPortName, portSpeed, dataBits, parity, stopBits)) {}
 
-        public SerialReader(string hostname, int port, int networkTimeout = NetworkStreamFactory.DefaultTimeout)
-            : this(new NetworkStreamFactory(hostname, port)) {}
+        public SerialReader(DnsEndPoint endPoint, int networkTimeout = NetworkStreamFactory.DefaultTimeout)
+            : this(new NetworkStreamFactory(endPoint)) {}
         
         public SerialReader(IDataStreamFactory streamFactory)
         {
@@ -67,7 +69,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
                         if (!packet.Success)
                             throw new ReceiveFailedException(
                                 $"Failed to read response from {streamFactory.Description} {packet.ResultType}");
-                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
+                        responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed,
+                            errorsObserver: ThrowOnIllegalCommandError ? null : errors));
                     } while (MessageParser.ShouldReadMore(lastResponse));
 
                     return responsePackets;
@@ -140,15 +143,16 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 (byte)mode));
             return responses.First().GetDrmEnabled();
         }
-        
+
         /// <summary>
         /// Change reader serial baud rate. After calling this method, you should reconnect using new baud
         /// </summary>
         /// <param name="baud"></param>
+        /// <param name="forceOverNetwork"></param>
         /// <returns></returns>
-        public async Task SetSerialBaudRate(BaudRates baud)
+        public async Task SetSerialBaudRate(BaudRates baud, bool forceOverNetwork = false)
         {
-            if (streamFactory is NetworkStreamFactory)
+            if (!forceOverNetwork && streamFactory is NetworkStreamFactory)
                 throw new InvalidOperationException($"You should not change baud rate of the reader connected over the network. " +
                                                     $"While this is possible, most probably you will loose connectivity to reader" +
                                                     $"until you make manual changes on the network host");
@@ -167,15 +171,19 @@ namespace maxbl4.RfidDotNet.GenericSerial
         /// <summary>
         /// Try to put reader into Query/Answer mode
         /// </summary>
-        public async Task ActivateOnDemandInventoryMode()
+        public async Task ActivateOnDemandInventoryMode(bool ignoreError = false)
         {
             realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
+            
             var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
-            if (resp == null)
-                throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
-            resp.CheckSuccess();
+            if (!ignoreError)
+            {
+                if (resp == null)
+                    throw new ReceiveFailedException($"Did not receive an answer for SetWorkingMode command");
+                resp.CheckSuccess();
+            }
         }
 
         public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
@@ -208,7 +216,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             responses.First().CheckSuccess();
         }
         
-        public async Task SetAntennaConfiguration(AntennaConfiguration configuration)
+        public async Task SetAntennaConfiguration(GenAntennaConfiguration configuration)
         {
             var responses = await SendReceive(CommandDataPacket.SetAntennaConfiguration(configuration));
             responses.First().CheckSuccess();

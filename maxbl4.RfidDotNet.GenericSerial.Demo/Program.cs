@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.RfidDotNet.Infrastructure;
 using PowerArgs;
 using RJCP.IO.Ports;
 
@@ -15,8 +16,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 {
     class Program
     {
-        public const int TemperatureLimit = 60;
-        static readonly Subject<TagInventoryResult> pollingResults = new Subject<TagInventoryResult>();
+        static readonly Subject<TagInventoryResultWithProcessingTime> pollingResults = new Subject<TagInventoryResultWithProcessingTime>();
         static readonly Subject<Tag> tagStream = new Subject<Tag>();
         static readonly Subject<Exception> tagStreamErrors = new Subject<Exception>();
         static readonly BehaviorSubject<int> temperatureSubject = new BehaviorSubject<int>(0);
@@ -33,12 +33,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
             try
             {
                 var demoArgs = Args.Parse<DemoArgs>(args);
-                if (string.IsNullOrEmpty(demoArgs.ConnectionString))
-                    ShowUsageAndExit();
                 connectionString = ConnectionString.Parse(demoArgs.ConnectionString);
-                using (var reader = new SerialReader(connectionString.Connect()))
+                if (!connectionString.IsValid(out var msg))
                 {
-                    reader.ActivateOnDemandInventoryMode().Wait();
+                    Console.WriteLine($"Connection string is invalid: {msg}");
+                    ShowUsageAndExit();
+                }
+
+                using (var reader = new SerialReader(new SerialConnectionString(connectionString).Connect()))
+                {
+                    reader.Errors.Subscribe(e => Console.WriteLine(e.Message));
+                    reader.ThrowOnIllegalCommandError = false;
+                    reader.ActivateOnDemandInventoryMode(true).Wait();
                     ShowBasicReaderInfo(reader, demoArgs);
                     SubscribeToInventoryResults(reader, demoArgs);
                     SetInventoryOptions(reader, demoArgs);
@@ -52,7 +58,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                             break;
                     }
                     Console.ReadLine();
-                    reader.ActivateOnDemandInventoryMode().Wait();
+                    reader.ActivateOnDemandInventoryMode(true).Wait();
                 }
             }
             catch (ArgException ex)
@@ -64,14 +70,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void SetInventoryOptions(SerialReader reader, DemoArgs demoArgs)
         {
+            var cs = ConnectionString.Parse(demoArgs.ConnectionString);
+            reader.SetAntennaCheck(false).Wait();
+            reader.SetAntennaConfiguration((GenAntennaConfiguration)cs.AntennaConfiguration).Wait();
             reader.SetDrmEnabled(demoArgs.EnableDrmMode).Wait();
             reader.SetRealTimeInventoryParameters(new RealtimeInventoryParams
             {
-                QValue = demoArgs.QValue,
-                Session = (SessionValue)demoArgs.Session,
+                QValue = (byte)cs.QValue,
+                Session = (SessionValue)cs.Session,
                 TagDebounceTime = TimeSpan.Zero
             }).Wait();
-            reader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(demoArgs.ScanInterval)).Wait();
+            reader.SetInventoryScanInterval(TimeSpan.FromMilliseconds(cs.InventoryDuration)).Wait();
         }
 
         static void StartStreaming(SerialReader reader)
@@ -83,25 +92,35 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void StartPolling(SerialReader reader, DemoArgs demoArgs)
         {
+            var cs = ConnectionString.Parse(demoArgs.ConnectionString);
             Task.Run(async () =>
             {
                 temperatureSubject.OnNext(reader.GetReaderTemperature().Result);
+                var processingTime = new Stopwatch();
                 var sw = Stopwatch.StartNew();
                 while (true)
                 {
                     try
                     {
+                        processingTime.Stop();
+                        var pTime = processingTime.Elapsed;
                         var res = await reader.TagInventory(new TagInventoryParams
                         {
-                            QValue = demoArgs.QValue,
-                            Session = (SessionValue)demoArgs.Session
+                            QValue = (byte)cs.QValue,
+                            Session = (SessionValue)cs.Session
                         });
-                        pollingResults.OnNext(res);
+                        processingTime.Restart();
+                        
+                        pollingResults.OnNext(new TagInventoryResultWithProcessingTime
+                        {
+                            Result =res,
+                            ProcessingTime = pTime
+                        });
 
                         if (sw.ElapsedMilliseconds > 10000)
                         {
                             var t = reader.GetReaderTemperature().Result;
-                            if (t > TemperatureLimit)
+                            if (t > demoArgs.ThermalLimit)
                             {
                                 Console.WriteLine(
                                     $"Reader is overheating, temperature is {t}. To prevent damage, stopping inventory.");
@@ -138,7 +157,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                 .Subscribe(buf =>
                 {
                     var rpsStats = RpsCounter.Count(buf, demoArgs.StatsSamplingInterval);
-                    DisplayInventoryInfo(demoArgs, rpsStats, 0, 0, 0, 0);
+                    DisplayInventoryInfo(demoArgs, rpsStats, 0, Triple.Empty, Triple.Empty);
                 });
         }
 
@@ -148,35 +167,32 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                 .Where(x => x.Count > 0)
                 .Subscribe(buf =>
                 {
-                    var bufferedTags = buf.SelectMany(x => x.Tags).ToList();
-                    var inventoryQueryAvgTimeMs = (int) buf.Average(x => x.Elapsed.TotalMilliseconds);
-                    var inventoryQueryMaxTimeMs = (int) buf.Max(x => x.Elapsed.TotalMilliseconds);
-                    var inventoryQueryMinTimeMs = (int) buf.Min(x => x.Elapsed.TotalMilliseconds);
+                    var bufferedTags = buf.SelectMany(x => x.Result.Tags).ToList();
+                    var inventoryDuration = new Triple(buf.Select(x => x.Result.Elapsed.TotalMilliseconds));
+                    var processingDuration = new Triple(buf.Select(x => x.ProcessingTime.TotalMilliseconds));
                     
                     var rpsStats = RpsCounter.Count(bufferedTags, demoArgs.StatsSamplingInterval);
                     
-                    DisplayInventoryInfo(demoArgs, rpsStats, buf.Count*1000/demoArgs.StatsSamplingInterval, inventoryQueryMinTimeMs,
-                        inventoryQueryAvgTimeMs, inventoryQueryMaxTimeMs);
+                    DisplayInventoryInfo(demoArgs, rpsStats, buf.Count*1000/demoArgs.StatsSamplingInterval, inventoryDuration, processingDuration);
                 });
         }
 
         static void DisplayInventoryInfo(DemoArgs demoArgs, RpsStats rpsStats, int inventoryPs, 
-            int inventoryQueryMinTimeMs,
-            int inventoryQueryAvgTimeMs,
-            int inventoryQueryMaxTimeMs)
+            Triple inventoryDuration, Triple processingDuration)
         {
             Console.Clear();
             Console.WriteLine($"Connected to: {connectionString}, {demoArgs.Inventory} mode, update {updateNumber++}");
             Console.WriteLine($"Reader Temp={temperatureSubject.Value}, Limit={demoArgs.ThermalLimit}");
             Console.WriteLine($"TagIds={rpsStats.TagIds}, RPS={rpsStats.RPS}, InventoryPS={inventoryPs}");
-            Console.WriteLine(
-                $"Inventory duration: Min={inventoryQueryMinTimeMs}, Avg={inventoryQueryAvgTimeMs}, Max={inventoryQueryMaxTimeMs}");
+            Console.WriteLine($"Inventory duration: {inventoryDuration}");
+            Console.WriteLine($"Processing duration: {processingDuration}");
             foreach (var h in rpsStats.Histogram)
             {
                 Console.Write("{0,6:F1}", h);
             }
             Console.WriteLine($" Avg={rpsStats.Average:F1}");
-            foreach (var h in rpsStats.AggTags)
+            foreach (var h in rpsStats.AggTags
+                .Where(x => string.IsNullOrWhiteSpace(demoArgs.TagIdFilter) || Regex.IsMatch(x.TagId, demoArgs.TagIdFilter)))
             {
                 Console.WriteLine($"{h.TagId} {h.ReadCount}");
             }
@@ -184,7 +200,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void ShowBasicReaderInfo(SerialReader reader, DemoArgs args)
         {
-            reader.SetRFPower(args.RFPower).Wait();
+            reader.SetRFPower((byte)ConnectionString.Parse(args.ConnectionString).RFPower).Wait();
             Console.WriteLine("Serial number: {0}", reader.GetSerialNumber().Result);
             var info = reader.GetReaderInfo().Result;
             Console.WriteLine("Model: {0}", info.Model);
@@ -220,5 +236,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                 Console.WriteLine(name);
             }
         }
+    }
+
+    class TagInventoryResultWithProcessingTime
+    {
+        public TagInventoryResult Result { get; set; }
+        public TimeSpan ProcessingTime { get; set; }
     }
 }
