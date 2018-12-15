@@ -39,6 +39,7 @@ namespace maxbl4.RfidDotNet
         public static ConnectionString Parse(string connectionString)
         {
             var cs = new ConnectionString();
+            if (string.IsNullOrEmpty(connectionString)) return cs;
             var tuples = connectionString.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
             foreach (var tuple in tuples)
             {

@@ -64,6 +64,13 @@ namespace maxbl4.RfidDotNet.Tests
         }
         
         [Fact]
+        public void Should_return_invalid_connection_string_for_null_string()
+        {
+            var cs = ConnectionString.Parse(null);
+            cs.IsValid(out var msg).ShouldBeFalse();
+        }
+        
+        [Fact]
         public void Enum_should_parse_or_values()
         {
             AntennaConfiguration res;
