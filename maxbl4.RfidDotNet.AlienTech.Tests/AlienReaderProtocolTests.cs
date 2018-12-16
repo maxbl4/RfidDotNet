@@ -9,6 +9,7 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
 {
+    [Trait("Hardware", "true")]
     public class AlienReaderProtocolTests : IDisposable
     {
         private AlienReaderProtocol proto;
