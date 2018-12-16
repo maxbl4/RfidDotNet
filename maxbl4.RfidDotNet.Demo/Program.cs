@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.Demo
             {
                 stream.Errors.Subscribe(e => Console.WriteLine(e.Message));
                 SubscribeToPollingResults(stream.Tags, 3000);
-                stream.Start();
+                stream.Start().Wait();
                 Console.ReadLine();
             }
         }

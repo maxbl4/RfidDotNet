@@ -75,12 +75,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
                     return responsePackets;
                 }
-                catch (ReceiveFailedException)
-                {
-                    Dispose();
-                    throw;
-                }
-                catch (NotSupportedException)
+                catch
                 {
                     Dispose();
                     throw;
