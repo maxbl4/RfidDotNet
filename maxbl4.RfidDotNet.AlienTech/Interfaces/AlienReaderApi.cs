@@ -254,7 +254,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Interfaces
         {
             return Property<int>(value);
         }
-        //RFModulation DRM|STD|HS|25M4|12M4|06M4|25FM0|12FM0|06FM0|25M2|12M2|06M2
+        //RFModulation DRM|STD|25M4|12M4|06M4|25FM0|12FM0|06FM0|25M2|12M2|06M2
         public Task<RFModulation> RFModulation(RFModulation? value = null)
         {
             return Property<RFModulation>(value);

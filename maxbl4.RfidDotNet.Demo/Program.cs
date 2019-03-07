@@ -12,6 +12,7 @@ namespace maxbl4.RfidDotNet.Demo
     {
         static readonly UniversalTagStreamFactory factory = new UniversalTagStreamFactory();
         private static ConnectionString connectionString;
+        private static string errors = "";
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -26,8 +27,8 @@ namespace maxbl4.RfidDotNet.Demo
             factory.UseAlienProtocol();
             using (var stream = factory.CreateStream(connectionString))
             {
-                stream.Errors.Subscribe(e => Console.WriteLine(e.Message));
-                SubscribeToPollingResults(stream.Tags, 3000);
+                stream.Errors.Subscribe(e => errors +=  e.Message + "\r\n");
+                SubscribeToPollingResults(stream.Tags, 500);
                 stream.Start().Wait();
                 Console.ReadLine();
             }
@@ -47,6 +48,7 @@ namespace maxbl4.RfidDotNet.Demo
         static void DisplayInventoryInfo(RpsStats rpsStats)
         {
             Console.Clear();
+            Console.WriteLine($"Errors: {errors}");
             Console.WriteLine($"Connected to: {connectionString}");
             Console.WriteLine($"TagIds={rpsStats.TagIds}, RPS={rpsStats.RPS}");
             foreach (var h in rpsStats.Histogram)

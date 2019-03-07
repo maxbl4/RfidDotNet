@@ -24,7 +24,8 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private readonly TcpListener listener;
         private Simulator client;
         private readonly string host;
-        public const string ReaderAddress = "192.168.1.100";
+        //public const string ReaderAddress = "192.168.1.100";
+        public const string ReaderAddress = "10.0.1.41";
 
         public Simulator Client => client;
         List<Simulator> clients = new List<Simulator>();

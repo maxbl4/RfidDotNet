@@ -82,7 +82,7 @@ namespace maxbl4.RfidDotNet.AlienTech
                 await api.AcqTime(connectionString.InventoryDuration);
                 await api.AcqG2Q(connectionString.QValue);
                 await api.AcqG2Session(connectionString.Session);
-                await api.RFModulation(RFModulation.HS);
+                await api.RFModulation(RFModulation.DRM);
                 await api.RFLevel(connectionString.RFPower);
                 await api.AntennaSequence(connectionString.AntennaConfiguration.ToAlienAntennaSequence());
             };
@@ -109,7 +109,7 @@ namespace maxbl4.RfidDotNet.AlienTech
                 var arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
                 await arp.ConnectAndLogin(endpoint.Host, endpoint.Port, login, password);
                 if (usePolling)
-                    await arp.StartTagPolling(tags);
+                    await arp.StartTagPolling(tags, errors);
                 else
                     await arp.StartTagStreamOld(tags);
                 arp.Disconnected += (s, e) => ScheduleReconnect(true);
@@ -159,38 +159,6 @@ namespace maxbl4.RfidDotNet.AlienTech
             Logger.Swallow(tags.OnCompleted);
             tags?.Dispose();
             proto?.Dispose();
-        }
-    }
-
-    public class ConnectionStatus
-    {
-        public bool Connected { get; protected set; }
-    }
-
-    public class ConnectedEvent : ConnectionStatus
-    {
-        public ConnectedEvent()
-        {
-            Connected = true;
-        }
-    }
-
-    public class DisconnectedEvent : ConnectionStatus
-    {
-        public DisconnectedEvent()
-        {
-            Connected = false;
-        }
-    }
-
-    public class FailedToConnect : ConnectionStatus
-    {
-        public Exception Error { get; set; }
-
-        public FailedToConnect(Exception error)
-        {
-            Connected = false;
-            Error = error;
         }
     }
 }

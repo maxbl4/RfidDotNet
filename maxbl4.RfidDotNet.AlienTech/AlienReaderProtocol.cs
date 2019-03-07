@@ -101,7 +101,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             await api.AutoMode(true);
         }
 
-        public async Task StartTagPolling(IObserver<Tag> tags)
+        public async Task StartTagPolling(IObserver<Tag> tags, IObserver<Exception> errors)
         {
             await api.TagListFormat(ListFormat.Custom);
             await api.TagListCustomFormat(TagParser.CustomFormat);
@@ -111,7 +111,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             await api.Clear();
             await api.NotifyMode(false);
             await api.AutoMode(true);
-            pollerDisposable.Disposable = tagPoller = new TagPoller(api, tags);
+            pollerDisposable.Disposable = tagPoller = new TagPoller(api, tags, errors);
         }
 
         public async Task<string> SendReceive(string data)

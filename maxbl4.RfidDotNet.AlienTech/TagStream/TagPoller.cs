@@ -12,23 +12,25 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
         static readonly ILogger Logger = Log.ForContext<TagPoller>();
         private readonly AlienReaderApi api;
         private readonly IObserver<Tag> tags;
+        private readonly IObserver<Exception> errors;
         private bool run = true;
         readonly Subject<string> unparsedMessages = new Subject<string>();
         public IObservable<string> UnparsedMessages => unparsedMessages;
 
-        public TagPoller(AlienReaderApi api, IObserver<Tag> tags)
+        public TagPoller(AlienReaderApi api, IObserver<Tag> tags, IObserver<Exception> errors)
         {
             this.api = api;
             this.tags = tags;
+            this.errors = errors;
             Logger.Information("Starting");
             new Task(PollingThread, TaskCreationOptions.LongRunning).Start();
         }
 
         async void PollingThread()
         {
-            try
+            while (run)
             {
-                while (run)
+                try
                 {
                     var s = await api.TagList();
                     var lines = s.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
@@ -42,10 +44,11 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                             unparsedMessages.OnNext(line);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("{ex}", ex);
+                catch (Exception ex)
+                {
+                    Logger.Error("{ex}", ex);
+                    errors.OnNext(ex);
+                }
             }
         }
 

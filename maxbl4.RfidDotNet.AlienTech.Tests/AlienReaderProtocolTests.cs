@@ -41,8 +41,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task RfModulation()
         {
-            (await proto.SendReceive("RFModulation = HS")).ShouldBe("RFModulation = HS");
-            (await proto.SendReceive("RFModulation?")).ShouldBe("RFModulation = HS");
+            (await proto.SendReceive("RFModulation = DRM")).ShouldBe("RFModulation = DRM");
+            (await proto.SendReceive("RFModulation?")).ShouldBe("RFModulation = DRM");
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         public async Task SetupReader()
         {
             await SendReceiveConfirm("TagListMillis = ON");
-            await SendReceiveConfirm("RFModulation = HS");
+            await SendReceiveConfirm("RFModulation = DRM");
             await SendReceiveConfirm("PersistTime = -1");
             await SendReceiveConfirm("TagListAntennaCombine = OFF");
             await SendReceiveConfirm("AntennaSequence = 0");

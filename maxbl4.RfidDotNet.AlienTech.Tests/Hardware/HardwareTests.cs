@@ -26,6 +26,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         private const int baseTimeout = 1000;
 
         private Subject<Tag> tagStream = new Subject<Tag>();
+        private Subject<Exception> errorStream = new Subject<Exception>();
 
         public HardwareTests()
         {
@@ -42,8 +43,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await reader.AntennaSequence("3");
             var tags = new List<Tag>();
             var msgs = new List<string>();
-            await proto.StartTagPolling(tagStream);
+            var errors = new List<Exception>();
+            await proto.StartTagPolling(tagStream, errorStream);
             tagStream.Subscribe(tags.Add);
+            errorStream.Subscribe(errors.Add);
             proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);            
             await reader.AntennaSequence("0");
             await Task.Delay(2000);
