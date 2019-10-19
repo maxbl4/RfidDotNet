@@ -39,6 +39,15 @@ namespace maxbl4.RfidDotNet.Tests
         }
         
         [Fact]
+        public void Should_validate_fake_protocol()
+        {
+            var cs = ConnectionString.Parse(@"protocol=fake");
+            cs.Protocol.ShouldBe(ReaderProtocolType.Fake);
+            cs.IsValid(out var msg).ShouldBeTrue();
+            msg.ShouldBeEmpty();
+        }
+        
+        [Fact]
         public void Should_validate_alien_protocol()
         {
             var cs = ConnectionString.Parse(@"protocol=alien");

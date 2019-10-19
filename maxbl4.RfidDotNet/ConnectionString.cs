@@ -134,6 +134,9 @@ namespace maxbl4.RfidDotNet
                     if (Serial != null && (Serial.BaudRate < 9600))
                         errors.Add("Serial protocol requires valid BaudRate on Serial endpoint");
                     break;
+                case ReaderProtocolType.Fake:
+                    message = "";
+                    return true;
                 default:
                     message = $"Unknown protocol type {Protocol}";
                     return false;
