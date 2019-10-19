@@ -4,6 +4,8 @@ namespace maxbl4.RfidDotNet
     {
         None = 0,
         Alien = 1,
-        Serial = 2
+        Serial = 2,
+        Fake = 3,
+        Custom = 100
     }
 }

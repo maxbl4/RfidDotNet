@@ -4,7 +4,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Ext
     {
         public static void UseSerialProtocol(this UniversalTagStreamFactory factory)
         {
-            factory.Register<SerialUnifiedTagStream>(ReaderProtocolType.Serial);
+            factory.Register(ReaderProtocolType.Serial, x => new SerialUnifiedTagStream(x));
         }
     }
 }

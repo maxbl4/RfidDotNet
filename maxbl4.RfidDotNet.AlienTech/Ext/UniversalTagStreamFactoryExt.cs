@@ -4,7 +4,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Ext
     {
         public static void UseAlienProtocol(this UniversalTagStreamFactory factory)
         {
-            factory.Register<ReconnectingAlienReaderProtocol>(ReaderProtocolType.Alien);
+            factory.Register(ReaderProtocolType.Alien, x => new ReconnectingAlienReaderProtocol(x));
         }
     }
 }
