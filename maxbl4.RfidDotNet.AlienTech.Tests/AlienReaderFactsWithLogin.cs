@@ -12,75 +12,67 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
 {
-    public class AlienReaderFactsWithLogin : IClassFixture<ReaderFixture>
+    public class AlienReaderFactsWithLogin : ReaderFixture
     {
-        private readonly ReaderFixture readerFixture;
         static readonly ILogger Logger = Log.ForContext<AlienReaderFactsWithLogin>();
-        private readonly IAlienReaderApi reader;
-
-        public AlienReaderFactsWithLogin(ReaderFixture readerFixture)
-        {
-            this.readerFixture = readerFixture;
-            reader = readerFixture.Proto.Api;
-        }
-
+        
         [Fact]
         public void Reader_bounce_current_client_when_new_comes()
         {
-            Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout, 
+            Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout, 
                     AlienReaderProtocol.DefaultReceiveTimeout)
                 .Result
                 .ShouldBeTrue("Did not get first keepalive");
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
-                r2.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password").Wait(6000).ShouldBeTrue();
+                r2.ConnectAndLogin(Host, Port, "alien", "password").Wait(6000).ShouldBeTrue();
                 Logger.Debug("Second client connected");
             }
             Logger.Debug("Second client disconnected");
             
-            Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2, 
+            Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2, 
                     AlienReaderProtocol.DefaultReceiveTimeout * 2)
                 .Result
-                .ShouldBeTrue($"Still getting keepalives {readerFixture.Proto.LastKeepalive} {DateTime.Now}");
+                .ShouldBeTrue($"Still getting keepalives {Proto.LastKeepalive} {DateTime.Now}");
             Logger.Information("Keepalives stopped");
-            Timing.StartWait(() => !readerFixture.Proto.IsConnected).Result.ShouldBe(true);
+            Timing.StartWait(() => !Proto.IsConnected).Result.ShouldBe(true);
         }
 
         [Fact]
         public async Task Empty_taglist()
         {
-            await reader.AutoModeReset();
-            await reader.Clear();
-            (await reader.AntennaSequence("3")).ShouldBe("3");
-            (await reader.TagList()).ShouldBe(ProtocolMessages.NoTags);
+            await Proto.Api.AutoModeReset();
+            await Proto.Api.Clear();
+            (await Proto.Api.AntennaSequence("3")).ShouldBe("3");
+            (await Proto.Api.TagList()).ShouldBe(ProtocolMessages.NoTags);
         }
 
         [Fact]
         public async Task Should_get_keepalives()
         {
-            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
+            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
                 .ShouldBeTrue("Did not get first keepalive");
             await Task.Delay(1000);
-            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
+            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
                 .ShouldBeTrue("Did not get second keepalive");
         }
 
         [Fact]
         public async Task Clear_taglist()
         {
-            (await reader.Clear()).ShouldBe(ProtocolMessages.TagListClearConfirmation);
+            (await Proto.Api.Clear()).ShouldBe(ProtocolMessages.TagListClearConfirmation);
         }
 
         [Fact]
         public async Task Return_taglist()
         {
-            await reader.Clear();
-            await reader.AntennaSequence("0");
-            await reader.RFLevel(180);
-            await reader.TagListFormat(ListFormat.Custom);
-            await reader.TagListCustomFormat("%k");
-            var tagList = await reader.TagList();
+            await Proto.Api.Clear();
+            await Proto.Api.AntennaSequence("0");
+            await Proto.Api.RFLevel(180);
+            await Proto.Api.TagListFormat(ListFormat.Custom);
+            await Proto.Api.TagListCustomFormat("%k");
+            var tagList = await Proto.Api.TagList();
             var tags = tagList.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             var exptectedTags = new[]
             {

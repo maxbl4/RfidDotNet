@@ -15,34 +15,30 @@ using Xunit;
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
     [Trait("Hardware", "true")]
-    public class TagStreamListenerTests : IClassFixture<ReaderFixture>
+    public class TagStreamListenerTests : ReaderFixture
     {
-        private readonly ReaderFixture readerFixture;
-        private readonly IAlienReaderApi reader;
-        List<Tag> tags = new List<Tag>();
-        List<Exception> errors = new List<Exception>();
-        List<string> msgs = new List<string>();
+        private readonly List<Tag> tags = new List<Tag>();
+        private readonly List<Exception> errors = new List<Exception>();
+        private readonly List<string> msgs = new List<string>();
         private bool completed = false;
-        Subject<Tag> tagStream = new Subject<Tag>();
-        Subject<Exception> errorStream = new Subject<Exception>();
+        private Subject<Tag> tagStream = new Subject<Tag>();
+        private readonly Subject<Exception> errorStream = new Subject<Exception>();
 
-        public TagStreamListenerTests(ReaderFixture readerFixture)
+        public TagStreamListenerTests()
         {
-            this.readerFixture = readerFixture;
-            readerFixture.Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
-            reader = readerFixture.Proto.Api;
+            Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);
             errorStream.Subscribe(errors.Add);
-            readerFixture.Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
+            Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
         }
 
         [Fact]
         public async Task TagStreamServer_prop()
         {
-            var tss = await reader.TagStreamServer(new TagStreamServer(7, 4567));
+            var tss = await Proto.Api.TagStreamServer(new TagStreamServer(7, 4567));
             tss.AllowedClients.ShouldBe(7);
             tss.Port.ShouldBe(4567);
-            tss = await reader.TagStreamServer();
+            tss = await Proto.Api.TagStreamServer();
             tss.AllowedClients.ShouldBe(7);
             tss.Port.ShouldBe(4567);
         }
@@ -50,9 +46,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Start_and_stop_stream()
         {
-            await reader.AntennaSequence("0");
+            await Proto.Api.AntennaSequence("0");
             (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
-            readerFixture.Proto.Dispose();
+            Proto.Dispose();
             completed.ShouldBeFalse();
             msgs.Count.ShouldBe(0);
             errors.Count.ShouldBe(0);
@@ -73,11 +69,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                 "0307260000000000000092D5",
             };
 
-            await reader.AntennaSequence("0");
-            await reader.RFAttenuation(50);
-            await reader.AcqG2AntennaCombine(false);
+            await Proto.Api.AntennaSequence("0");
+            await Proto.Api.RFAttenuation(50);
+            await Proto.Api.AcqG2AntennaCombine(false);
             (await Timing.StartWait(() => tags.Count > 500)).ShouldBeTrue();
-            readerFixture.Proto.Dispose();
+            Proto.Dispose();
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
             var foundTags = dict.Keys.Intersect(exptectedTagIds).ToList();
@@ -93,10 +89,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Recover_from_tags_subscriber_error()
         {
-            readerFixture.Proto.Dispose();
+            Proto.Dispose();
             tagStream = new Subject<Tag>();
             var p = new AlienReaderProtocol(receiveTimeout:int.MaxValue);
-            p.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password").Wait(2000).ShouldBeTrue();
+            p.ConnectAndLogin(Host, Port, "alien", "password").Wait(2000).ShouldBeTrue();
             p.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
             var doThrow = false;
             var badSubscriber = tagStream.Subscribe(x =>

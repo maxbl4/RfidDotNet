@@ -13,20 +13,13 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
-    public class ReconnectionTests : IClassFixture<ReaderFixture>
+    public class ReconnectionTests : ReaderFixture
     {
-        private readonly ReaderFixture readerFixture;
-
-        public ReconnectionTests(ReaderFixture readerFixture)
-        {
-            this.readerFixture = readerFixture;
-        }
-        
         [Fact]
         public async Task Reconnection_check()
         {
-            if (!readerFixture.Settings.UseHardwareReader) return;
-            var r = new ReconnectingAlienReaderProtocol(new DnsEndPoint(readerFixture.Host, readerFixture.Port),
+            if (!Settings.UseHardwareReader) return;
+            var r = new ReconnectingAlienReaderProtocol(new DnsEndPoint(Host, Port),
                 async api => {
                     await api.AntennaSequence("0");
                     await api.TagListAntennaCombine(false);
@@ -53,9 +46,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Help_should_work()
         {
-            if (!readerFixture.Settings.UseHardwareReader) return;
+            if (!Settings.UseHardwareReader) return;
             var proto = new AlienReaderProtocol();
-            await proto.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password");
+            await proto.ConnectAndLogin(Host, Port, "alien", "password");
             var info = await proto.Api.Command("help");
             info.ShouldStartWith("**************************************************************");
             info.Length.ShouldBeGreaterThan(500);
