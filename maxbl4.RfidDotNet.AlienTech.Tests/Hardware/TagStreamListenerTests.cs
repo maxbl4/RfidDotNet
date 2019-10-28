@@ -7,6 +7,7 @@ using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Infrastructure;
 using Shouldly;
 using Xunit;
@@ -14,11 +15,10 @@ using Xunit;
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
     [Trait("Hardware", "true")]
-    public class TagStreamListenerTests : IDisposable
+    public class TagStreamListenerTests : IClassFixture<ReaderFixture>
     {
+        private readonly ReaderFixture readerFixture;
         private readonly IAlienReaderApi reader;
-        private readonly SimulatorListener sim;
-        private readonly AlienReaderProtocol proto;
         List<Tag> tags = new List<Tag>();
         List<Exception> errors = new List<Exception>();
         List<string> msgs = new List<string>();
@@ -26,16 +26,14 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         Subject<Tag> tagStream = new Subject<Tag>();
         Subject<Exception> errorStream = new Subject<Exception>();
 
-        public TagStreamListenerTests()
+        public TagStreamListenerTests(ReaderFixture readerFixture)
         {
-            sim = new SimulatorListener();
-            proto = new AlienReaderProtocol(receiveTimeout:int.MaxValue);
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(2000).ShouldBeTrue();
-            proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
-            reader = proto.Api;
+            this.readerFixture = readerFixture;
+            readerFixture.Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
+            reader = readerFixture.Proto.Api;
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);
             errorStream.Subscribe(errors.Add);
-            proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
+            readerFixture.Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
         }
 
         [Fact]
@@ -54,7 +52,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         {
             await reader.AntennaSequence("0");
             (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
-            proto.Dispose();
+            readerFixture.Proto.Dispose();
             completed.ShouldBeFalse();
             msgs.Count.ShouldBe(0);
             errors.Count.ShouldBe(0);
@@ -79,7 +77,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await reader.RFAttenuation(50);
             await reader.AcqG2AntennaCombine(false);
             (await Timing.StartWait(() => tags.Count > 500)).ShouldBeTrue();
-            proto.Dispose();
+            readerFixture.Proto.Dispose();
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
             var foundTags = dict.Keys.Intersect(exptectedTagIds).ToList();
@@ -95,10 +93,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Recover_from_tags_subscriber_error()
         {
-            proto.Dispose();
+            readerFixture.Proto.Dispose();
             tagStream = new Subject<Tag>();
             var p = new AlienReaderProtocol(receiveTimeout:int.MaxValue);
-            p.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(2000).ShouldBeTrue();
+            p.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password").Wait(2000).ShouldBeTrue();
             p.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
             var doThrow = false;
             var badSubscriber = tagStream.Subscribe(x =>
@@ -118,12 +116,6 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             (await Timing.StartWait(() => tags.Count > 0, 2000)).ShouldBeFalse();
             badSubscriber.Dispose();
             (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
-        }
-
-        public void Dispose()
-        {
-            proto?.Dispose();
-            sim?.Dispose();
         }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
+using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Exceptions;
 using Shouldly;
 using Xunit;
@@ -10,27 +12,17 @@ using Xunit;
 namespace maxbl4.RfidDotNet.AlienTech.Tests
 {
     [Trait("Hardware", "true")]
-    public class AlienReaderProtocolTests : IDisposable
+    public class AlienReaderProtocolTests : ReaderFixture
     {
-        private AlienReaderProtocol proto;
-        private SimulatorListener sim;
-        
-        public AlienReaderProtocolTests()
-        {
-            sim = new SimulatorListener();
-            proto = new AlienReaderProtocol();
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(6000).ShouldBeTrue();
-        }
-        
         [Fact]
         public void Connect_timeout()
         {
+            Simulator.OnClientAccepted = x => Thread.Sleep(6000);
             var sw = Stopwatch.StartNew();
             Assert.ThrowsAny<Exception>(() =>
-                new AlienReaderProtocol().ConnectAndLogin("10.0.0.254", sim.Port, "alien", "password").Wait());
+                new AlienReaderProtocol().ConnectAndLogin(Host, Port, "alien", "password", 100).Wait());
             sw.Stop();
-            sw.ElapsedMilliseconds.ShouldBeInRange(AlienReaderProtocol.DefaultReceiveTimeout, 
-                DuplexProtocol.DefaultConnectTimeout + 1000);
+            sw.ElapsedMilliseconds.ShouldBeInRange(0, 6000);
         }
         
         [Fact]
@@ -41,16 +33,16 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task RfModulation()
         {
-            (await proto.SendReceive("RFModulation = DRM")).ShouldBe("RFModulation = DRM");
-            (await proto.SendReceive("RFModulation?")).ShouldBe("RFModulation = DRM");
+            (await Proto.SendReceive("RFModulation = DRM")).ShouldBe("RFModulation = DRM");
+            (await Proto.SendReceive("RFModulation?")).ShouldBe("RFModulation = DRM");
         }
 
         [Fact]
         public void LoginWithWrongPassword()
         {
-            proto?.Dispose();
-            proto = new AlienReaderProtocol();
-            Assert.Throws<AggregateException>(() => proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password1").Wait())
+            Proto?.Dispose();
+            Proto = new AlienReaderProtocol();
+            Assert.Throws<AggregateException>(() => Proto.ConnectAndLogin(Host, Port, "alien", "password1").Wait())
                 .InnerException.ShouldBeOfType<LoginFailedException>();
         }
         
@@ -77,24 +69,18 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task AutoModeReset()
         {
-            (await proto.SendReceive("AutoModeReset")).ShouldBe(ProtocolMessages.AutoModeResetConfirmation);
+            (await Proto.SendReceive("AutoModeReset")).ShouldBe(ProtocolMessages.AutoModeResetConfirmation);
         }
 
         [Fact]
         public async Task Clear()
         {
-            (await proto.SendReceive("Clear")).ShouldBe(ProtocolMessages.TagListClearConfirmation);
+            (await Proto.SendReceive("Clear")).ShouldBe(ProtocolMessages.TagListClearConfirmation);
         }
 
         async Task SendReceiveConfirm(string command, string customValidation = null)
         {
-            (await proto.SendReceive(command)).ShouldBe(customValidation ?? command);
-        }
-
-        public void Dispose()
-        {
-            proto?.Dispose();
-            sim?.Dispose();
+            (await Proto.SendReceive(command)).ShouldBe(customValidation ?? command);
         }
     }
 }

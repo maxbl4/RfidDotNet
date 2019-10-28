@@ -6,26 +6,27 @@ using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Infrastructure;
 using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
-    public class ReconnectionTests : IDisposable
+    public class ReconnectionTests : IClassFixture<ReaderFixture>
     {
-        private SimulatorListener sim;
+        private readonly ReaderFixture readerFixture;
 
-        public ReconnectionTests()
+        public ReconnectionTests(ReaderFixture readerFixture)
         {
-            sim = new SimulatorListener();
+            this.readerFixture = readerFixture;
         }
         
         [Fact]
         public async Task Reconnection_check()
         {
-            if (!sim.UsePhysicalDevice) return;
-            var r = new ReconnectingAlienReaderProtocol(new DnsEndPoint(sim.Host, sim.Port),
+            if (!readerFixture.Settings.UseHardwareReader) return;
+            var r = new ReconnectingAlienReaderProtocol(new DnsEndPoint(readerFixture.Host, readerFixture.Port),
                 async api => {
                     await api.AntennaSequence("0");
                     await api.TagListAntennaCombine(false);
@@ -52,17 +53,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Help_should_work()
         {
-            if (!sim.UsePhysicalDevice) return;
+            if (!readerFixture.Settings.UseHardwareReader) return;
             var proto = new AlienReaderProtocol();
-            await proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password");
+            await proto.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password");
             var info = await proto.Api.Command("help");
             info.ShouldStartWith("**************************************************************");
             info.Length.ShouldBeGreaterThan(500);
-        }
-
-        public void Dispose()
-        {
-            sim?.Dispose();
         }
     }
 }

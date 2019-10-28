@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
+using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Infrastructure;
 using Serilog;
 using Shouldly;
@@ -11,43 +12,39 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
 {
-    public class AlienReaderFactsWithLogin : IDisposable
+    public class AlienReaderFactsWithLogin : IClassFixture<ReaderFixture>
     {
+        private readonly ReaderFixture readerFixture;
         static readonly ILogger Logger = Log.ForContext<AlienReaderFactsWithLogin>();
         private readonly IAlienReaderApi reader;
-        private SimulatorListener sim;
-        private AlienReaderProtocol proto;
-        private const int baseTimeout = 1000;
 
-        public AlienReaderFactsWithLogin()
+        public AlienReaderFactsWithLogin(ReaderFixture readerFixture)
         {
-            sim = new SimulatorListener();
-            proto = new AlienReaderProtocol(baseTimeout, baseTimeout * 2);
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(6000).ShouldBeTrue();
-            reader = proto.Api;
+            this.readerFixture = readerFixture;
+            reader = readerFixture.Proto.Api;
         }
 
         [Fact]
         public void Reader_bounce_current_client_when_new_comes()
         {
-            Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout, 
+            Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout, 
                     AlienReaderProtocol.DefaultReceiveTimeout)
                 .Result
                 .ShouldBeTrue("Did not get first keepalive");
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
-                r2.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(6000).ShouldBeTrue();
+                r2.ConnectAndLogin(readerFixture.Host, readerFixture.Port, "alien", "password").Wait(6000).ShouldBeTrue();
                 Logger.Debug("Second client connected");
             }
             Logger.Debug("Second client disconnected");
             
-            Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2, 
+            Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2, 
                     AlienReaderProtocol.DefaultReceiveTimeout * 2)
                 .Result
-                .ShouldBeTrue($"Still getting keepalives {proto.LastKeepalive} {DateTime.Now}");
+                .ShouldBeTrue($"Still getting keepalives {readerFixture.Proto.LastKeepalive} {DateTime.Now}");
             Logger.Information("Keepalives stopped");
-            Timing.StartWait(() => !proto.IsConnected).Result.ShouldBe(true);
+            Timing.StartWait(() => !readerFixture.Proto.IsConnected).Result.ShouldBe(true);
         }
 
         [Fact]
@@ -62,10 +59,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task Should_get_keepalives()
         {
-            (await Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
+            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
                 .ShouldBeTrue("Did not get first keepalive");
             await Task.Delay(1000);
-            (await Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
+            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
                 .ShouldBeTrue("Did not get second keepalive");
         }
 
@@ -94,12 +91,6 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
                 "E20000165919006518405C91"
             };
             exptectedTags.Except(tags).Count().ShouldBe(0);
-        }
-
-        public void Dispose()
-        {
-            proto?.Dispose();
-            sim?.Dispose();
         }
     }
 }

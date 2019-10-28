@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Ext;
@@ -20,29 +21,19 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
     {
         static readonly ILogger Logger = Log.ForContext<SimulatorListener>();
         private readonly bool acceptSingleClient;
-        private static int basePort = 20000;
         private readonly TcpListener listener;
         private Simulator client;
-        private readonly string host;
-        //public const string ReaderAddress = "192.168.1.100";
         public const string ReaderAddress = "10.0.1.41";
 
         public Simulator Client => client;
-        List<Simulator> clients = new List<Simulator>();
-        public bool UsePhysicalDevice { get; }
-        public string Host => UsePhysicalDevice ? ReaderAddress : host;
-        public int Port => UsePhysicalDevice ? 23 : basePort;
+        readonly List<Simulator> clients = new List<Simulator>();
         public TagStreamLogic TagStreamLogic { get; } = new TagStreamLogic();
+        public Action<Socket> OnClientAccepted { get; set; }
 
-
-        public SimulatorListener(bool acceptSingleClient = true, bool? usePhysicalDevice = null)
+        public SimulatorListener(IPEndPoint bindTo, bool acceptSingleClient = true)
         {
-            basePort++;
-            UsePhysicalDevice = usePhysicalDevice ?? File.Exists("AlienTests_UsePhysicalDevice");
             this.acceptSingleClient = acceptSingleClient;
-            host = EndpointLookup.GetAnyPhysicalIp().ToString();
-            if (UsePhysicalDevice) return;
-            listener = new TcpListener(EndpointLookup.GetAnyPhysicalIp(), basePort);
+            listener = new TcpListener(bindTo);
             listener.Start();
             new Task(AcceptLoop, TaskCreationOptions.LongRunning).Start();
         }
@@ -56,6 +47,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
                     var socket = await listener.AcceptSocketAsync();
                     lock (clients)
                     {
+                        OnClientAccepted?.Invoke(socket);
                         Logger.Information("Accepted client {RemoteEndPoint}", socket.RemoteEndPoint);
                         if (acceptSingleClient && client?.Proto.IsConnected == true)
                         {

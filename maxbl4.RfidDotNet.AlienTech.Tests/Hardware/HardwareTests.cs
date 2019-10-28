@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Infrastructure;
 using Serilog;
 using Shouldly;
@@ -17,23 +18,19 @@ using Xunit;
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
     [Trait("Hardware", "true")]
-    public class HardwareTests : IDisposable
+    public class HardwareTests : IClassFixture<ReaderFixture>
     {
-        static readonly ILogger Logger = Log.ForContext<HardwareTests>();
-        private SimulatorListener sim;
-        private AlienReaderProtocol proto;
-        private IAlienReaderApi reader;
-        private const int baseTimeout = 1000;
+        private readonly ReaderFixture readerFixture;
+        private static readonly ILogger Logger = Log.ForContext<HardwareTests>();
+        private readonly IAlienReaderApi reader;
 
-        private Subject<Tag> tagStream = new Subject<Tag>();
-        private Subject<Exception> errorStream = new Subject<Exception>();
+        private readonly Subject<Tag> tagStream = new Subject<Tag>();
+        private readonly Subject<Exception> errorStream = new Subject<Exception>();
 
-        public HardwareTests()
+        public HardwareTests(ReaderFixture readerFixture)
         {
-            sim = new SimulatorListener();
-            proto = new AlienReaderProtocol(baseTimeout, baseTimeout * 2);
-            proto.ConnectAndLogin(sim.Host, sim.Port, "alien", "password").Wait(baseTimeout * 2).ShouldBeTrue();
-            reader = proto.Api;
+            this.readerFixture = readerFixture;
+            reader = readerFixture.Proto.Api;
         }
 
         [Fact]
@@ -44,10 +41,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             var tags = new List<Tag>();
             var msgs = new List<string>();
             var errors = new List<Exception>();
-            await proto.StartTagPolling(tagStream, errorStream);
+            await readerFixture.Proto.StartTagPolling(tagStream, errorStream);
             tagStream.Subscribe(tags.Add);
             errorStream.Subscribe(errors.Add);
-            proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);            
+            readerFixture.Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);            
             await reader.AntennaSequence("0");
             await Task.Delay(2000);
             tags.Clear();
@@ -68,27 +65,27 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact()]
         public async Task Should_disconnect_if_no_keepalives()
         {
-            if (sim.UsePhysicalDevice) return;
-            (await Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive) < TimeSpan.FromSeconds(1),
+            if (readerFixture.Settings.UseHardwareReader) return;
+            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) < TimeSpan.FromSeconds(1),
                     1500))
                 .ShouldBeTrue("Did not get first keepalive");
             Logger.Debug("First keepalive receive");
-            if (sim.UsePhysicalDevice)
+            if (readerFixture.Settings.UseHardwareReader)
             {
                 var w = reader.Reboot().Wait(AlienReaderProtocol.DefaultReceiveTimeout); //linux hangs on this
                 Logger.Debug("Disabled keepalives (reboot reader command). Return in time: {w}", w);
             }
             else
             {
-                sim.Client.Logic.KeepaliveEnabled = false;
+                readerFixture.Simulator.Client.Logic.KeepaliveEnabled = false;
                 Logger.Debug("Disabled keepalives on simulator");
             }
 
-            (await Timing.StartWait(() => (DateTime.Now - proto.LastKeepalive) > TimeSpan.FromSeconds(8),
+            (await Timing.StartWait(() => (DateTime.Now - readerFixture.Proto.LastKeepalive) > TimeSpan.FromSeconds(8),
                     10000))
                 .ShouldBeTrue("Keepalives should stop");
             Logger.Debug("Keepalives have stopped");
-            proto.IsConnected.ShouldBeFalse();
+            readerFixture.Proto.IsConnected.ShouldBeFalse();
             Logger.Debug("proto in disconnected");
         }
 
@@ -106,43 +103,6 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                 infos[0].IPAddress.ShouldBe(IPAddress.Parse(SimulatorListener.ReaderAddress));
             }
             await reader.HeartbeatTime(30);
-        }
-
-        public void Dispose()
-        {
-            proto?.Dispose();
-            WaitForPhysicalReaderToComeback();
-            sim?.Dispose();
-        }
-
-        void WaitForPhysicalReaderToComeback()
-        {
-            if (sim.UsePhysicalDevice)
-            {
-                Logger.Debug("will wait for physical reader to restart");
-                var i = 0;
-                while (i < 200)
-                {
-                    var sw = Stopwatch.StartNew();
-                    try
-                    {
-                        Logger.Debug("Try {i}", i++);
-                        var p = new AlienReaderProtocol();
-                        p.ConnectAndLogin(sim.Host, sim.Port, "alien", "password", 1000).Wait();
-                        sw.Stop();
-                        Logger.Debug("[{Elapsed}]Successfully connected to physical reader", sw.Elapsed);
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        sw.Stop();
-                        Logger.Debug("[{Elapsed}]Failed to connect to physical reader: {Message}", sw.Elapsed, ex.Message);
-                        if (sw.ElapsedMilliseconds < 1000)
-                            Thread.Sleep(1000);
-                    }
-                }
-                throw new Exception("Could not connect to reader after 200 retries");
-            }
         }
     }
 }
