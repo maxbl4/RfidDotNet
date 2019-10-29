@@ -10,7 +10,9 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
     {
         private SimulatorLogicState state = SimulatorLogicState.WaitForLogin;
         private string login;
-        private readonly Dictionary<string, string> propeties = new Dictionary<string, string>();
+        public Dictionary<string, string> Properties { get; } = new Dictionary<string, string>();
+
+        public string VisibleTags { get; set; } = ProtocolMessages.NoTags;
 
         public bool KeepaliveEnabled { get; set; } = true;
 
@@ -44,7 +46,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        
         private string ExecuteAction(string command)
         {
             switch (command.ToLowerInvariant())
@@ -70,7 +72,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
             if (ReadonlyProperty(kv[0], out var ret))
                 return ret;
             var key = kv[0].ToLowerInvariant();
-            propeties[key] = kv[1];
+            Properties[key] = kv[1];
             return command;
         }
 
@@ -80,8 +82,8 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
             if (ReadonlyProperty(command, out var ret))
                 return ret;
             var key = command.ToLowerInvariant();
-            if (propeties.ContainsKey(key))
-                return $"{command} = {propeties[key]}";
+            if (Properties.ContainsKey(key))
+                return $"{command} = {Properties[key]}";
             return ProtocolMessages.InvalidUseOfCommand;;
         }
 
@@ -90,7 +92,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
             switch (command.ToLowerInvariant())
             {
                 case "taglist":
-                    response = propeties.Get("antennasequence") == "0" ? ProtocolMessages.KnownTags : ProtocolMessages.NoTags;
+                    response = VisibleTags;
                     break;
                 default:
                     response = null;

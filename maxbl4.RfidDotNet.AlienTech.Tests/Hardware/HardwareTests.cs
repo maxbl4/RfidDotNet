@@ -28,6 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Stream_should_continue_after_keepalive_timeout()
         {
+            SetExpectedVisibleTags();
             await Proto.Api.TagStreamKeepAliveTime(1);
             await Proto.Api.AntennaSequence("3");
             var tags = new List<Tag>();
@@ -84,6 +85,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Heartbeat()
         {
+            if (!Settings.UseHardwareReader) return;
             await Proto.Api.HeartbeatTime(2);
             using (var disc = new AlienReaderDiscovery())
             {

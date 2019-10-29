@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Enums;
@@ -26,9 +27,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 
         public TagStreamListenerTests()
         {
+            SetExpectedVisibleTags();
+            
             Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);
-            errorStream.Subscribe(errors.Add);
+            errorStream.Where(x => !(x is ObjectDisposedException)).Subscribe(errors.Add);
             Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
         }
 
@@ -57,18 +60,6 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Check_known_tags()
         {
-            var exptectedTagIds = new[]
-            {
-                "E20000165919004418405CBA",
-                "E20000165919006718405C92",
-                "E20000165919007818405C7B",
-                "E20000165919007718405C83",
-                "E20000165919006518405C91",
-                "0307260000000000000090B1",
-                "030726000000000000009213",
-                "0307260000000000000092D5",
-            };
-
             await Proto.Api.AntennaSequence("0");
             await Proto.Api.RFAttenuation(50);
             await Proto.Api.AcqG2AntennaCombine(false);
@@ -76,13 +67,15 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             Proto.Dispose();
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
-            var foundTags = dict.Keys.Intersect(exptectedTagIds).ToList();
+            var foundTags = dict.Keys.Intersect(Settings.KnownTagIds).ToList();
             foundTags.Count.ShouldBeGreaterThanOrEqualTo(3);
             foreach (var tagId in foundTags)
             {
                 dict[tagId].Count.ShouldBeGreaterThan(50);
             }
             msgs.Count.ShouldBe(0);
+            if (errors.Count > 0)
+                errors[0].ToString().ShouldBeNull();
             errors.Count.ShouldBe(0);
         }
         
@@ -103,6 +96,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             
             await p.Api.AntennaSequence("0");
             (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
+            if (errors.Count > 0)
+                errors[0].ToString().ShouldBeNull();
             errors.Count.ShouldBe(0);
             doThrow = true;
             

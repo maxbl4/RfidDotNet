@@ -21,12 +21,5 @@
         public static string Goodbye = "Goodbye!";
         public static string CommandNotUnderstood = "Error 1: Command not understood.";
         public static string InvalidUseOfCommand = "Error 4: Invalid use of command.";
-
-        public static string KnownTags = 
-            "E20000165919004418405CBA\r\n" +
-            "E20000165919006718405C92\r\n" +
-            "E20000165919007818405C7B\r\n" +
-            "E20000165919007718405C83\r\n" +
-            "E20000165919006518405C91";
     }
 }

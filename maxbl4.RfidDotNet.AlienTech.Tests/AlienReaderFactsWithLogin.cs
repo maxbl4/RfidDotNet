@@ -72,17 +72,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             await Proto.Api.RFLevel(180);
             await Proto.Api.TagListFormat(ListFormat.Custom);
             await Proto.Api.TagListCustomFormat("%k");
+            Simulator.VisibleTags = "11\r\n22\r\n33";
             var tagList = await Proto.Api.TagList();
-            var tags = tagList.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var exptectedTags = new[]
-            {
-                "E20000165919004418405CBA",
-                "E20000165919006718405C92",
-                "E20000165919007818405C7B",
-                "E20000165919007718405C83",
-                "E20000165919006518405C91"
-            };
-            exptectedTags.Except(tags).Count().ShouldBe(0);
+            tagList.ShouldBe(Simulator.VisibleTags);
         }
     }
 }

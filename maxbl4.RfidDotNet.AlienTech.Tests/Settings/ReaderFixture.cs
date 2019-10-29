@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading;
+using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -79,6 +81,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
                 }
             }
             throw new Exception("Could not connect to reader after 200 retries");
+        }
+        
+        public void SetExpectedVisibleTags()
+        {
+            Simulator.VisibleTags = string.Join("\r\n", Settings.KnownTagIds.Select(x => x.ToTagString()));
         }
     }
 }

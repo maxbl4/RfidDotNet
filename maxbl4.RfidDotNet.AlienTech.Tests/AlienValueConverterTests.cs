@@ -161,6 +161,13 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         }
 
         [Fact]
+        public void TagParser_SerializeRoundtrip()
+        {
+            var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
+            TagParser.Parse(tagString).ToCustomFormatString().ShouldBe(tagString);
+        }
+
+        [Fact]
         public void Tag_parser()
         {
             var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
@@ -180,6 +187,21 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             tag.Antenna.ShouldBe(0);
             tag.Rssi.ShouldBe(-35.4, 0.1);
             tag.ReadCount.ShouldBe(66);
+        }
+        
+        [Fact]
+        public void TagParser_UnitEpoch()
+        {
+            var epoch1 = 1518371341633L;
+            var epoch2 = 1518371343641L;
+            var dt1 = DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3");
+            var dt2 = DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3");
+            
+            DateTimeOffset.FromUnixTimeMilliseconds(epoch1).ShouldBe(dt1);
+            dt1.ToUnixTimeMilliseconds().ShouldBe(epoch1);
+            
+            DateTimeOffset.FromUnixTimeMilliseconds(epoch2).ShouldBe(dt2);
+            dt2.ToUnixTimeMilliseconds().ShouldBe(epoch2);
         }
 
         [Fact]

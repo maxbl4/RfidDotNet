@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.Ext;
 using Serilog;
@@ -25,8 +27,16 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private Simulator client;
         public const string ReaderAddress = "10.0.1.41";
 
+        private string visibleTags = ProtocolMessages.NoTags;
+        public string VisibleTags
+        {
+            get => visibleTags;
+            set => visibleTags = Client.Logic.VisibleTags = value;
+        }
+
         public Simulator Client => client;
         readonly List<Simulator> clients = new List<Simulator>();
+        
         public TagStreamLogic TagStreamLogic { get; } = new TagStreamLogic();
         public Action<Socket> OnClientAccepted { get; set; }
 
@@ -57,7 +67,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
                             Logger.Information("Previous connection closed");
                         }
 
-                        client = new Simulator {Logic = new SimulatorLogic()};
+                        client = new Simulator {Logic = new SimulatorLogic{VisibleTags = VisibleTags}};
                         client.Proto = new SimulatorProtocol(client.Logic.HandleCommand);
                         clients.Add(client);
                         client.Proto.Accept(socket);
