@@ -27,7 +27,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 
         public TagStreamListenerTests()
         {
-            SetExpectedVisibleTags();
+            SetTagListHandlerForKnownTags();
             
             Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);

@@ -40,7 +40,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             r.IsConnected.ShouldBeFalse();
             status.Last().ShouldBeFalse();
             //Timing.StartWait(() => status.Last(), (int)(AlienReaderProtocol.DefaultReceiveTimeout * 2.5)).Result.ShouldBeTrue();
-            Timing.StartWait(() => tags.Count > 0, 60000).Result.ShouldBeTrue();
+            Timing.StartWait(() => tags.Count > 0, 90000).Result.ShouldBeTrue();
         }
         
         [Fact]

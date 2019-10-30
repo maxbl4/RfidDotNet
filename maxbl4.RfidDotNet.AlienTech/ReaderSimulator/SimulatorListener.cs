@@ -25,13 +25,14 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private readonly bool acceptSingleClient;
         private readonly TcpListener listener;
         private Simulator client;
-        public const string ReaderAddress = "10.0.1.41";
 
-        private string visibleTags = ProtocolMessages.NoTags;
-        public string VisibleTags
+        public static Func<string> DefaultTagListHandler = () => ProtocolMessages.NoTags;
+
+        public Func<string> tagListHandler = DefaultTagListHandler;
+        public Func<string> TagListHandler
         {
-            get => visibleTags;
-            set => visibleTags = Client.Logic.VisibleTags = value;
+            get => tagListHandler;
+            set => tagListHandler = Client.Logic.TagListHandler = value;
         }
 
         public Simulator Client => client;
@@ -67,7 +68,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
                             Logger.Information("Previous connection closed");
                         }
 
-                        client = new Simulator {Logic = new SimulatorLogic{VisibleTags = VisibleTags}};
+                        client = new Simulator {Logic = new SimulatorLogic{TagListHandler = TagListHandler}};
                         client.Proto = new SimulatorProtocol(client.Logic.HandleCommand);
                         clients.Add(client);
                         client.Proto.Accept(socket);

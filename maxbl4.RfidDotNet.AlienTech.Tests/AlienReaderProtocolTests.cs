@@ -17,6 +17,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public void Connect_timeout()
         {
+            if (Settings.UseHardwareReader) return;
             Simulator.OnClientAccepted = x => Thread.Sleep(10000);
             var sw = Stopwatch.StartNew();
             Assert.ThrowsAny<Exception>(() =>

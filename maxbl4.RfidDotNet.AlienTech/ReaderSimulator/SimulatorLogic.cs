@@ -12,7 +12,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private string login;
         public Dictionary<string, string> Properties { get; } = new Dictionary<string, string>();
 
-        public string VisibleTags { get; set; } = ProtocolMessages.NoTags;
+        public Func<string> TagListHandler { get; set; } = SimulatorListener.DefaultTagListHandler;
 
         public bool KeepaliveEnabled { get; set; } = true;
 
@@ -92,7 +92,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
             switch (command.ToLowerInvariant())
             {
                 case "taglist":
-                    response = VisibleTags;
+                    response = TagListHandler();
                     break;
                 default:
                     response = null;

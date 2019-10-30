@@ -83,9 +83,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
             throw new Exception("Could not connect to reader after 200 retries");
         }
         
-        public void SetExpectedVisibleTags()
+        public void SetTagListHandlerForKnownTags()
         {
-            Simulator.VisibleTags = string.Join("\r\n", Settings.KnownTagIds.Select(x => x.ToTagString()));
+            if (Settings.UseHardwareReader) return;
+            var serializedTagList = string.Join("\r\n", Settings.KnownTagIds.Select(x => x.ToTagString()));
+            Simulator.TagListHandler = () => serializedTagList;
         }
     }
 }

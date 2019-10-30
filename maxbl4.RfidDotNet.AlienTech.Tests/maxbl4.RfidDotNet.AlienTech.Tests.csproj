@@ -19,7 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="alien-test-settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>

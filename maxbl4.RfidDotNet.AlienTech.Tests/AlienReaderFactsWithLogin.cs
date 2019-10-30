@@ -63,18 +63,5 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             (await Proto.Api.Clear()).ShouldBe(ProtocolMessages.TagListClearConfirmation);
         }
-
-        [Fact]
-        public async Task Return_taglist()
-        {
-            await Proto.Api.Clear();
-            await Proto.Api.AntennaSequence("0");
-            await Proto.Api.RFLevel(180);
-            await Proto.Api.TagListFormat(ListFormat.Custom);
-            await Proto.Api.TagListCustomFormat("%k");
-            Simulator.VisibleTags = "11\r\n22\r\n33";
-            var tagList = await Proto.Api.TagList();
-            tagList.ShouldBe(Simulator.VisibleTags);
-        }
     }
 }

@@ -22,6 +22,11 @@ namespace maxbl4.RfidDotNet.Demo
             }
 
             connectionString = ConnectionString.Parse(args[0]);
+            if (!connectionString.IsValid(out var errors))
+            {
+                Console.WriteLine(errors);
+                return;
+            }
 
             factory.UseSerialProtocol();
             factory.UseAlienProtocol();
@@ -30,6 +35,7 @@ namespace maxbl4.RfidDotNet.Demo
                 stream.Errors.Subscribe(e => errors +=  e.Message + "\r\n");
                 SubscribeToPollingResults(stream.Tags, 500);
                 stream.Start().Wait();
+                Console.WriteLine("Polling for tags...");
                 Console.ReadLine();
             }
         }

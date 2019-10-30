@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         [Fact]
         public async Task Stream_should_continue_after_keepalive_timeout()
         {
-            SetExpectedVisibleTags();
+            SetTagListHandlerForKnownTags();
             await Proto.Api.TagStreamKeepAliveTime(1);
             await Proto.Api.AntennaSequence("3");
             var tags = new List<Tag>();
@@ -94,7 +94,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                 (await Timing.StartWait(() => observed && disc.Readers.Any())).ShouldBeTrue();
                 var infos = disc.Readers.ToList();
                 infos.Count.ShouldBe(1);
-                infos[0].IPAddress.ShouldBe(IPAddress.Parse(SimulatorListener.ReaderAddress));
+                infos[0].IPAddress.ShouldBe(IPEndPoint.Parse(Settings.HardwareReaderAddress).Address);
             }
             await Proto.Api.HeartbeatTime(30);
         }
