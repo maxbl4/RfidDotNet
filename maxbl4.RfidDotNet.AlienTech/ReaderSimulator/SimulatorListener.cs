@@ -42,8 +42,8 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         }
 
         public Simulator Client => client;
-        
-        public TagStreamLogic TagStreamLogic { get; } = new TagStreamLogic();
+
+        public IPEndPoint ListenEndpoint => (IPEndPoint)listener.LocalEndpoint;
         public Action<Socket> OnClientAccepted { get; set; }
 
         public SimulatorListener(IPEndPoint bindTo, bool acceptSingleClient = true)

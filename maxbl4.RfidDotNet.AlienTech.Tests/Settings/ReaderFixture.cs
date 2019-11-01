@@ -34,6 +34,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
             }else
             {
                 Simulator = new SimulatorListener(UseEndpoint(Settings.ReaderSimAddress));
+                Port = Simulator.ListenEndpoint.Port;
             }
             
             Proto = new AlienReaderProtocol();
