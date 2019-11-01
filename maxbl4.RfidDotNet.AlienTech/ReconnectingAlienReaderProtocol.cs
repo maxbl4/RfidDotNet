@@ -8,6 +8,7 @@ using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech
@@ -105,7 +106,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             Logger.Information("Trying to connect to {endpoint}", endpoint);
             try
             {
-                proto?.Dispose();
+                proto.DisposeSafe();
                 var arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
                 await arp.ConnectAndLogin(endpoint.Host, endpoint.Port, login, password);
                 if (usePolling)
@@ -155,10 +156,10 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         public void Dispose()
         {
-            reconnectDisposable?.Dispose();
+            reconnectDisposable.DisposeSafe();
             Logger.Swallow(tags.OnCompleted);
-            tags?.Dispose();
-            proto?.Dispose();
+            tags.DisposeSafe();
+            proto.DisposeSafe();
         }
     }
 }

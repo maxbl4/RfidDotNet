@@ -10,6 +10,7 @@ using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
 using maxbl4.RfidDotNet.Exceptions;
+using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech
@@ -86,7 +87,7 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         public async Task StartTagStreamOld(IObserver<Tag> tags)
         {
-            tagStreamListener?.Dispose();
+            tagStreamListener.DisposeSafe();
             await api.TagStreamKeepAliveTime(1800);
             await api.TagStreamFormat(ListFormat.Custom);
             await api.TagStreamCustomFormat(TagParser.CustomFormat);
@@ -152,8 +153,8 @@ namespace maxbl4.RfidDotNet.AlienTech
         public override void Dispose()
         {
             Logger.Information("Disposing");
-            pollerDisposable.Dispose();
-            tagStreamListener?.Dispose();
+            pollerDisposable.DisposeSafe();
+            tagStreamListener.DisposeSafe();
             base.Dispose();
         }
     }

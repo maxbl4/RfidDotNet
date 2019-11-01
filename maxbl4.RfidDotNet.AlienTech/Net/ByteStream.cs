@@ -95,7 +95,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
         {
             Logger.Information("Disposing");
             Close();
-            semaphore?.Dispose();
+            semaphore.DisposeSafe();
         }
     }
 }

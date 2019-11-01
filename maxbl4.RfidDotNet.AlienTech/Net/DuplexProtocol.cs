@@ -117,8 +117,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
             if (disposed) return;
             disposed = true;
             Logger.Information("Disposing");
-            sendReceiveSemaphore?.Dispose();
-            stream?.Dispose();
+            sendReceiveSemaphore.DisposeSafe();
+            stream.DisposeSafe();
             Disconnected(this, EventArgs.Empty);
             Disconnected = null;
         }

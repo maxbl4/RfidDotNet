@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech.TagStream
@@ -60,7 +61,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                 if (disposed) return;
                 disposed = true;
                 Logger.Swallow(() => unparsedMessages?.OnCompleted());
-                unparsedMessages?.Dispose();
+                unparsedMessages.DisposeSafe();
             }
         }
     }

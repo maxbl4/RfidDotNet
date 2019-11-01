@@ -25,6 +25,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private readonly bool acceptSingleClient;
         private readonly TcpListener listener;
         private Simulator client;
+        private object sync = new object();
 
         public static readonly Func<string> DefaultTagListHandler = () => ProtocolMessages.NoTags;
 
@@ -41,7 +42,6 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         }
 
         public Simulator Client => client;
-        readonly List<Simulator> clients = new List<Simulator>();
         
         public TagStreamLogic TagStreamLogic { get; } = new TagStreamLogic();
         public Action<Socket> OnClientAccepted { get; set; }
@@ -61,21 +61,19 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
                 while (true)
                 {
                     var socket = await listener.AcceptSocketAsync();
-                    lock (clients)
+                    lock (sync)
                     {
                         OnClientAccepted?.Invoke(socket);
                         Logger.Information("Accepted client {RemoteEndPoint}", socket.RemoteEndPoint);
                         if (acceptSingleClient && client?.Proto.IsConnected == true)
                         {
                             Logger.Information("Closing previous connection");
-                            clients.Clear();
-                            client.Proto.Dispose();
+                            client.Proto.DisposeSafe();
                             Logger.Information("Previous connection closed");
                         }
 
                         client = new Simulator {Logic = new SimulatorLogic{TagListHandler = TagListHandler}};
                         client.Proto = new SimulatorProtocol(client.Logic.HandleCommand);
-                        clients.Add(client);
                         client.Proto.Accept(socket);
                     }
                 }
@@ -90,7 +88,6 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         {
             listener?.Server.CloseForce();
             listener?.Stop();
-            clients.ForEach(x => x?.Proto?.Dispose());
         }
     }
 }

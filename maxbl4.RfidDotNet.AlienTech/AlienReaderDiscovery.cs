@@ -68,7 +68,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         public void Dispose()
         {
             client.Client.CloseForce();
-            client?.Dispose();
+            client.DisposeSafe();
         }
     }
 }
