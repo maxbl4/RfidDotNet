@@ -1,9 +1,9 @@
 using System;
 using Serilog;
 
-namespace maxbl4.RfidDotNet.GenericSerial.Ext
+namespace maxbl4.RfidDotNet.Ext
 {
-    internal static class DisposableExt
+    public static class DisposableExt
     {
         public static void DisposeSafe(this IDisposable disposable)
         {

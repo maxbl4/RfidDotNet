@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
@@ -29,7 +30,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public void Dispose()
         {
             doInventory = false;
-            serialReader?.DisposeSafe();
+            serialReader.DisposeSafe();
         }
 
         readonly Subject<Tag> tags = new Subject<Tag>();

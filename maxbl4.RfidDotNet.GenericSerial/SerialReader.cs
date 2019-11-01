@@ -168,7 +168,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         /// </summary>
         public async Task ActivateOnDemandInventoryMode(bool ignoreError = false)
         {
-            realtimeInventoryListener.DisposeSafe();
+            DisposableExt.DisposeSafe(realtimeInventoryListener);
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
             
@@ -183,7 +183,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
         {
-            realtimeInventoryListener.DisposeSafe();
+            DisposableExt.DisposeSafe(realtimeInventoryListener);
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, 
                 (byte)(withGpioTrigger ? ReaderWorkingMode.RealtimeGPIOTriggered : ReaderWorkingMode.Realtime)));
             var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
@@ -252,8 +252,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public void Dispose()
         {
-            realtimeInventoryListener.DisposeSafe();
-            streamFactory.DisposeSafe();
+            DisposableExt.DisposeSafe(realtimeInventoryListener);
+            DisposableExt.DisposeSafe(streamFactory);
         }
     }
 }

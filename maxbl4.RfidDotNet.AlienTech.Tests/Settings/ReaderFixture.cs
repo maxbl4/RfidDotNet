@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading;
+using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using Microsoft.Extensions.Configuration;
@@ -50,8 +51,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
 
         public void Dispose()
         {
-            Proto?.Dispose();
-            Simulator?.Dispose();
+            Proto.DisposeSafe();
+            Simulator.DisposeSafe();
             WaitForPhysicalReaderToComeback();
         }
 

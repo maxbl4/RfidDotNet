@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 
 namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
@@ -38,8 +39,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
 
         public void Invalidate()
         {
-            stream.DisposeSafe();
-            socket.DisposeSafe();
+            DisposableExt.DisposeSafe(stream);
+            DisposableExt.DisposeSafe(socket);
             stream = null;
             socket = null;
         }
