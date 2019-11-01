@@ -26,13 +26,18 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private readonly TcpListener listener;
         private Simulator client;
 
-        public static Func<string> DefaultTagListHandler = () => ProtocolMessages.NoTags;
+        public static readonly Func<string> DefaultTagListHandler = () => ProtocolMessages.NoTags;
 
         public Func<string> tagListHandler = DefaultTagListHandler;
         public Func<string> TagListHandler
         {
             get => tagListHandler;
-            set => tagListHandler = Client.Logic.TagListHandler = value;
+            set
+            {
+                tagListHandler = value;
+                if (Client?.Logic != null)
+                    Client.Logic.TagListHandler = value;
+            }
         }
 
         public Simulator Client => client;
