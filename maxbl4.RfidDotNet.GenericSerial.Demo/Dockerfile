@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1-sdk
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1
 #RUN apt update && apt install socat build-essential cmake -y
 #WORKDIR /root
 #RUN git clone https://github.com/jcurl/SerialPortStream.git
