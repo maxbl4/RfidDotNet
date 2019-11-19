@@ -16,9 +16,8 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
 
         public string HandleCommand(string command)
         {
-            if (!command.StartsWith("\x1"))
-                throw new NotSupportedException("Only handle commands with disabled prompt");
-            command = command.Substring(1);
+            if (command.StartsWith("\x1"))
+                command = command.Substring(1);
             switch (state)
             {
                 case SimulatorLogicState.WaitForLogin:
