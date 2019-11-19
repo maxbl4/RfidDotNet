@@ -32,11 +32,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 {
                     Console.WriteLine($"{DateTime.UtcNow:HH:mm:ss} served {requestCounter} requests for last {interval}");
                     requestCounter = 0;
+                    lastInfo = DateTime.UtcNow;
                 }
                 
                 Thread.Sleep(simulatorOptions.ReadLatencyMs);
                 
-                lastInfo = DateTime.UtcNow;
                 if (returnContinuos.Length > 0)
                     return string.Join("\r\n", returnContinuos.Select(x =>
                     {
