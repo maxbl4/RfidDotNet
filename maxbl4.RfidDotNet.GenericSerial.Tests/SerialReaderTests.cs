@@ -159,11 +159,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 r.SetRFPower(10).Wait();
                 r.SetInventoryScanInterval(TimeSpan.FromSeconds(10)).Wait();
                 var tags = new List<Tag>();
-                Timing.StartWait(() =>
+                new Timing().Expect(() =>
                 {
                     tags.AddRange(r.TagInventory().Result.Tags);
                     return tags.Select(x => x.TagId).Distinct().Any();
-                }).Result.ShouldBeTrue();
+                });
                 tags.Select(x => x.TagId)
                     .Intersect(TestSettings.Instance.GetKnownTagIds)
                     .Count()
@@ -186,13 +186,15 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 var totalTagsBuffered = 0;
                 var lastInventoryAgg = 0;
-                Timing.StartWait(() =>
+                new Timing()
+                    .Context("Failed to read 50 tags")
+                    .Expect(() =>
                 {
                     var res = r.TagInventoryWithMemoryBuffer().Result;
                     totalTagsBuffered = res.TagsInBuffer;
                     lastInventoryAgg += res.TagsInLastInventory;
                     return lastInventoryAgg > 50;
-                }).Result.ShouldBeTrue("Failed to read 50 tags");
+                });
                 lastInventoryAgg.ShouldBeGreaterThan(50);
                 totalTagsBuffered.ShouldBeInRange(1, 100);
                 
@@ -267,7 +269,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     TagDebounceTime = TimeSpan.Zero
                 }).Wait();
                 r.ActivateRealtimeInventoryMode().Wait();
-                Timing.StartWait(() => tags.Count > 50).Result.ShouldBeTrue("Could not read 50 tags in 10 seconds");
+                new Timing().Context("Could not read 50 tags in 10 seconds").Expect(() => tags.Count > 50);
                 try
                 {
                     r.ActivateOnDemandInventoryMode().Wait();

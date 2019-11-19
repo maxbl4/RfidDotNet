@@ -1,6 +1,6 @@
 using System;
 using System.Net;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.RfidDotNet.Extensions.Endpoint;
 using Shouldly;
 using Xunit;
 

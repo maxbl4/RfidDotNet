@@ -5,12 +5,12 @@ using System.Net.Sockets;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
 using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
 using maxbl4.RfidDotNet.Exceptions;
-using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech

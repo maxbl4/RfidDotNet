@@ -1,10 +1,8 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.Infrastructure.Extensions.SemaphoreExt;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
-using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Buffers

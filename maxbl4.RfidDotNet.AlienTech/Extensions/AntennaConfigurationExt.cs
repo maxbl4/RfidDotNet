@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.AlienTech.Extensions
 {
     public static class AntennaConfigurationExt
     {

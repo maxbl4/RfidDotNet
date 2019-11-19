@@ -6,9 +6,9 @@ using System.Net.Sockets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Xml;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.SocketExt;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
-using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech

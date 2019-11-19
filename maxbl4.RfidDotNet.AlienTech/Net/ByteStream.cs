@@ -4,10 +4,12 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using maxbl4.Infrastructure;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.SemaphoreExt;
+using maxbl4.Infrastructure.Extensions.SocketExt;
 using maxbl4.RfidDotNet.AlienTech.Buffers;
-using maxbl4.RfidDotNet.AlienTech.Ext;
 using maxbl4.RfidDotNet.Exceptions;
-using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech.Net

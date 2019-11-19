@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure.Extensions.IPAddressExt;
 
 namespace maxbl4.RfidDotNet.AlienTech.Net
 {

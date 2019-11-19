@@ -1,6 +1,6 @@
 using System;
 using maxbl4.RfidDotNet.AlienTech;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Extensions;
 using maxbl4.RfidDotNet.GenericSerial;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 using Shouldly;

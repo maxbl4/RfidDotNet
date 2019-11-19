@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.AlienTech.Ext;
-using maxbl4.RfidDotNet.AlienTech.Interfaces;
-using maxbl4.RfidDotNet.AlienTech.Net;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.SocketExt;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator

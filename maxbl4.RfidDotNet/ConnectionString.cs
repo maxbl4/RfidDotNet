@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.RfidDotNet.Extensions.Endpoint;
 
 namespace maxbl4.RfidDotNet
 {

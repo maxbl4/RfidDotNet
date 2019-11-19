@@ -4,8 +4,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.AlienTech.Ext;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.LoggerExt;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech.TagStream

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text.RegularExpressions;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Extensions;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.Infrastructure;
 

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure;
 using Shouldly;
 using Xunit;
 

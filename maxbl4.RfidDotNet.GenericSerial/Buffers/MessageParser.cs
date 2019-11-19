@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using maxbl4.Infrastructure.Extensions.ByteArrayExt;
 using maxbl4.RfidDotNet.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;

@@ -1,4 +1,4 @@
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.AlienTech.Extensions
 {
     public static class UniversalTagStreamFactoryExt
     {

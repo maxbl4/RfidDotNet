@@ -15,7 +15,6 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
-    [Trait("Hardware", "true")]
     public class TagStreamListenerTests : ReaderFixture
     {
         private readonly List<Tag> tags = new List<Tag>();
@@ -50,7 +49,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         public async Task Start_and_stop_stream()
         {
             await Proto.Api.AntennaSequence("0");
-            (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => tags.Count > 100);
             Proto.Dispose();
             completed.ShouldBeFalse();
             msgs.Count.ShouldBe(0);
@@ -63,7 +62,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await Proto.Api.AntennaSequence("0");
             await Proto.Api.RFAttenuation(50);
             await Proto.Api.AcqG2AntennaCombine(false);
-            (await Timing.StartWait(() => tags.Count > 500)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => tags.Count > 500);
             Proto.Dispose();
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
@@ -95,18 +94,16 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);
             
             await p.Api.AntennaSequence("0");
-            (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
-            if (errors.Count > 0)
-                errors[0].ToString().ShouldBeNull();
+            await new Timing().ExpectAsync(() => tags.Count > 100);
             errors.Count.ShouldBe(0);
             doThrow = true;
             
-            (await Timing.StartWait(() => errors.Count > 0)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => errors.Count > 0);
             errors[0].ShouldBeOfType<Exception>();
             tags.Clear();
-            (await Timing.StartWait(() => tags.Count > 0, 2000)).ShouldBeFalse();
+            (await new Timing().Timeout(2000).WaitAsync(() => tags.Count > 0)).ShouldBeFalse();
             badSubscriber.Dispose();
-            (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => tags.Count > 100);
         }
     }
 }

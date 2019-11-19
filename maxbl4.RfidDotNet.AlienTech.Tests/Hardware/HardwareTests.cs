@@ -17,7 +17,6 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
-    [Trait("Hardware", "true")]
     public class HardwareTests : ReaderFixture
     {
         private static readonly ILogger Logger = Log.ForContext<HardwareTests>();
@@ -41,16 +40,15 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await Proto.Api.AntennaSequence("0");
             await Task.Delay(2000);
             tags.Clear();
-            (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => tags.Count > 100);
             Logger.Debug("{LastSeenTime}", tags.Last().LastSeenTime);
             (DateTime.Now - tags.Last().LastSeenTime).TotalMinutes.ShouldBeLessThan(1);
             (await Proto.Api.AntennaSequence("3")).ShouldBe("3");
-            (await Timing.StartWait(() => (DateTime.Now - tags.Last().LastSeenTime).TotalSeconds > 1)
-                ).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => (DateTime.Now - tags.Last().LastSeenTime).TotalSeconds > 1);
             await Task.Delay(2000);
             tags.Clear();
             await Proto.Api.AntennaSequence("0");
-            (await Timing.StartWait(() => tags.Count > 100)).ShouldBeTrue();
+            await new Timing().ExpectAsync(() => tags.Count > 100);
             msgs.ForEach(x => Logger.Error(x));
             msgs.Count.ShouldBe(0);
         }
@@ -59,9 +57,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         public async Task Should_disconnect_if_no_keepalives()
         {
             if (Settings.UseHardwareReader) return;
-            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1),
-                    1500))
-                .ShouldBeTrue("Did not get first keepalive");
+            await new Timing()
+                    .Timeout(1500)
+                    .Context("Did not get first keepalive")
+                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
             Logger.Debug("First keepalive receive");
             if (Settings.UseHardwareReader)
             {
@@ -74,9 +73,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                 Logger.Debug("Disabled keepalives on simulator");
             }
 
-            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) > TimeSpan.FromSeconds(8),
-                    10000))
-                .ShouldBeTrue("Keepalives should stop");
+            await new Timing()
+                    .Timeout(10000)
+                    .Context("Keepalives should stop")
+                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) > TimeSpan.FromSeconds(8));
             Logger.Debug("Keepalives have stopped");
             Proto.IsConnected.ShouldBeFalse();
             Logger.Debug("proto in disconnected");
@@ -91,7 +91,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             {
                 var observed = false;
                 disc.Discovery.Subscribe(x => observed = true);
-                (await Timing.StartWait(() => observed && disc.Readers.Any())).ShouldBeTrue();
+                await new Timing().ExpectAsync(() => observed && disc.Readers.Any());
                 var infos = disc.Readers.ToList();
                 infos.Count.ShouldBe(1);
                 infos[0].IPAddress.ShouldBe(IPEndPoint.Parse(Settings.HardwareReaderAddress).Address);

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Net;
+using maxbl4.Infrastructure.Extensions.DateTimeExt;
+using maxbl4.Infrastructure.Extensions.EnumExt;
 
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.AlienTech.Extensions
 {
     public class AlienValueConverter
     {

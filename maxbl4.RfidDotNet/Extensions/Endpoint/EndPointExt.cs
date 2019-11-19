@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace maxbl4.RfidDotNet.Ext
+namespace maxbl4.RfidDotNet.Extensions.Endpoint
 {
     public static class EndPointExt
     {

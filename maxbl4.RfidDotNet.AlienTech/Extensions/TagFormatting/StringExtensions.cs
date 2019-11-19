@@ -1,7 +1,7 @@
 ﻿using System;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
 
-namespace maxbl4.RfidDotNet.AlienTech.Ext
+namespace maxbl4.RfidDotNet.AlienTech.Extensions.TagFormatting
 {
     public static class StringExtensions
     {

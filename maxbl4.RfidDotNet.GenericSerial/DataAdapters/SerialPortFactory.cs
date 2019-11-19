@@ -1,7 +1,5 @@
 using System.IO;
-using maxbl4.RfidDotNet.Ext;
-using maxbl4.RfidDotNet.GenericSerial.Ext;
-using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
 using RJCP.IO.Ports;
 
 namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
@@ -53,7 +51,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
 
         public void Invalidate()
         {
-            DisposableExt.DisposeSafe(stream);
+            stream.DisposeSafe();
             stream = null;
         }
 

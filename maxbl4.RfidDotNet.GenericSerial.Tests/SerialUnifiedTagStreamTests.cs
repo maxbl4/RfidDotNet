@@ -32,7 +32,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
 
                 stream.Start().Wait();
                 stream.RFPower(25).Result.ShouldBe(25);
-                Timing.StartWait(() => tags.Count > 20).Result.ShouldBeTrue("Could not read 20 tags before timeout expired");
+                new Timing().Context("Could not read 20 tags before timeout expired").Expect(() => tags.Count > 20);
             }
         }
 

@@ -4,11 +4,11 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.LoggerExt;
 using maxbl4.RfidDotNet.AlienTech.Enums;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Extensions;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
-using maxbl4.RfidDotNet.AlienTech.TagStream;
-using maxbl4.RfidDotNet.Ext;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.AlienTech

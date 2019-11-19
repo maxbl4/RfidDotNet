@@ -1,4 +1,4 @@
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Extensions;
 using Shouldly;
 using Xunit;
 

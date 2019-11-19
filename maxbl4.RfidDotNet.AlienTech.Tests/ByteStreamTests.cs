@@ -5,10 +5,9 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reactive.Linq;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure.Extensions.SocketExt;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.Exceptions;
-using maxbl4.RfidDotNet.Ext;
 using Shouldly;
 using Xunit;
 

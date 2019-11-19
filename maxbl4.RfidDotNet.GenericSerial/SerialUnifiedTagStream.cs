@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.Ext;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
-using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 
 namespace maxbl4.RfidDotNet.GenericSerial

@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Net;
 using System.Threading;
-using maxbl4.RfidDotNet.Ext;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.RfidDotNet.AlienTech.Extensions.TagFormatting;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using Microsoft.Extensions.Configuration;
 using Serilog;

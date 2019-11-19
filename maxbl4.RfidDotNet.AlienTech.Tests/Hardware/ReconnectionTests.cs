@@ -32,15 +32,15 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             var tags = new List<Tag>();
             r.Connected.Subscribe(status.Add);
             r.Tags.Subscribe(tags.Add);
-            Timing.StartWait(() => tags.Count > 0).Result.ShouldBeTrue();
+            new Timing().Expect(() => tags.Count > 0);
             status.LastOrDefault().ShouldBeTrue();
             await r.Current.Api.Reboot();
-            Timing.StartWait(() => (DateTimeOffset.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 5).Result.ShouldBeTrue();
+            new Timing().Expect(() => (DateTimeOffset.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 5);
             tags.Clear();
             r.IsConnected.ShouldBeFalse();
             status.Last().ShouldBeFalse();
             //Timing.StartWait(() => status.Last(), (int)(AlienReaderProtocol.DefaultReceiveTimeout * 2.5)).Result.ShouldBeTrue();
-            Timing.StartWait(() => tags.Count > 0, 90000).Result.ShouldBeTrue();
+            new Timing().Timeout(90000).Expect(() => tags.Count > 0);
         }
         
         [Fact]

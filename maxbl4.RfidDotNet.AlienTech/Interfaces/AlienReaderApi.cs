@@ -3,7 +3,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.Enums;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.RfidDotNet.AlienTech.Extensions;
 
 namespace maxbl4.RfidDotNet.AlienTech.Interfaces
 {

@@ -19,10 +19,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public void Reader_bounce_current_client_when_new_comes()
         {
-            Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout, 
-                    AlienReaderProtocol.DefaultReceiveTimeout)
-                .Result
-                .ShouldBeTrue("Did not get first keepalive");
+            new Timing()
+                .Timeout(AlienReaderProtocol.DefaultReceiveTimeout)
+                .Context("Did not get first keepalive")
+                .Expect(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout);
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
@@ -31,12 +31,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             }
             Logger.Debug("Second client disconnected");
             
-            Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2, 
-                    AlienReaderProtocol.DefaultReceiveTimeout * 2)
-                .Result
-                .ShouldBeTrue($"Still getting keepalives {Proto.LastKeepalive} {DateTime.Now}");
+            new Timing()
+                .Timeout(AlienReaderProtocol.DefaultReceiveTimeout * 2)
+                .FailureDetails(() => $"Still getting keepalives {Proto.LastKeepalive} {DateTime.Now}")
+                .Expect(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2);
             Logger.Information("Keepalives stopped");
-            Timing.StartWait(() => !Proto.IsConnected).Result.ShouldBe(true);
+            new Timing().Expect(() => !Proto.IsConnected);
         }
 
         [Fact]
@@ -51,11 +51,15 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task Should_get_keepalives()
         {
-            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
-                .ShouldBeTrue("Did not get first keepalive");
+            await new Timing()
+                    .Timeout(1500)
+                    .Context("Did not get first keepalive")
+                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
             await Task.Delay(1000);
-            (await Timing.StartWait(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1), 1500))
-                .ShouldBeTrue("Did not get second keepalive");
+            await new Timing()
+                    .Timeout(1500)
+                    .Context("Did not get second keepalive")
+                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
         }
 
         [Fact]

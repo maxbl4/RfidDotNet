@@ -2,7 +2,8 @@
 using System.Globalization;
 using System.Net;
 using System.Xml;
-using maxbl4.RfidDotNet.AlienTech.Ext;
+using maxbl4.Infrastructure.Extensions.DateTimeExt;
+using maxbl4.Infrastructure.Extensions.XmlExt;
 
 namespace maxbl4.RfidDotNet.AlienTech.TagStream
 {

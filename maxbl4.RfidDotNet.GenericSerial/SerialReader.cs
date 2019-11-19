@@ -1,24 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.SemaphoreExt;
 using maxbl4.RfidDotNet.Exceptions;
-using maxbl4.RfidDotNet.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Buffers;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using RJCP.IO.Ports;
-using ProtocolType = System.Net.Sockets.ProtocolType;
 
 namespace maxbl4.RfidDotNet.GenericSerial
 {
@@ -168,7 +164,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         /// </summary>
         public async Task ActivateOnDemandInventoryMode(bool ignoreError = false)
         {
-            DisposableExt.DisposeSafe(realtimeInventoryListener);
+            realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, (byte)ReaderWorkingMode.Answer));
             // If reader is in realtime mode, it may send arbitrary number notification packets.
             
@@ -183,7 +179,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public async Task ActivateRealtimeInventoryMode(bool withGpioTrigger = false)
         {
-            DisposableExt.DisposeSafe(realtimeInventoryListener);
+            realtimeInventoryListener.DisposeSafe();
             var responses = await SendReceive(new CommandDataPacket(ReaderCommand.SetWorkingMode, 
                 (byte)(withGpioTrigger ? ReaderWorkingMode.RealtimeGPIOTriggered : ReaderWorkingMode.Realtime)));
             var resp = responses.FirstOrDefault(x => x.Command == ReaderCommand.SetWorkingMode);
