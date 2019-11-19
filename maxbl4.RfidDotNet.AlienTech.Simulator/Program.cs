@@ -15,7 +15,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
             Console.WriteLine($"Starting Alien reader protocol simulator on {options.ListenOn}");
             var readerEndpoint = IPEndPoint.Parse(options.ListenOn);
             var simulator = new SimulatorListener(readerEndpoint);
-            var tagListHandler = new TagListHandler();
+            var tagListHandler = new TagListHandler(options);
             simulator.TagListHandler = tagListHandler.Handle;
             var tags = options.VisibleTags
                 .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries)

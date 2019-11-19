@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
@@ -10,10 +11,16 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
 {
     public class TagListHandler
     {
+        private readonly SimulatorOptions simulatorOptions;
         readonly object sync = new object();
         private Tag[] returnContinuos;
         DateTime lastInfo = DateTime.UtcNow;
         private int requestCounter = 0;
+
+        public TagListHandler(SimulatorOptions simulatorOptions)
+        {
+            this.simulatorOptions = simulatorOptions;
+        }
 
         public string Handle()
         {
@@ -26,6 +33,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                     Console.WriteLine($"{DateTime.UtcNow:HH:mm:ss} served {requestCounter} requests for last {interval}");
                     requestCounter = 0;
                 }
+                
+                Thread.Sleep(simulatorOptions.ReadLatencyMs);
                 
                 lastInfo = DateTime.UtcNow;
                 if (returnContinuos.Length > 0)
