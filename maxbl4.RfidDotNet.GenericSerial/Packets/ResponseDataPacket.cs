@@ -16,7 +16,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         public const int DataOffset = 4;
         public byte[] RawData { get; }
         public ReaderCommand ExpectedCommand { get; }
-        public DateTime Timestamp { get; }
+        public DateTime Timestamp { get; } = new DateTime(0, DateTimeKind.Utc);
         public TimeSpan Elapsed { get; }
         
         /// <summary>

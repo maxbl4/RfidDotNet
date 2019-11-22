@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         private readonly AlienReaderApiImpl api;
         private string host;
         public IAlienReaderApi Api => api;
-        public DateTime LastKeepalive { get; private set; }
+        public DateTime LastKeepalive { get; private set; } = new DateTime(0, DateTimeKind.Utc);
 
         private AlienTagStreamListener tagStreamListener;
         private TagPoller tagPoller;
