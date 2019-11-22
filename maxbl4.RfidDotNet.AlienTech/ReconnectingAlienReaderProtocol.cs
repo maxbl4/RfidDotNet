@@ -30,7 +30,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         private BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
         public IObservable<bool> Connected => connected;
         private BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
-        public IObservable<DateTime> Heartbeat { get; }
+        public IObservable<DateTime> Heartbeat => heartbeat;
         public Task Start()
         {
             return Connect();
