@@ -172,8 +172,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                         $"Actually found: {string.Join(", ", tags.Select(x => x.TagId))}");
                 tags[0].Rssi.ShouldBeGreaterThan(0);
                 tags[0].ReadCount.ShouldBe(1);
-                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
-                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
             }
         }
         
@@ -209,8 +209,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                         $"Actually found: {string.Join(", ", tagInBuffer.Tags.Select(x => x.TagId))}");
                 tagInBuffer.Tags[0].Antenna.ShouldBe(0);
                 tagInBuffer.Tags[0].Rssi.ShouldBeGreaterThan(0);
-                tagInBuffer.Tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
-                tagInBuffer.Tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tagInBuffer.Tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tagInBuffer.Tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
             }
         }
         
@@ -283,8 +283,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 
                 tags[0].Antenna.ShouldBe(0);
                 tags[0].Rssi.ShouldBeGreaterThan(0);
-                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
-                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTimeOffset.Now.Date);
+                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
 
                 var aggTags = tags.GroupBy(x => x.TagId)
                     .Select(x => new Tag {TagId = x.Key, ReadCount = x.Count()})

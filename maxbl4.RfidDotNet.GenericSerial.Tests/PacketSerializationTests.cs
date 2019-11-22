@@ -48,7 +48,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         [Fact]
         public void Deserialize_tag_inventory_result()
         {
-            var timestamp = DateTimeOffset.Now;
+            var timestamp = DateTime.UtcNow;
             var result = new TagInventoryResult(new[]
                 {new ResponseDataPacket(ReaderCommand.TagInventory, SamplesData.TagInventoryResponse, timestamp)});
             result.Tags.Count.ShouldBe(2);

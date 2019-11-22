@@ -70,7 +70,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
             if (msg.StartsWith("#Time:", StringComparison.OrdinalIgnoreCase))
             {
                 if (GetValue(msg, out var t) && DateTimeExt.TryParseAsUtc(t,
-                        "yyyy/MM/dd HH:mm:ss.fff", CultureInfo.InvariantCulture,
+                        "yyyy/MM/dd HH:mm:ss.fff", 
                         DateTimeStyles.AssumeLocal | DateTimeStyles.AllowWhiteSpaces, out var time))
                 {
                     info.Time = time;
@@ -92,7 +92,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
             if (int.TryParse(root.Attr("//CommandPort"), out var commandPort))
                 ri.CommandPort = commandPort;
             ri.MACAddress = root.Attr("//MACAddress");
-            ri.Time = DateTimeOffset.UtcNow;
+            ri.Time = DateTime.UtcNow;
             return ri;
         }
 

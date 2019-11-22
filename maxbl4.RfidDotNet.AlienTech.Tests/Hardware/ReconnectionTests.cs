@@ -25,7 +25,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                     await api.TagListAntennaCombine(false);
                     await api.AcqG2AntennaCombine(false);
                     await api.RFAttenuation(100);
-                    await api.Time(DateTimeOffset.UtcNow);
+                    await api.Time(DateTime.UtcNow);
                 });
             r.ReconnectTimeout = 2000;
             var status = new List<bool>();
@@ -35,7 +35,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             new Timing().Expect(() => tags.Count > 0);
             status.LastOrDefault().ShouldBeTrue();
             await r.Current.Api.Reboot();
-            new Timing().Expect(() => (DateTimeOffset.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 5);
+            new Timing().Expect(() => (DateTime.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 5);
             tags.Clear();
             r.IsConnected.ShouldBeFalse();
             status.Last().ShouldBeFalse();

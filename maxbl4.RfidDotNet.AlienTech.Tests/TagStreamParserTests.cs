@@ -29,8 +29,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             p.Parse("E20000165919007818405C7B;1518784324007;1518784353958;0;-40.3;908").ShouldBe(TagStreamParserReponse.ParsedTag);
             p.Tag.TagId.ShouldBe("E20000165919007818405C7B");
-            p.Tag.DiscoveryTime.ShouldBe(new DateTimeOffset(2018,2,16,15,32,04,7, TimeSpan.FromHours(3)));
-            p.Tag.LastSeenTime.ShouldBe(new DateTimeOffset(2018,2,16,15,32,33,958, TimeSpan.FromHours(3)));
+            p.Tag.DiscoveryTime.ShouldBe(new DateTime(2018,2,16,12,32,04,7, DateTimeKind.Utc));
+            p.Tag.LastSeenTime.ShouldBe(new DateTime(2018,2,16,12,32,33,958, DateTimeKind.Utc));
             p.Tag.Antenna.ShouldBe(0);
             p.Tag.Rssi.ShouldBe(-40.3, 0.1);
             p.Tag.ReadCount.ShouldBe(908);

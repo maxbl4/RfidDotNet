@@ -44,7 +44,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             {
                 var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 var sw = Stopwatch.StartNew();
-                Observable.Timer(DateTime.Now.AddMilliseconds(500))
+                Observable.Timer(DateTime.UtcNow.AddMilliseconds(500))
                     .Subscribe(x => socket.CloseForce());
                 Assert.ThrowsAny<Exception>(() => socket.Connect("10.0.0.253", 25));
                 sw.Stop();

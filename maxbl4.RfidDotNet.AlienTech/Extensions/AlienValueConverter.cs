@@ -16,14 +16,14 @@ namespace maxbl4.RfidDotNet.AlienTech.Extensions
                 case bool v: return v ? "ON" : "OFF";
                 case float v: return v.ToString(CultureInfo.InvariantCulture);
                 case double v: return v.ToString(CultureInfo.InvariantCulture);
-                case DateTimeOffset v: return v.ToString(AlienDateTimeFormat.Replace("/", "\\/"));
+                case DateTime v: return v.ToString(AlienDateTimeFormat.Replace("/", "\\/"));
                 default: return value?.ToString();
             }
         }
 
         public static T ToStrongType<T>(string value)
         {
-            if (typeof(T) == typeof(DateTimeOffset))
+            if (typeof(T) == typeof(DateTime))
                 return (T) (object) DateTimeExt.ParseAsUtc(value, AlienDateTimeFormat);
             if (typeof(T) == typeof(IPEndPoint)) return (T) (object)ParseEnpoint(value);
             if (typeof(T) == typeof(bool)) return (T)(object)"ON".Equals(value,StringComparison.OrdinalIgnoreCase);

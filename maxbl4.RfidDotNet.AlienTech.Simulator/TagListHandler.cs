@@ -40,7 +40,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 if (returnContinuos.Length > 0)
                     return string.Join("\r\n", returnContinuos.Select(x =>
                     {
-                        x.LastSeenTime = DateTimeOffset.UtcNow;
+                        x.LastSeenTime = DateTime.UtcNow;
                         return x.ToCustomFormatString();
                     }));
 

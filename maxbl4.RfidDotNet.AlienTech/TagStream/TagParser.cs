@@ -6,7 +6,6 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
 {
     public static class TagParser
     {
-        public static readonly DateTimeOffset UnixEpoch = new DateTimeOffset(1970, 01, 01, 0, 0, 0, TimeSpan.Zero);
         public static string CustomFormat => "%k;${MSEC1};${MSEC2};%a;%m;%r";
 
         public static Tag Parse(string msg)
@@ -17,8 +16,8 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                 return new Tag
                 {
                     TagId = parts[0],
-                    DiscoveryTime = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[1])),
-                    LastSeenTime = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[2])),
+                    DiscoveryTime = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[1])).UtcDateTime,
+                    LastSeenTime = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[2])).UtcDateTime,
                     Antenna = int.Parse(parts[3]),
                     Rssi = double.Parse(parts[4], CultureInfo.InvariantCulture),
                     ReadCount = int.Parse(parts[5])
@@ -46,8 +45,8 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
             tag = new Tag
             {
                 TagId = parts[0],
-                DiscoveryTime = DateTimeOffset.FromUnixTimeMilliseconds(discoveryMsec),
-                LastSeenTime = DateTimeOffset.FromUnixTimeMilliseconds(lastSeenMsec),
+                DiscoveryTime = DateTimeOffset.FromUnixTimeMilliseconds(discoveryMsec).UtcDateTime,
+                LastSeenTime = DateTimeOffset.FromUnixTimeMilliseconds(lastSeenMsec).UtcDateTime,
                 Antenna = int.Parse(parts[3]),
                 Rssi = double.Parse(parts[4], CultureInfo.InvariantCulture),
                 ReadCount = int.Parse(parts[5])
@@ -68,7 +67,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
 
         public static string ToCustomFormatString(this Tag tag)
         {
-            return $"{tag.TagId};{tag.DiscoveryTime.ToUnixTimeMilliseconds()};{tag.LastSeenTime.ToUnixTimeMilliseconds()};{tag.Antenna};{tag.Rssi.ToString(CultureInfo.InvariantCulture)};{tag.ReadCount}";
+            return $"{tag.TagId};{new DateTimeOffset(tag.DiscoveryTime).ToUnixTimeMilliseconds()};{new DateTimeOffset(tag.LastSeenTime).ToUnixTimeMilliseconds()};{tag.Antenna};{tag.Rssi.ToString(CultureInfo.InvariantCulture)};{tag.ReadCount}";
         }
     }
 }

@@ -11,6 +11,8 @@ namespace maxbl4.RaceLogic.Tests.CheckpointService
         {
         }
 
+        public IObservable<DateTime> Heartbeat => new BehaviorSubject<DateTime>(DateTime.UtcNow);
+
         public virtual Task Start()
         {
             return Task.CompletedTask;

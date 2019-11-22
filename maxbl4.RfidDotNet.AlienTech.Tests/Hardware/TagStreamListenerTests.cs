@@ -20,15 +20,18 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
         private readonly List<Tag> tags = new List<Tag>();
         private readonly List<Exception> errors = new List<Exception>();
         private readonly List<string> msgs = new List<string>();
+        private readonly List<DateTime> heartbeats = new List<DateTime>();
         private bool completed = false;
         private Subject<Tag> tagStream = new Subject<Tag>();
         private readonly Subject<Exception> errorStream = new Subject<Exception>();
+        private readonly Subject<DateTime> heartbeatStream = new Subject<DateTime>();
 
         public TagStreamListenerTests()
         {
             SetTagListHandlerForKnownTags();
             
-            Proto.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
+            Proto.StartTagPolling(tagStream, errorStream, heartbeatStream).Wait(2000).ShouldBeTrue();
+            heartbeatStream.Subscribe(heartbeats.Add);
             tagStream.Subscribe(tags.Add, ex => throw ex, () => completed = true);
             errorStream.Where(x => !(x is ObjectDisposedException)).Subscribe(errors.Add);
             Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);
@@ -43,6 +46,13 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             tss = await Proto.Api.TagStreamServer();
             tss.AllowedClients.ShouldBe(7);
             tss.Port.ShouldBe(4567);
+        }
+        
+        [Fact]
+        public async Task Polling_should_heartbeat()
+        {
+            await new Timing().ExpectAsync(() => heartbeats.Count > 2);
+            heartbeats.ShouldContain(x => x > DateTime.UtcNow.AddSeconds(-10));
         }
 
         [Fact]
@@ -67,7 +77,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
             var foundTags = dict.Keys.Intersect(Settings.KnownTagIds).ToList();
-            foundTags.Count.ShouldBeGreaterThanOrEqualTo(3);
+            foundTags.Count.ShouldBeGreaterThanOrEqualTo(2);
             foreach (var tagId in foundTags)
             {
                 dict[tagId].Count.ShouldBeGreaterThan(50);
@@ -85,7 +95,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             tagStream = new Subject<Tag>();
             var p = new AlienReaderProtocol(receiveTimeout:int.MaxValue);
             p.ConnectAndLogin(Host, Port, "alien", "password").Wait(2000).ShouldBeTrue();
-            p.StartTagPolling(tagStream, errorStream).Wait(2000).ShouldBeTrue();
+            p.StartTagPolling(tagStream, errorStream, heartbeatStream).Wait(2000).ShouldBeTrue();
             var doThrow = false;
             var badSubscriber = tagStream.Subscribe(x =>
             {

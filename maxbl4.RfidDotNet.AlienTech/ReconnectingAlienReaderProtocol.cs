@@ -29,6 +29,8 @@ namespace maxbl4.RfidDotNet.AlienTech
         public IObservable<Exception> Errors => errors;
         private BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
         public IObservable<bool> Connected => connected;
+        private BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
+        public IObservable<DateTime> Heartbeat { get; }
         public Task Start()
         {
             return Connect();
@@ -110,7 +112,7 @@ namespace maxbl4.RfidDotNet.AlienTech
                 var arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
                 await arp.ConnectAndLogin(endpoint.Host, endpoint.Port, login, password);
                 if (usePolling)
-                    await arp.StartTagPolling(tags, errors);
+                    await arp.StartTagPolling(tags, errors, heartbeat);
                 else
                     await arp.StartTagStreamOld(tags);
                 arp.Disconnected += (s, e) => ScheduleReconnect(true);

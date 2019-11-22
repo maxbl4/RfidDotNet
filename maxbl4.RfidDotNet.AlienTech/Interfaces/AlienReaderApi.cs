@@ -21,9 +21,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Interfaces
             return Property<ReaderFunction>(value);
         }
 
-        public Task<DateTimeOffset> Time(DateTimeOffset? value = null)
+        public Task<DateTime> Time(DateTime? value = null)
         {
-            return Property<DateTimeOffset>(value);
+            return Property<DateTime>(value);
         }
 
         public Task<bool> TagStreamMode(bool? value = null)

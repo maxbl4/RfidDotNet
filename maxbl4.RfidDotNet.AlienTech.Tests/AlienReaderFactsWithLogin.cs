@@ -22,7 +22,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             new Timing()
                 .Timeout(AlienReaderProtocol.DefaultReceiveTimeout)
                 .Context("Did not get first keepalive")
-                .Expect(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout);
+                .Expect(() => (DateTime.UtcNow - Proto.LastKeepalive).TotalMilliseconds < AlienReaderProtocol.DefaultKeepaliveTimeout);
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
@@ -33,8 +33,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             
             new Timing()
                 .Timeout(AlienReaderProtocol.DefaultReceiveTimeout * 2)
-                .FailureDetails(() => $"Still getting keepalives {Proto.LastKeepalive} {DateTime.Now}")
-                .Expect(() => (DateTime.Now - Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2);
+                .FailureDetails(() => $"Still getting keepalives {Proto.LastKeepalive} {DateTime.UtcNow}")
+                .Expect(() => (DateTime.UtcNow - Proto.LastKeepalive).TotalMilliseconds > AlienReaderProtocol.DefaultKeepaliveTimeout * 2);
             Logger.Information("Keepalives stopped");
             new Timing().Expect(() => !Proto.IsConnected);
         }
@@ -54,12 +54,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             await new Timing()
                     .Timeout(1500)
                     .Context("Did not get first keepalive")
-                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
+                    .ExpectAsync(() => (DateTime.UtcNow - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
             await Task.Delay(1000);
             await new Timing()
                     .Timeout(1500)
                     .Context("Did not get second keepalive")
-                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
+                    .ExpectAsync(() => (DateTime.UtcNow - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
         }
 
         [Fact]

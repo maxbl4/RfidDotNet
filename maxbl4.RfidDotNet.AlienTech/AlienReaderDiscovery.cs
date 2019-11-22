@@ -29,7 +29,7 @@ namespace maxbl4.RfidDotNet.AlienTech
                 lock (readers)
                 {
                     readers = readers
-                        .Where(x => (DateTime.Now - x.Time).TotalSeconds < HeartbeatInterval)
+                        .Where(x => (DateTime.UtcNow - x.Time).TotalSeconds < HeartbeatInterval)
                         .ToList();
                     return readers.ToList();
                 }

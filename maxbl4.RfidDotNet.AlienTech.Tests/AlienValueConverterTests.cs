@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             AlienValueConverter.ToAlienValueString(StringComparison.OrdinalIgnoreCase).ShouldBe("OrdinalIgnoreCase");
             AlienValueConverter.ToAlienValueString(null).ShouldBeNull();
             AlienValueConverter.ToAlienValueString(new IPEndPoint(IPAddress.Parse("10.0.0.59"), 7000)).ShouldBe("10.0.0.59:7000");
-            AlienValueConverter.ToAlienValueString(new DateTimeOffset(2018,03,10,23,02,57, TimeSpan.Zero)).ShouldBe("2018/03/10 23:02:57");
+            AlienValueConverter.ToAlienValueString(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc)).ShouldBe("2018/03/10 23:02:57");
         }
 
         [Fact]
@@ -44,7 +44,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             var ep = AlienValueConverter.ToStrongType<IPEndPoint>("10.0.0.59:7000");
             ep.Address.ShouldBe(IPAddress.Parse("10.0.0.59"));
             ep.Port.ShouldBe(7000);
-            AlienValueConverter.ToStrongType<DateTimeOffset>("2018/03/10 23:02:57").ShouldBe(new DateTimeOffset(2018,03,10,23,02,57, TimeSpan.Zero));
+            AlienValueConverter.ToStrongType<DateTime>("2018/03/10 23:02:57").ShouldBe(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -64,10 +64,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             reader.IPAddress6.ToString().ShouldBe("fdaa::aaaa");
             reader.CommandPort.ShouldBe(23);
             reader.MACAddress.ShouldBe("00:1B:5F:01:08:E4");
-            reader.Time.ShouldBe(new DateTimeOffset(2018, 2, 16, 11, 48, 21, 363, TimeSpan.Zero));
+            reader.Time.ShouldBe(new DateTime(2018, 2, 16, 11, 48, 21, 363, DateTimeKind.Utc));
             
             reader.ParseLine("#Time: 2018/02/16 16:04:58.744 ").ShouldBe(true);
-            reader.Time.ShouldBe(new DateTimeOffset(2018, 2, 16, 16, 04, 58, 744, TimeSpan.Zero));
+            reader.Time.ShouldBe(new DateTime(2018, 2, 16, 16, 04, 58, 744, DateTimeKind.Utc));
         }
         
         [Fact]
@@ -90,7 +90,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             ri.IPAddress6.ShouldBe(IPAddress.Parse("fdaa::aaaa"));
             ri.CommandPort.ShouldBe(23);
             ri.MACAddress.ShouldBe("00:1B:5F:01:08:E4");
-            ri.Time.ShouldBeInRange(DateTimeOffset.UtcNow.AddSeconds(-2), DateTimeOffset.UtcNow);
+            ri.Time.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
         }
         
         [Fact]
@@ -175,8 +175,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
             var tag = TagParser.Parse(tagString);
             tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
-            tag.LastSeenTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3"));
+            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
             tag.Antenna.ShouldBe(0);
             tag.Rssi.ShouldBe(-35.4, 0.1);
             tag.ReadCount.ShouldBe(66);
@@ -184,36 +184,21 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             TagParser.TryParse(tagString, out tag).ShouldBeTrue();
 
             tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
-            tag.LastSeenTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3"));
+            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
             tag.Antenna.ShouldBe(0);
             tag.Rssi.ShouldBe(-35.4, 0.1);
             tag.ReadCount.ShouldBe(66);
         }
         
         [Fact]
-        public void TagParser_UnitEpoch()
-        {
-            var epoch1 = 1518371341633L;
-            var epoch2 = 1518371343641L;
-            var dt1 = DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3");
-            var dt2 = DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3");
-            
-            DateTimeOffset.FromUnixTimeMilliseconds(epoch1).ShouldBe(dt1);
-            dt1.ToUnixTimeMilliseconds().ShouldBe(epoch1);
-            
-            DateTimeOffset.FromUnixTimeMilliseconds(epoch2).ShouldBe(dt2);
-            dt2.ToUnixTimeMilliseconds().ShouldBe(epoch2);
-        }
-
-        [Fact]
         public void Tag_parse_with_junk()
         {
             var tagString = "\0E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66\r\n";
             var tag = TagParser.Parse(tagString);
             tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:01.6330000+3"));
-            tag.LastSeenTime.ShouldBe(DateTimeOffset.Parse("2018-02-11T20:49:03.6410000+3"));
+            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
             tag.Antenna.ShouldBe(0);
             tag.Rssi.ShouldBe(-35.4, 0.1);
             tag.ReadCount.ShouldBe(66);

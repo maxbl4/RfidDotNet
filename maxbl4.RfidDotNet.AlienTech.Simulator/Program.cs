@@ -19,7 +19,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
             simulator.TagListHandler = tagListHandler.Handle;
             var tags = options.VisibleTags
                 .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => new Tag{TagId = x, DiscoveryTime = DateTimeOffset.UtcNow, LastSeenTime = DateTimeOffset.UtcNow, ReadCount = 1})
+                .Select(x => new Tag{TagId = x, DiscoveryTime = DateTime.UtcNow, LastSeenTime = DateTime.UtcNow, ReadCount = 1})
                 .ToArray();
             Console.WriteLine($"Found {tags.Length} tags in options");
             tagListHandler.ReturnContinuos(tags);

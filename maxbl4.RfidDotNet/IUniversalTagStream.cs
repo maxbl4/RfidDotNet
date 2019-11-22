@@ -8,6 +8,7 @@ namespace maxbl4.RfidDotNet
         IObservable<Tag> Tags { get; }
         IObservable<Exception> Errors { get; }
         IObservable<bool> Connected { get; }
+        IObservable<DateTime> Heartbeat { get; }
         Task Start();
         Task<int> QValue(int? newValue = null);
         Task<int> Session(int? newValue = null);

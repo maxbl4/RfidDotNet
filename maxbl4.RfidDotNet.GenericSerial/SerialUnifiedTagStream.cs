@@ -5,13 +5,16 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using maxbl4.Infrastructure.Extensions.DisposableExt;
+using maxbl4.Infrastructure.Extensions.LoggerExt;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Model;
+using Serilog;
 
 namespace maxbl4.RfidDotNet.GenericSerial
 {
     public class SerialUnifiedTagStream : IUniversalTagStream
     {
+        static readonly ILogger Logger = Log.ForContext<SerialUnifiedTagStream>();
         private readonly ConnectionString connectionString;
         private readonly SerialReader serialReader;
         readonly ConcurrentQueue<TagInventoryResult> inventoryResults = new ConcurrentQueue<TagInventoryResult>();
@@ -37,6 +40,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
         readonly Subject<Exception> errors = new Subject<Exception>();
         public IObservable<Exception> Errors => errors;
         readonly BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
+        public IObservable<DateTime> Heartbeat => heartbeat;
+        readonly BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
         private Task pollingTask;
         private bool doInventory = true;
         private Task tagStreamingTask;
@@ -63,6 +68,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 var sw = new Stopwatch();
                 if (connectionString.ThermalLimit > 0)
                     sw.Start();
+                var lastHeartbeat = DateTime.UtcNow;
                 while (doInventory)
                 {
                     try
@@ -83,6 +89,11 @@ namespace maxbl4.RfidDotNet.GenericSerial
                                 return;
                             }
                             sw.Restart();
+                        }
+                        if (DateTime.UtcNow - lastHeartbeat > TimeSpan.FromSeconds(1))
+                        {
+                            Logger.Swallow(() => heartbeat.OnNext(DateTime.UtcNow));
+                            lastHeartbeat = DateTime.UtcNow;
                         }
                     }
                     catch (Exception e)

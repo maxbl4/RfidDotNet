@@ -23,17 +23,19 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 
         private readonly Subject<Tag> tagStream = new Subject<Tag>();
         private readonly Subject<Exception> errorStream = new Subject<Exception>();
+        private readonly Subject<DateTime> heartbeatStream = new Subject<DateTime>();
 
         [Fact]
         public async Task Stream_should_continue_after_keepalive_timeout()
         {
+            if (!Settings.UseHardwareReader) return;
             SetTagListHandlerForKnownTags();
             await Proto.Api.TagStreamKeepAliveTime(1);
             await Proto.Api.AntennaSequence("3");
             var tags = new List<Tag>();
             var msgs = new List<string>();
             var errors = new List<Exception>();
-            await Proto.StartTagPolling(tagStream, errorStream);
+            await Proto.StartTagPolling(tagStream, errorStream, heartbeatStream);
             tagStream.Subscribe(tags.Add);
             errorStream.Subscribe(errors.Add);
             Proto.TagPoller.UnparsedMessages.Subscribe(msgs.Add);            
@@ -42,9 +44,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             tags.Clear();
             await new Timing().ExpectAsync(() => tags.Count > 100);
             Logger.Debug("{LastSeenTime}", tags.Last().LastSeenTime);
-            (DateTime.Now - tags.Last().LastSeenTime).TotalMinutes.ShouldBeLessThan(1);
+            (DateTime.UtcNow - tags.Last().LastSeenTime).TotalMinutes.ShouldBeLessThan(1);
             (await Proto.Api.AntennaSequence("3")).ShouldBe("3");
-            await new Timing().ExpectAsync(() => (DateTime.Now - tags.Last().LastSeenTime).TotalSeconds > 1);
+            await new Timing()
+                .FailureDetails(() => $"Now: {DateTime.UtcNow}, Actual: {tags.Last().LastSeenTime}")
+                .ExpectAsync(() => (DateTime.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 1);
             await Task.Delay(2000);
             tags.Clear();
             await Proto.Api.AntennaSequence("0");
@@ -60,7 +64,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await new Timing()
                     .Timeout(1500)
                     .Context("Did not get first keepalive")
-                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
+                    .ExpectAsync(() => (DateTime.UtcNow - Proto.LastKeepalive) < TimeSpan.FromSeconds(1));
             Logger.Debug("First keepalive receive");
             if (Settings.UseHardwareReader)
             {
@@ -76,7 +80,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await new Timing()
                     .Timeout(10000)
                     .Context("Keepalives should stop")
-                    .ExpectAsync(() => (DateTime.Now - Proto.LastKeepalive) > TimeSpan.FromSeconds(8));
+                    .ExpectAsync(() => (DateTime.UtcNow - Proto.LastKeepalive) > TimeSpan.FromSeconds(8));
             Logger.Debug("Keepalives have stopped");
             Proto.IsConnected.ShouldBeFalse();
             Logger.Debug("proto in disconnected");

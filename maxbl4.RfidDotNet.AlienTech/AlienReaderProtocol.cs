@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         private readonly AlienReaderApiImpl api;
         private string host;
         public IAlienReaderApi Api => api;
-        public DateTimeOffset LastKeepalive { get; private set; }
+        public DateTime LastKeepalive { get; private set; }
 
         private AlienTagStreamListener tagStreamListener;
         private TagPoller tagPoller;
@@ -102,7 +102,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             await api.AutoMode(true);
         }
 
-        public async Task StartTagPolling(IObserver<Tag> tags, IObserver<Exception> errors)
+        public async Task StartTagPolling(IObserver<Tag> tags, IObserver<Exception> errors, IObserver<DateTime> heartbeat)
         {
             await api.TagListFormat(ListFormat.Custom);
             await api.TagListCustomFormat(TagParser.CustomFormat);
@@ -112,7 +112,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             await api.Clear();
             await api.NotifyMode(false);
             await api.AutoMode(true);
-            pollerDisposable.Disposable = tagPoller = new TagPoller(api, tags, errors);
+            pollerDisposable.Disposable = tagPoller = new TagPoller(api, tags, errors, heartbeat);
         }
 
         public async Task<string> SendReceive(string data)
@@ -124,14 +124,14 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         protected override void OnReceiveAny(List<string> msgs)
         {
-            LastKeepalive = DateTimeOffset.UtcNow;
+            LastKeepalive = DateTime.UtcNow;
             SetKeepaliveTimer();
         }
 
         void SetKeepaliveTimer()
         {
             timerHandle?.Dispose();
-            timerHandle = Observable.Timer(DateTimeOffset.Now.AddMilliseconds(keepAliveTimeout))
+            timerHandle = Observable.Timer(DateTime.Now.AddMilliseconds(keepAliveTimeout))
                 .Subscribe(CheckKeepAlive);
         }
 
@@ -141,7 +141,7 @@ namespace maxbl4.RfidDotNet.AlienTech
             {
                 SendReceive("").Wait();
                 Logger.Information("Keepalive success");
-                Observable.Timer(DateTimeOffset.Now.AddMilliseconds(keepAliveTimeout))
+                Observable.Timer(DateTime.Now.AddMilliseconds(keepAliveTimeout))
                     .Subscribe(CheckKeepAlive);
             }
             catch

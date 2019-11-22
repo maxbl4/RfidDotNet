@@ -15,6 +15,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         private readonly List<Tag> tags = new List<Tag>();
         private readonly List<Exception> errors = new List<Exception>();
         private readonly List<bool> connected = new List<bool>();
+        private readonly List<DateTime> heartbeats = new List<DateTime>();
         
         [SkippableTheory]
         [InlineData(ConnectionType.Serial)]
@@ -32,7 +33,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
 
                 stream.Start().Wait();
                 stream.RFPower(25).Result.ShouldBe(25);
-                new Timing().Context("Could not read 20 tags before timeout expired").Expect(() => tags.Count > 20);
+                new Timing()
+                    .FailureDetails(()=> $"heartbeats.Count = {heartbeats.Count} tags.Count = {tags.Count}")
+                    .Expect(() => heartbeats.Count > 2 && tags.Count > 20);
+                heartbeats.ShouldContain(x => x > DateTime.UtcNow.AddSeconds(-10));
             }
         }
 
@@ -41,6 +45,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             stream.Connected.Subscribe(connected.Add);
             stream.Tags.Subscribe(tags.Add);
             stream.Errors.Subscribe(errors.Add);
+            stream.Heartbeat.Subscribe(heartbeats.Add);
         }
     }
 }

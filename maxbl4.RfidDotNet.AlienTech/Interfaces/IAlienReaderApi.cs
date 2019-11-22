@@ -83,6 +83,6 @@ namespace maxbl4.RfidDotNet.AlienTech.Interfaces
         Task<string> TagList();
         Task<bool> AcqG2AntennaCombine(bool? value = null);
         Task<string> Command(string command);
-        Task<DateTimeOffset> Time(DateTimeOffset? value = null);
+        Task<DateTime> Time(DateTime? value = null);
     }
 }

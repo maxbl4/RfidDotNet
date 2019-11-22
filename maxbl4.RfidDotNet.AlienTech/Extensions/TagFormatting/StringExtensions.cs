@@ -10,8 +10,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Extensions.TagFormatting
             return new Tag
             {
                 TagId = tagId,
-                DiscoveryTime = DateTimeOffset.Now,
-                LastSeenTime = DateTimeOffset.Now,
+                DiscoveryTime = DateTime.UtcNow,
+                LastSeenTime = DateTime.UtcNow,
                 ReadCount = 1
             }.ToCustomFormatString();
         }
