@@ -21,7 +21,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => new Tag{TagId = x, DiscoveryTime = DateTime.UtcNow, LastSeenTime = DateTime.UtcNow, ReadCount = 1})
                 .ToArray();
-            Console.WriteLine($"Found {tags.Length} tags in options");
+            if (options.RandomTags)
+                Console.WriteLine($"Will return random tags");
+            else
+                Console.WriteLine($"Found {tags.Length} tags in options");
             tagListHandler.ReturnContinuos(tags);
             Console.WriteLine($"Waiting for connections on {simulator.ListenEndpoint}, press ENTER to stop");
             Console.ReadLine();

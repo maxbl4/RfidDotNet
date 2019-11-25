@@ -16,7 +16,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
         private Tag[] returnContinuos;
         DateTime lastInfo = DateTime.UtcNow;
         private int requestCounter = 0;
-
+        private RandomTagGenerator randomTagGenerator = new RandomTagGenerator(); 
+            
         public TagListHandler(SimulatorOptions simulatorOptions)
         {
             this.simulatorOptions = simulatorOptions;
@@ -36,6 +37,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 }
                 
                 Thread.Sleep(simulatorOptions.ReadLatencyMs);
+
+                if (simulatorOptions.RandomTags)
+                    return randomTagGenerator.Next();
                 
                 if (returnContinuos.Length > 0)
                     return string.Join("\r\n", returnContinuos.Select(x =>
@@ -47,7 +51,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 return ProtocolMessages.NoTags;
             }
         }
+
         
+
         public void ReturnContinuos(params Tag[] tags)
         {
             lock (sync)
