@@ -40,16 +40,17 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
 
         public IPEndPoint ListenEndpoint => (IPEndPoint)listener.LocalEndpoint;
         public Action<Socket> OnClientAccepted { get; set; }
+        public Task ListenTask { get; }
 
         public SimulatorListener(IPEndPoint bindTo, bool acceptSingleClient = true)
         {
             this.acceptSingleClient = acceptSingleClient;
             listener = new TcpListener(bindTo);
             listener.Start();
-            new Task(AcceptLoop, TaskCreationOptions.LongRunning).Start();
+            ListenTask = AcceptLoop();
         }
-        
-        async void AcceptLoop()
+
+        async Task AcceptLoop()
         {
             try
             {

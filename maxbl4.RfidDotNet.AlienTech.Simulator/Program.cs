@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
-using maxbl4.RfidDotNet.AlienTech.TagStream;
 using Microsoft.Extensions.Configuration;
 
 namespace maxbl4.RfidDotNet.AlienTech.Simulator
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var options = ReadOptions(args);
             Console.WriteLine($"Starting Alien reader protocol simulator on {options.ListenOn}");
@@ -26,8 +26,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
             else
                 Console.WriteLine($"Found {tags.Length} tags in options");
             tagListHandler.ReturnContinuos(tags);
-            Console.WriteLine($"Waiting for connections on {simulator.ListenEndpoint}, press ENTER to stop");
-            Console.ReadLine();
+            Console.WriteLine($"Waiting for connections on {simulator.ListenEndpoint}, press CTRL+C to stop");
+            Console.CancelKeyPress += (sender, args) => simulator.Dispose();
+            await simulator.ListenTask;
         }
 
         static SimulatorOptions ReadOptions(string[] args)
