@@ -2,4 +2,5 @@
 ADD ./bin/ /app/
 WORKDIR /app
 EXPOSE 20023
+ENV SimulatorOptions:ListenOn=0.0.0.0:20023
 CMD ["dotnet", "maxbl4.RfidDotNet.AlienTech.Simulator.dll" ]
