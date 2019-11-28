@@ -159,7 +159,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         public void Dispose()
         {
             reconnectDisposable.DisposeSafe();
-            Logger.Swallow(tags.OnCompleted);
+            Logger.Swallow((Action)tags.OnCompleted);
             tags.DisposeSafe();
             proto.DisposeSafe();
         }
