@@ -62,7 +62,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("{ex}", ex);
+                    Logger.Warning(ex, "TagPoller stopped");
                     errors.OnNext(ex);
                 }
             }
