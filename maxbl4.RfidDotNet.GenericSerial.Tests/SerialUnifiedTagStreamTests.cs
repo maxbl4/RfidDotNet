@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using maxbl4.RfidDotNet.Infrastructure;
+using maxbl4.Infrastructure;
 using Shouldly;
 using Xunit;
 

@@ -1,5 +1,4 @@
 using System;
-using System.Net.NetworkInformation;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using Shouldly;

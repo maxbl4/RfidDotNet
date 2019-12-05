@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
-using maxbl4.RfidDotNet.GenericSerial.Ext;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using Microsoft.Extensions.Configuration;
 using Xunit;

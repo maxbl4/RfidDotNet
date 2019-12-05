@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.AlienTech.Enums;
-using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
-using maxbl4.RfidDotNet.AlienTech.TagStream;
+using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
-using maxbl4.RfidDotNet.Infrastructure;
 using Shouldly;
 using Xunit;
 

@@ -1,4 +1,3 @@
-using System;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Ext

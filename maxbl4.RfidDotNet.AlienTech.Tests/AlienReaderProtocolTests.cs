@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Exceptions;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
 {

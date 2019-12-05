@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using maxbl4.Infrastructure.Extensions.LoggerExt;
 using maxbl4.RfidDotNet.AlienTech.Interfaces;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using Serilog;

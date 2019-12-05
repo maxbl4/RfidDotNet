@@ -1,16 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
+using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Model;
-using maxbl4.RfidDotNet.GenericSerial.Packets;
-using maxbl4.RfidDotNet.Infrastructure;
-using RJCP.IO.Ports;
 using Shouldly;
 using Xunit;
-using Xunit.Sdk;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {

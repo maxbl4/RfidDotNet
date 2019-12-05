@@ -1,4 +1,3 @@
-using maxbl4.RfidDotNet.GenericSerial.Model;
 using PowerArgs;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Demo
