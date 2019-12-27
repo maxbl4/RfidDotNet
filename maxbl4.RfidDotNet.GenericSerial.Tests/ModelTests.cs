@@ -1,7 +1,7 @@
 using System;
+using FluentAssertions;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -17,7 +17,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 QValue = 4,
                 OptionalParams = new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(1100))
             }).Serialize();
-            res.ShouldBe(SamplesData.TagInventoryRequest1);
+            res.Should().Equal(SamplesData.TagInventoryRequest1);
         }
 
         [Fact]
@@ -29,13 +29,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 QFlags = QFlags.SpecialStrategy|QFlags.ImpinjFastId|QFlags.RequestStatisticsPacket,
                 Session = SessionValue.S1,
             }.Serialize();
-            TagInventoryParams.BaseSize.ShouldBe(2);
-            res.Length.ShouldBe(TagInventoryParams.BaseSize);
-            (res[0] & 0b0001_1111).ShouldBe(15);
-            ((QFlags)res[0] & QFlags.SpecialStrategy).ShouldBe(QFlags.SpecialStrategy);
-            ((QFlags)res[0] & QFlags.ImpinjFastId).ShouldBe(QFlags.ImpinjFastId);
-            ((QFlags)res[0] & QFlags.RequestStatisticsPacket).ShouldBe(QFlags.RequestStatisticsPacket);
-            ((SessionValue)res[1]).ShouldBe(SessionValue.S1);
+            TagInventoryParams.BaseSize.Should().Be(2);
+            res.Length.Should().Be(TagInventoryParams.BaseSize);
+            (res[0] & 0b0001_1111).Should().Be(15);
+            ((QFlags)res[0] & QFlags.SpecialStrategy).Should().Be(QFlags.SpecialStrategy);
+            ((QFlags)res[0] & QFlags.ImpinjFastId).Should().Be(QFlags.ImpinjFastId);
+            ((QFlags)res[0] & QFlags.RequestStatisticsPacket).Should().Be(QFlags.RequestStatisticsPacket);
+            ((SessionValue)res[1]).Should().Be(SessionValue.S1);
         }
         
         [Fact]
@@ -48,18 +48,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     Session = SessionValue.S1,
                     OptionalParams = new TagInventoryOptionalParams(TimeSpan.FromMilliseconds(300))
                 }).Serialize();
-            res.ShouldBe(SamplesData.TagInventoryWithBufferRequest1);
+            res.Should().Equal(SamplesData.TagInventoryWithBufferRequest1);
         }
 
         [Fact]
         public void Should_check_type_of_connection_string()
         {
             new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Serial=COM4"))
-                .Type.ShouldBe(ConnectionType.Serial);
+                .Type.Should().Be(ConnectionType.Serial);
             new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Network=host"))
-                .Type.ShouldBe(ConnectionType.Network);
+                .Type.Should().Be(ConnectionType.Network);
             new SerialConnectionString(ConnectionString.Parse("protocol=Alien;Network=host"))
-                .Type.ShouldBe(ConnectionType.None);
+                .Type.Should().Be(ConnectionType.None);
         }
     }
 }

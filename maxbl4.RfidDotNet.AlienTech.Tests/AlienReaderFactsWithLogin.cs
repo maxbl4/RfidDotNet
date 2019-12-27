@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FluentAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using Serilog;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
@@ -23,7 +23,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             using (var r2 = new AlienReaderProtocol())
             {
                 Logger.Debug("Connecting second client");
-                r2.ConnectAndLogin(Host, Port, "alien", "password").Wait(6000).ShouldBeTrue();
+                r2.ConnectAndLogin(Host, Port, "alien", "password").Wait(6000).Should().BeTrue();
                 Logger.Debug("Second client connected");
             }
             Logger.Debug("Second client disconnected");
@@ -41,8 +41,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             await Proto.Api.AutoModeReset();
             await Proto.Api.Clear();
-            (await Proto.Api.AntennaSequence("3")).ShouldBe("3");
-            (await Proto.Api.TagList()).ShouldBe(ProtocolMessages.NoTags);
+            (await Proto.Api.AntennaSequence("3")).Should().Be("3");
+            (await Proto.Api.TagList()).Should().Be(ProtocolMessages.NoTags);
         }
 
         [Fact]
@@ -62,7 +62,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task Clear_taglist()
         {
-            (await Proto.Api.Clear()).ShouldBe(ProtocolMessages.TagListClearConfirmation);
+            (await Proto.Api.Clear()).Should().Be(ProtocolMessages.TagListClearConfirmation);
         }
     }
 }

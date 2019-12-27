@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Net;
 using System.Threading;
+using FluentAssertions;
 using maxbl4.Infrastructure.Extensions.DisposableExt;
 using maxbl4.RfidDotNet.AlienTech.Extensions.TagFormatting;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using Shouldly;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
@@ -39,7 +39,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Settings
             
             Proto = new AlienReaderProtocol();
             Proto.ConnectAndLogin(Host, Port, "alien", "password")
-                .Wait(AlienReaderProtocol.DefaultConnectTimeout).ShouldBeTrue();
+                .Wait(AlienReaderProtocol.DefaultConnectTimeout).Should().BeTrue();
         }
 
         private IPEndPoint UseEndpoint(string endpointString)

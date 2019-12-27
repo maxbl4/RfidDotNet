@@ -5,10 +5,10 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reactive.Linq;
+using FluentAssertions;
 using maxbl4.Infrastructure.Extensions.SocketExt;
 using maxbl4.RfidDotNet.AlienTech.Net;
 using maxbl4.RfidDotNet.Exceptions;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
@@ -21,7 +21,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             using (var con = new SocketConnection())
             {
                 Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
-                con.Client.Connected.ShouldBeFalse();
+                con.Client.Connected.Should().BeFalse();
             }
         }
 
@@ -31,9 +31,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             using (var con = new SocketConnection())
             {
                 con.ServerStream.Send("hello\0");
-                con.ClientStream.Read()[0].ShouldBe("hello");
+                con.ClientStream.Read()[0].Should().Be("hello");
                 Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
-                con.Client.Connected.ShouldBeFalse();
+                con.Client.Connected.Should().BeFalse();
             }
         }
 
@@ -48,7 +48,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
                     .Subscribe(x => socket.CloseForce());
                 Assert.ThrowsAny<Exception>(() => socket.Connect("10.0.0.253", 25));
                 sw.Stop();
-                sw.ElapsedMilliseconds.ShouldBeLessThan(4000);
+                sw.ElapsedMilliseconds.Should().BeLessThan(4000);
             }
         }
     }

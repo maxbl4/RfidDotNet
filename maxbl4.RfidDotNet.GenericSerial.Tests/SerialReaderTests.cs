@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Model;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -20,7 +20,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    r.GetSerialNumber().Result.ShouldBeOneOf((uint)0x17439015, (uint)406196256);
+                    r.GetSerialNumber().Result.Should().BeOneOf((uint)0x17439015, (uint)406196256);
                 }
             }
         }
@@ -33,15 +33,18 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 //r.SetAntennaCheck(false).Wait();
                 r.SetRFPower(20).Wait();
                 var info = r.GetReaderInfo().Result;
-                info.FirmwareVersion.Major.ShouldBe(3);
-                info.FirmwareVersion.Minor.ShouldBeInRange(1,18);
-                info.Model.ShouldBeOneOf(ReaderModel.CF_RU5202, ReaderModel.UHFReader288MP);
-                info.SupportedProtocols.ShouldBeOneOf(ProtocolType.Gen18000_6C, 
-                    ProtocolType.Gen18000_6B, ProtocolType.Gen18000_6C|ProtocolType.Gen18000_6B);
-                info.RFPower.ShouldBe((byte)20);
-                info.InventoryScanInterval.ShouldBeInRange(TimeSpan.FromMilliseconds(0), TimeSpan.FromMilliseconds(25500));
-                info.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1);
-                info.AntennaCheck.ShouldBe(false);
+                info.FirmwareVersion.Major.Should().Be(3);
+                info.FirmwareVersion.Minor.Should().BeInRange(1,18);
+                new[] {ReaderModel.CF_RU5202, ReaderModel.UHFReader288MP}.Should().Contain(info.Model);
+                new[]
+                {
+                    ProtocolType.Gen18000_6C,
+                    ProtocolType.Gen18000_6B, ProtocolType.Gen18000_6C | ProtocolType.Gen18000_6B
+                }.Should().Contain(info.SupportedProtocols);
+                info.RFPower.Should().Be((byte)20);
+                info.InventoryScanInterval.Should().BeLessOrEqualTo(TimeSpan.FromMilliseconds(25500));
+                info.AntennaConfiguration.Should().Be(GenAntennaConfiguration.Antenna1);
+                info.AntennaCheck.Should().Be(false);
             }
         }
         
@@ -51,9 +54,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetInventoryScanInterval(TimeSpan.FromMilliseconds(1000)).Wait();
-                r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(1000));
+                r.GetReaderInfo().Result.InventoryScanInterval.Should().Be(TimeSpan.FromMilliseconds(1000));
                 r.SetInventoryScanInterval(TimeSpan.FromMilliseconds(300)).Wait();
-                r.GetReaderInfo().Result.InventoryScanInterval.ShouldBe(TimeSpan.FromMilliseconds(300));
+                r.GetReaderInfo().Result.InventoryScanInterval.Should().Be(TimeSpan.FromMilliseconds(300));
             }
         }
         
@@ -63,11 +66,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetRFPower(20).Wait();
-                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)20);
+                r.GetReaderInfo().Result.RFPower.Should().Be((byte)20);
                 r.SetRFPower(0).Wait();
-                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)0);
+                r.GetReaderInfo().Result.RFPower.Should().Be((byte)0);
                 r.SetRFPower(26).Wait();
-                r.GetReaderInfo().Result.RFPower.ShouldBe((byte)26);
+                r.GetReaderInfo().Result.RFPower.Should().Be((byte)26);
             }
         }
         
@@ -77,9 +80,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection()))
             {
                 r.SetEpcLengthForBufferOperations(EpcLength.UpTo496Bits).Wait();
-                r.GetEpcLengthForBufferOperations().Result.ShouldBe(EpcLength.UpTo496Bits);
+                r.GetEpcLengthForBufferOperations().Result.Should().Be(EpcLength.UpTo496Bits);
                 r.SetEpcLengthForBufferOperations(EpcLength.UpTo128Bits).Wait();
-                r.GetEpcLengthForBufferOperations().Result.ShouldBe(EpcLength.UpTo128Bits);
+                r.GetEpcLengthForBufferOperations().Result.Should().Be(EpcLength.UpTo128Bits);
             }
         }
         
@@ -140,7 +143,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 r.ClearBuffer().Wait();
                 var buffer = r.GetTagsFromBuffer().Result;
-                buffer.Tags.Count.ShouldBe(0);
+                buffer.Tags.Count.Should().Be(0);
             }
         }
         
@@ -162,13 +165,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 tags.Select(x => x.TagId)
                     .Intersect(TestSettings.Instance.GetKnownTagIds)
                     .Count()
-                    .ShouldBeGreaterThanOrEqualTo(1,
+                    .Should().BeGreaterOrEqualTo(1,
                         $"Should find at least one tag from known tags list. " +
                         $"Actually found: {string.Join(", ", tags.Select(x => x.TagId))}");
-                tags[0].Rssi.ShouldBeGreaterThan(0);
-                tags[0].ReadCount.ShouldBe(1);
-                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
-                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tags[0].Rssi.Should().BeGreaterThan(0);
+                tags[0].ReadCount.Should().Be(1);
+                tags[0].LastSeenTime.Should().BeAfter(DateTime.UtcNow.Date);
+                tags[0].DiscoveryTime.Should().BeAfter(DateTime.UtcNow.Date);
             }
         }
         
@@ -190,22 +193,22 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     lastInventoryAgg += res.TagsInLastInventory;
                     return lastInventoryAgg > 50;
                 });
-                lastInventoryAgg.ShouldBeGreaterThan(50);
-                totalTagsBuffered.ShouldBeInRange(1, 100);
+                lastInventoryAgg.Should().BeGreaterThan(50);
+                totalTagsBuffered.Should().BeInRange(1, 100);
                 
-                r.GetNumberOfTagsInBuffer().Result.ShouldBe(totalTagsBuffered);
+                r.GetNumberOfTagsInBuffer().Result.Should().Be(totalTagsBuffered);
                 var tagInBuffer = r.GetTagsFromBuffer().Result;
-                tagInBuffer.Tags.Count.ShouldBe(totalTagsBuffered);
+                tagInBuffer.Tags.Count.Should().Be(totalTagsBuffered);
                 tagInBuffer.Tags.Select(x => x.TagId)
                     .Intersect(TestSettings.Instance.GetKnownTagIds)
                     .Count()
-                    .ShouldBeGreaterThanOrEqualTo(1,
+                    .Should().BeGreaterOrEqualTo(1,
                         $"Should find at least one tag from known tags list. " +
                         $"Actually found: {string.Join(", ", tagInBuffer.Tags.Select(x => x.TagId))}");
-                tagInBuffer.Tags[0].Antenna.ShouldBe(0);
-                tagInBuffer.Tags[0].Rssi.ShouldBeGreaterThan(0);
-                tagInBuffer.Tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
-                tagInBuffer.Tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tagInBuffer.Tags[0].Antenna.Should().Be(0);
+                tagInBuffer.Tags[0].Rssi.Should().BeGreaterThan(0);
+                tagInBuffer.Tags[0].LastSeenTime.Should().BeAfter(DateTime.UtcNow.Date);
+                tagInBuffer.Tags[0].DiscoveryTime.Should().BeAfter(DateTime.UtcNow.Date);
             }
         }
         
@@ -217,9 +220,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
                 r.SetAntennaConfiguration(GenAntennaConfiguration.Antenna1|GenAntennaConfiguration.Antenna2).Wait();
-                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1|GenAntennaConfiguration.Antenna2);
+                r.GetReaderInfo().Result.AntennaConfiguration.Should().Be(GenAntennaConfiguration.Antenna1|GenAntennaConfiguration.Antenna2);
                 r.SetAntennaConfiguration(GenAntennaConfiguration.Antenna1).Wait();
-                r.GetReaderInfo().Result.AntennaConfiguration.ShouldBe(GenAntennaConfiguration.Antenna1);
+                r.GetReaderInfo().Result.AntennaConfiguration.Should().Be(GenAntennaConfiguration.Antenna1);
             }
         }
         
@@ -230,7 +233,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
                 //Assume we run tests at home :)
-                r.GetReaderTemperature().Result.ShouldBeInRange(10, 50);
+                r.GetReaderTemperature().Result.Should().BeInRange(10, 50);
             }
         }
         
@@ -242,9 +245,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
                 r.SetAntennaCheck(true).Wait();
-                r.GetReaderInfo().Result.AntennaCheck.ShouldBeTrue();
+                r.GetReaderInfo().Result.AntennaCheck.Should().BeTrue();
                 r.SetAntennaCheck(false).Wait();
-                r.GetReaderInfo().Result.AntennaCheck.ShouldBeFalse();
+                r.GetReaderInfo().Result.AntennaCheck.Should().BeFalse();
             }
         }
         
@@ -276,10 +279,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 if (errors.Count > 0)
                     throw errors[0];
                 
-                tags[0].Antenna.ShouldBe(0);
-                tags[0].Rssi.ShouldBeGreaterThan(0);
-                tags[0].DiscoveryTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
-                tags[0].LastSeenTime.ShouldBeGreaterThan(DateTime.UtcNow.Date);
+                tags[0].Antenna.Should().Be(0);
+                tags[0].Rssi.Should().BeGreaterThan(0);
+                tags[0].DiscoveryTime.Should().BeAfter(DateTime.UtcNow.Date);
+                tags[0].LastSeenTime.Should().BeAfter(DateTime.UtcNow.Date);
 
                 var aggTags = tags.GroupBy(x => x.TagId)
                     .Select(x => new Tag {TagId = x.Key, ReadCount = x.Count()})
@@ -288,7 +291,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 aggTags.Select(x => x.TagId)
                     .Intersect(TestSettings.Instance.GetKnownTagIds)
                     .Count()
-                    .ShouldBeGreaterThanOrEqualTo(1,
+                    .Should().BeGreaterOrEqualTo(1,
                         $"Should find at least one tag from known tags list. " +
                         $"Actually found: {string.Join(", ", aggTags.Select(x => x.TagId))}");
             }
@@ -300,10 +303,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             using (var r = new SerialReader(TestSettings.Instance.GetConnection(connectionType)))
             {
-                r.SetDrmEnabled(true).Result.ShouldBe(DrmMode.On);
-                r.GetDrmEnabled().Result.ShouldBe(true);
-                r.SetDrmEnabled(false).Result.ShouldBe(DrmMode.Off);
-                r.GetDrmEnabled().Result.ShouldBe(false);
+                r.SetDrmEnabled(true).Result.Should().Be(DrmMode.On);
+                r.GetDrmEnabled().Result.Should().Be(true);
+                r.SetDrmEnabled(false).Result.Should().Be(DrmMode.Off);
+                r.GetDrmEnabled().Result.Should().Be(false);
             }
         }
         
@@ -317,10 +320,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 var info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud115200).Wait();
-                connection.BaudRate.ShouldBe(115200);
+                connection.BaudRate.Should().Be(115200);
                 info = r.GetReaderInfo().Result;
                 r.SetSerialBaudRate(BaudRates.Baud57600).Wait();
-                connection.BaudRate.ShouldBe(57600);
+                connection.BaudRate.Should().Be(57600);
                 info = r.GetReaderInfo().Result;
             }
         }

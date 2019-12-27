@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Xml;
+using FluentAssertions;
+using FluentAssertions.Extensions;
 using maxbl4.Infrastructure.Extensions.EnumExt;
 using maxbl4.Infrastructure.Extensions.IPAddressExt;
 using maxbl4.RfidDotNet.AlienTech.Buffers;
@@ -10,7 +12,6 @@ using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Extensions;
 using maxbl4.RfidDotNet.AlienTech.TagStream;
 using maxbl4.RfidDotNet.Exceptions;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
@@ -20,54 +21,54 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public void Object_to_alien_string()
         {
-            AlienValueConverter.ToAlienValueString(true).ShouldBe("ON");
-            AlienValueConverter.ToAlienValueString(false).ShouldBe("OFF");
-            AlienValueConverter.ToAlienValueString(1.3d).ShouldBe("1.3");
-            AlienValueConverter.ToAlienValueString(1.3f).ShouldBe("1.3");
-            AlienValueConverter.ToAlienValueString("str").ShouldBe("str");
-            AlienValueConverter.ToAlienValueString(StringComparison.OrdinalIgnoreCase).ShouldBe("OrdinalIgnoreCase");
-            AlienValueConverter.ToAlienValueString(null).ShouldBeNull();
-            AlienValueConverter.ToAlienValueString(new IPEndPoint(IPAddress.Parse("10.0.0.59"), 7000)).ShouldBe("10.0.0.59:7000");
-            AlienValueConverter.ToAlienValueString(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc)).ShouldBe("2018/03/10 23:02:57");
+            AlienValueConverter.ToAlienValueString(true).Should().Be("ON");
+            AlienValueConverter.ToAlienValueString(false).Should().Be("OFF");
+            AlienValueConverter.ToAlienValueString(1.3d).Should().Be("1.3");
+            AlienValueConverter.ToAlienValueString(1.3f).Should().Be("1.3");
+            AlienValueConverter.ToAlienValueString("str").Should().Be("str");
+            AlienValueConverter.ToAlienValueString(StringComparison.OrdinalIgnoreCase).Should().Be("OrdinalIgnoreCase");
+            AlienValueConverter.ToAlienValueString(null).Should().BeNull();
+            AlienValueConverter.ToAlienValueString(new IPEndPoint(IPAddress.Parse("10.0.0.59"), 7000)).Should().Be("10.0.0.59:7000");
+            AlienValueConverter.ToAlienValueString(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc)).Should().Be("2018/03/10 23:02:57");
         }
 
         [Fact]
         public void Alien_string_to_object()
         {
-            AlienValueConverter.ToStrongType<bool>("ON").ShouldBeTrue();
-            AlienValueConverter.ToStrongType<bool>("OFF").ShouldBeFalse();
-            AlienValueConverter.ToStrongType<float>("1.3").ShouldBe(1.3f);
-            AlienValueConverter.ToStrongType<double>("1.3").ShouldBe(1.3d);
-            AlienValueConverter.ToStrongType<string>("str").ShouldBe("str");
+            AlienValueConverter.ToStrongType<bool>("ON").Should().BeTrue();
+            AlienValueConverter.ToStrongType<bool>("OFF").Should().BeFalse();
+            AlienValueConverter.ToStrongType<float>("1.3").Should().Be(1.3f);
+            AlienValueConverter.ToStrongType<double>("1.3").Should().Be(1.3d);
+            AlienValueConverter.ToStrongType<string>("str").Should().Be("str");
             AlienValueConverter.ToStrongType<StringComparison>("OrdinalIgnoreCase")
-                .ShouldBe(StringComparison.OrdinalIgnoreCase);
+                .Should().Be(StringComparison.OrdinalIgnoreCase);
             var ep = AlienValueConverter.ToStrongType<IPEndPoint>("10.0.0.59:7000");
-            ep.Address.ShouldBe(IPAddress.Parse("10.0.0.59"));
-            ep.Port.ShouldBe(7000);
-            AlienValueConverter.ToStrongType<DateTime>("2018/03/10 23:02:57").ShouldBe(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc));
+            ep.Address.Should().Be(IPAddress.Parse("10.0.0.59"));
+            ep.Port.Should().Be(7000);
+            AlienValueConverter.ToStrongType<DateTime>("2018/03/10 23:02:57").Should().Be(new DateTime(2018,03,10,23,02,57, DateTimeKind.Utc));
         }
 
         [Fact]
         public void Stream_header()
         {
             var reader = new ReaderInfo();
-            reader.ParseLine("#ReaderName: Alien RFID Reader").ShouldBe(true);
-            reader.ParseLine("#Hostname: alr-0108e4").ShouldBe(true);
-            reader.ParseLine("#IPAddress: 10.0.0.41").ShouldBe(true);
-            reader.ParseLine("#IPAddress6: fdaa::aaaa").ShouldBe(true);
-            reader.ParseLine("#CommandPort: 23").ShouldBe(true);
-            reader.ParseLine("#MACAddress: 00:1B:5F:01:08:E4").ShouldBe(true);
-            reader.ParseLine("#Time: 2018/02/16 11:48:21.363").ShouldBe(true);
-            reader.ReaderName.ShouldBe("Alien RFID Reader");
-            reader.Hostname.ShouldBe("alr-0108e4");
-            reader.IPAddress.ToString().ShouldBe("10.0.0.41");
-            reader.IPAddress6.ToString().ShouldBe("fdaa::aaaa");
-            reader.CommandPort.ShouldBe(23);
-            reader.MACAddress.ShouldBe("00:1B:5F:01:08:E4");
-            reader.Time.ShouldBe(new DateTime(2018, 2, 16, 11, 48, 21, 363, DateTimeKind.Utc));
+            reader.ParseLine("#ReaderName: Alien RFID Reader").Should().Be(true);
+            reader.ParseLine("#Hostname: alr-0108e4").Should().Be(true);
+            reader.ParseLine("#IPAddress: 10.0.0.41").Should().Be(true);
+            reader.ParseLine("#IPAddress6: fdaa::aaaa").Should().Be(true);
+            reader.ParseLine("#CommandPort: 23").Should().Be(true);
+            reader.ParseLine("#MACAddress: 00:1B:5F:01:08:E4").Should().Be(true);
+            reader.ParseLine("#Time: 2018/02/16 11:48:21.363").Should().Be(true);
+            reader.ReaderName.Should().Be("Alien RFID Reader");
+            reader.Hostname.Should().Be("alr-0108e4");
+            reader.IPAddress.ToString().Should().Be("10.0.0.41");
+            reader.IPAddress6.ToString().Should().Be("fdaa::aaaa");
+            reader.CommandPort.Should().Be(23);
+            reader.MACAddress.Should().Be("00:1B:5F:01:08:E4");
+            reader.Time.Should().Be(new DateTime(2018, 2, 16, 11, 48, 21, 363, DateTimeKind.Utc));
             
-            reader.ParseLine("#Time: 2018/02/16 16:04:58.744 ").ShouldBe(true);
-            reader.Time.ShouldBe(new DateTime(2018, 2, 16, 16, 04, 58, 744, DateTimeKind.Utc));
+            reader.ParseLine("#Time: 2018/02/16 16:04:58.744 ").Should().Be(true);
+            reader.Time.Should().Be(new DateTime(2018, 2, 16, 16, 04, 58, 744, DateTimeKind.Utc));
         }
         
         [Fact]
@@ -85,40 +86,40 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
   <ReaderVersion>17.11.13.00</ReaderVersion>
 </Alien-RFID-Reader-Heartbeat>");
             var ri = ReaderInfoParser.FromXmlString(doc);
-            ri.ReaderName.ShouldBe("Alien RFID Reader");
-            ri.IPAddress.ShouldBe(IPAddress.Parse("10.0.0.41"));
-            ri.IPAddress6.ShouldBe(IPAddress.Parse("fdaa::aaaa"));
-            ri.CommandPort.ShouldBe(23);
-            ri.MACAddress.ShouldBe("00:1B:5F:01:08:E4");
-            ri.Time.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-2), DateTime.UtcNow);
+            ri.ReaderName.Should().Be("Alien RFID Reader");
+            ri.IPAddress.Should().Be(IPAddress.Parse("10.0.0.41"));
+            ri.IPAddress6.Should().Be(IPAddress.Parse("fdaa::aaaa"));
+            ri.CommandPort.Should().Be(23);
+            ri.MACAddress.Should().Be("00:1B:5F:01:08:E4");
+            ri.Time.Should().BeWithin(2.Seconds()).Before(DateTime.UtcNow);
         }
         
         [Fact]
         public void Enum_description()
         {
-            AcquireMode.GlobalScroll.ToStringDescriptive().ShouldBe("Global Scroll");
-            AcquireMode.Inventory.ToStringDescriptive().ShouldBe("Inventory");
-            EnumExt.ParseEnum<AcquireMode>("Global Scroll").ShouldBe(AcquireMode.GlobalScroll);
-            EnumExt.ParseEnum<AcquireMode>("Inventory").ShouldBe(AcquireMode.Inventory);
+            AcquireMode.GlobalScroll.ToStringDescriptive().Should().Be("Global Scroll");
+            AcquireMode.Inventory.ToStringDescriptive().Should().Be("Inventory");
+            EnumExt.ParseEnum<AcquireMode>("Global Scroll").Should().Be(AcquireMode.GlobalScroll);
+            EnumExt.ParseEnum<AcquireMode>("Inventory").Should().Be(AcquireMode.Inventory);
         }
 
         [Fact]
         public void Process_partial_message()
         {
             var parser = new MessageParser();
-            parser.Write("1234").ShouldBe(4);
-            parser.Parse(4).ToList().Count.ShouldBe(0);
-            parser.Offset.ShouldBe(4);
-            parser.BufferLength.ShouldBe(MessageParser.DefaultBufferSize - 4);
-            parser.Parse(0).ToList().Count.ShouldBe(0);
-            parser.Offset.ShouldBe(4);
+            parser.Write("1234").Should().Be(4);
+            parser.Parse(4).ToList().Count.Should().Be(0);
+            parser.Offset.Should().Be(4);
+            parser.BufferLength.Should().Be(MessageParser.DefaultBufferSize - 4);
+            parser.Parse(0).ToList().Count.Should().Be(0);
+            parser.Offset.Should().Be(4);
 
-            parser.Write("567\n").ShouldBe(4);
+            parser.Write("567\n").Should().Be(4);
             var results = parser.Parse(4).ToList();
-            results.Count.ShouldBe(1);
-            results[0].ShouldBe("1234567");
-            parser.Offset.ShouldBe(0);
-            parser.BufferLength.ShouldBe(MessageParser.DefaultBufferSize);
+            results.Count.Should().Be(1);
+            results[0].Should().Be("1234567");
+            parser.Offset.Should().Be(0);
+            parser.BufferLength.Should().Be(MessageParser.DefaultBufferSize);
         }
 
         [Fact]
@@ -135,8 +136,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             var parser = new MessageParser(5);
             parser.Write("1234\0");
             var msgs = parser.Parse(5).ToList();
-            msgs.Count.ShouldBe(1);
-            msgs[0].ShouldBe("1234");
+            msgs.Count.Should().Be(1);
+            msgs[0].Should().Be("1234");
         }
 
         [Fact]
@@ -144,7 +145,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             var ip = IPAddress.Parse("192.168.1.15");
             ip.Mask(IPAddress.Parse("255.255.255.0"))
-                .ShouldBe(IPAddress.Parse("192.168.1.0"));
+                .Should().Be(IPAddress.Parse("192.168.1.0"));
         }
 
         [Fact]
@@ -152,21 +153,21 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             var parser = new MessageParser();
 
-            parser.Write("123\n567").ShouldBe(7);
+            parser.Write("123\n567").Should().Be(7);
             var results = parser.Parse(7).ToList();
-            results.Count.ShouldBe(1);
-            results[0].ShouldBe("123");
-            parser.Offset.ShouldBe(3);
+            results.Count.Should().Be(1);
+            results[0].Should().Be("123");
+            parser.Offset.Should().Be(3);
 
             parser.Write("\n");
-            parser.Parse(1).Single().ShouldBe("567");
+            parser.Parse(1).Single().Should().Be("567");
         }
 
         [Fact]
         public void TagParser_SerializeRoundtrip()
         {
             var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
-            TagParser.Parse(tagString).ToCustomFormatString().ShouldBe(tagString);
+            TagParser.Parse(tagString).ToCustomFormatString().Should().Be(tagString);
         }
 
         [Fact]
@@ -174,21 +175,21 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             var tagString = "E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66";
             var tag = TagParser.Parse(tagString);
-            tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
-            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
-            tag.Antenna.ShouldBe(0);
-            tag.Rssi.ShouldBe(-35.4, 0.1);
-            tag.ReadCount.ShouldBe(66);
+            tag.TagId.Should().Be("E20000165919004418405CBA");
+            tag.DiscoveryTime.Should().Be(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.Should().Be(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
+            tag.Antenna.Should().Be(0);
+            tag.Rssi.Should().BeApproximately(-35.4, 0.1);
+            tag.ReadCount.Should().Be(66);
 
-            TagParser.TryParse(tagString, out tag).ShouldBeTrue();
+            TagParser.TryParse(tagString, out tag).Should().BeTrue();
 
-            tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
-            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
-            tag.Antenna.ShouldBe(0);
-            tag.Rssi.ShouldBe(-35.4, 0.1);
-            tag.ReadCount.ShouldBe(66);
+            tag.TagId.Should().Be("E20000165919004418405CBA");
+            tag.DiscoveryTime.Should().Be(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.Should().Be(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
+            tag.Antenna.Should().Be(0);
+            tag.Rssi.Should().BeApproximately(-35.4, 0.1);
+            tag.ReadCount.Should().Be(66);
         }
         
         [Fact]
@@ -196,43 +197,43 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             var tagString = "\0E20000165919004418405CBA;1518371341633;1518371343641;0;-35.4;66\r\n";
             var tag = TagParser.Parse(tagString);
-            tag.TagId.ShouldBe("E20000165919004418405CBA");
-            tag.DiscoveryTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
-            tag.LastSeenTime.ShouldBe(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
-            tag.Antenna.ShouldBe(0);
-            tag.Rssi.ShouldBe(-35.4, 0.1);
-            tag.ReadCount.ShouldBe(66);
+            tag.TagId.Should().Be("E20000165919004418405CBA");
+            tag.DiscoveryTime.Should().Be(DateTime.Parse("2018-02-11T20:49:01.6330000+3").ToUniversalTime());
+            tag.LastSeenTime.Should().Be(DateTime.Parse("2018-02-11T20:49:03.6410000+3").ToUniversalTime());
+            tag.Antenna.Should().Be(0);
+            tag.Rssi.Should().BeApproximately(-35.4, 0.1);
+            tag.ReadCount.Should().Be(66);
         }
 
         [Fact]
         public void Process_empty_message_one_terminator()
         {
             var parser = new MessageParser();
-            parser.Write("\0").ShouldBe(1);
+            parser.Write("\0").Should().Be(1);
             var results = parser.Parse(1).ToList();
-            parser.Offset.ShouldBe(0);
-            results.Count.ShouldBe(1);
-            results[0].ShouldBe("");
+            parser.Offset.Should().Be(0);
+            results.Count.Should().Be(1);
+            results[0].Should().Be("");
 
-            parser.Write("\0\0").ShouldBe(2);
+            parser.Write("\0\0").Should().Be(2);
             results = parser.Parse(2).ToList();
-            parser.Offset.ShouldBe(0);
-            results.Count.ShouldBe(1);
-            results[0].ShouldBe("");
+            parser.Offset.Should().Be(0);
+            results.Count.Should().Be(1);
+            results[0].Should().Be("");
         }
 
         [Fact]
         public void Process_multiple_messages()
         {
             var parser = new MessageParser();
-            parser.Write("12\n34\n56\n").ShouldBe(9);
+            parser.Write("12\n34\n56\n").Should().Be(9);
             
             var results = parser.Parse(9).ToList();
-            parser.Offset.ShouldBe(0);
-            results.Count.ShouldBe(3);
-            results[0].ShouldBe("12");
-            results[1].ShouldBe("34");
-            results[2].ShouldBe("56");
+            parser.Offset.Should().Be(0);
+            results.Count.Should().Be(3);
+            results[0].Should().Be("12");
+            results[1].Should().Be("34");
+            results[2].Should().Be("56");
         }
 
         [Fact]
@@ -240,31 +241,31 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         {
             var parser = new MessageParser();
             var msg = "12\r\n34\n\r56\n\0\n78\r\n\0";
-            parser.Write(msg).ShouldBe(msg.Length);
+            parser.Write(msg).Should().Be(msg.Length);
             
             var results = parser.Parse(msg.Length).ToList();
-            parser.Offset.ShouldBe(0);
-            results.Count.ShouldBe(4);
-            results[0].ShouldBe("12");
-            results[1].ShouldBe("34");
-            results[2].ShouldBe("56");
-            results[3].ShouldBe("78");
+            parser.Offset.Should().Be(0);
+            results.Count.Should().Be(4);
+            results[0].Should().Be("12");
+            results[1].Should().Be("34");
+            results[2].Should().Be("56");
+            results[3].Should().Be("78");
         }
 
         [Fact]
         public void Process_multiple_messages_with_leftover()
         {
             var parser = new MessageParser();
-            parser.Write("12\n34\n56\n89").ShouldBe(11);
+            parser.Write("12\n34\n56\n89").Should().Be(11);
             
             var results = parser.Parse(11).ToList();
-            parser.Offset.ShouldBe(2);
-            results.Count.ShouldBe(3);
-            results[0].ShouldBe("12");
-            results[1].ShouldBe("34");
-            results[2].ShouldBe("56");
+            parser.Offset.Should().Be(2);
+            results.Count.Should().Be(3);
+            results[0].Should().Be("12");
+            results[1].Should().Be("34");
+            results[2].Should().Be("56");
             parser.Write("\n");
-            parser.Parse(1).Single().ShouldBe("89");
+            parser.Parse(1).Single().Should().Be("89");
         }
     }
 

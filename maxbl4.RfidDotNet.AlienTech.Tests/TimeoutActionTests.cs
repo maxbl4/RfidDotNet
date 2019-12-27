@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Threading;
+using FluentAssertions;
 using maxbl4.Infrastructure;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
@@ -14,7 +14,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             var sw = Stopwatch.StartNew();
             using (TimeoutAction.Set(100, () => sw.Stop()))
                 Thread.Sleep(2000);
-            sw.ElapsedMilliseconds.ShouldBeInRange(0, 150);
+            sw.ElapsedMilliseconds.Should().BeInRange(0, 150);
         }
     }
 }

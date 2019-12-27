@@ -1,9 +1,9 @@
 using System;
+using FluentAssertions;
 using maxbl4.RfidDotNet.AlienTech;
 using maxbl4.RfidDotNet.AlienTech.Extensions;
 using maxbl4.RfidDotNet.GenericSerial;
 using maxbl4.RfidDotNet.GenericSerial.Ext;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.Tests
@@ -24,12 +24,12 @@ namespace maxbl4.RfidDotNet.Tests
             var factory = new UniversalTagStreamFactory();
             factory.UseAlienProtocol();
             var stream = factory.CreateStream("protocol=alien; network=localhost");
-            stream.ShouldBeOfType<ReconnectingAlienReaderProtocol>();
+            stream.Should().BeOfType<ReconnectingAlienReaderProtocol>();
             
             factory = new UniversalTagStreamFactory();
             factory.UseSerialProtocol();
             stream = factory.CreateStream("protocol=serial; serial=COM4");
-            stream.ShouldBeOfType<SerialUnifiedTagStream>();
+            stream.Should().BeOfType<SerialUnifiedTagStream>();
         }
     }
 }

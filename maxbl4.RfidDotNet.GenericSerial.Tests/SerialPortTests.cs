@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using FluentAssertions;
 using RJCP.IO.Ports;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -26,20 +26,20 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 port.Open();
                 
-                port.CanTimeout.ShouldBeTrue();
-                port.ReadTimeout.ShouldBe(Timeout.Infinite);
-                port.WriteTimeout.ShouldBe(Timeout.Infinite);
+                port.CanTimeout.Should().BeTrue();
+                port.ReadTimeout.Should().Be(Timeout.Infinite);
+                port.WriteTimeout.Should().Be(Timeout.Infinite);
 
                 port.ReadTimeout = 1000;
                 port.WriteTimeout = 1000;
-                port.ReadTimeout.ShouldBe(1000);
-                port.WriteTimeout.ShouldBe(1000);
+                port.ReadTimeout.Should().Be(1000);
+                port.WriteTimeout.Should().Be(1000);
 
                 var buf = new byte[10];
                 var sw = Stopwatch.StartNew();
-                port.Read(buf, 0, 10).ShouldBe(0);
+                port.Read(buf, 0, 10).Should().Be(0);
                 sw.Stop();
-                sw.ElapsedMilliseconds.ShouldBeGreaterThan(900);
+                sw.ElapsedMilliseconds.Should().BeGreaterThan(900);
             }
         }
         
@@ -52,7 +52,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 port.Write(new byte[]{0x04, 0x00, 0x4c, 0x3a, 0xd2}, 0, 5);
                 var b = new byte[100];
                 var read = port.Read(b, 0, 100);
-                read.ShouldBe(10);
+                read.Should().Be(10);
             }
         }
 
@@ -71,8 +71,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     port.Write(command, 0, command.Length);
                     var b = new byte[100];
                     var read = port.Read(b, 0, 100);
-                    read.ShouldBe(expectedResponse.Length);
-                    expectedResponse.ShouldBe(b.Take(expectedResponse.Length));
+                    read.Should().Be(expectedResponse.Length);
+                    expectedResponse.Should().Equal(b.Take(expectedResponse.Length));
                 }    
             }
         }

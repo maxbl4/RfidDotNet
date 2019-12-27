@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using maxbl4.RfidDotNet.Exceptions;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests
@@ -31,8 +31,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task RfModulation()
         {
-            (await Proto.SendReceive("RFModulation = DRM")).ShouldBe("RFModulation = DRM");
-            (await Proto.SendReceive("RFModulation?")).ShouldBe("RFModulation = DRM");
+            (await Proto.SendReceive("RFModulation = DRM")).Should().Be("RFModulation = DRM");
+            (await Proto.SendReceive("RFModulation?")).Should().Be("RFModulation = DRM");
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
             Proto?.Dispose();
             Proto = new AlienReaderProtocol();
             Assert.Throws<AggregateException>(() => Proto.ConnectAndLogin(Host, Port, "alien", "password1").Wait())
-                .InnerException.ShouldBeOfType<LoginFailedException>();
+                .InnerException.Should().BeOfType<LoginFailedException>();
         }
         
         [Fact]
@@ -67,18 +67,18 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public async Task AutoModeReset()
         {
-            (await Proto.SendReceive("AutoModeReset")).ShouldBe(ProtocolMessages.AutoModeResetConfirmation);
+            (await Proto.SendReceive("AutoModeReset")).Should().Be(ProtocolMessages.AutoModeResetConfirmation);
         }
 
         [Fact]
         public async Task Clear()
         {
-            (await Proto.SendReceive("Clear")).ShouldBe(ProtocolMessages.TagListClearConfirmation);
+            (await Proto.SendReceive("Clear")).Should().Be(ProtocolMessages.TagListClearConfirmation);
         }
 
         async Task SendReceiveConfirm(string command, string customValidation = null)
         {
-            (await Proto.SendReceive(command)).ShouldBe(customValidation ?? command);
+            (await Proto.SendReceive(command)).Should().Be(customValidation ?? command);
         }
     }
 }

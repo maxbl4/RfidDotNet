@@ -1,7 +1,7 @@
 using System;
+using FluentAssertions;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -37,12 +37,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             var pk = new CommandDataPacket(ReaderCommand.GetReaderSerialNumber);
             var buf = pk.Serialize();
-            buf.Length.ShouldBe(5);
-            buf[0].ShouldBe((byte)4);
-            buf[1].ShouldBe((byte)0);
-            buf[2].ShouldBe((byte)ReaderCommand.GetReaderSerialNumber);
-            buf[3].ShouldBe((byte)0x3a);
-            buf[4].ShouldBe((byte)0xd2);
+            buf.Length.Should().Be(5);
+            buf[0].Should().Be((byte)4);
+            buf[1].Should().Be((byte)0);
+            buf[2].Should().Be((byte)ReaderCommand.GetReaderSerialNumber);
+            buf[3].Should().Be((byte)0x3a);
+            buf[4].Should().Be((byte)0xd2);
         }
 
         [Fact]
@@ -51,13 +51,13 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             var timestamp = DateTime.UtcNow;
             var result = new TagInventoryResult(new[]
                 {new ResponseDataPacket(ReaderCommand.TagInventory, SamplesData.TagInventoryResponse, timestamp)});
-            result.Tags.Count.ShouldBe(2);
-            result.Tags.ShouldContain(x => x.TagId == "03072600000000000000926D");
-            result.Tags.ShouldContain(x => x.TagId == "0307260000000000000092D5");
-            result.Tags[0].Antenna.ShouldBe(0);
-            result.Tags[0].Rssi.ShouldBe(224);
-            result.Tags[0].LastSeenTime.ShouldBe(timestamp);
-            result.Tags[0].DiscoveryTime.ShouldBe(timestamp);
+            result.Tags.Count.Should().Be(2);
+            result.Tags.Should().Contain(x => x.TagId == "03072600000000000000926D");
+            result.Tags.Should().Contain(x => x.TagId == "0307260000000000000092D5");
+            result.Tags[0].Antenna.Should().Be(0);
+            result.Tags[0].Rssi.Should().Be(224);
+            result.Tags[0].LastSeenTime.Should().Be(timestamp);
+            result.Tags[0].DiscoveryTime.Should().Be(timestamp);
         }
     }
 }

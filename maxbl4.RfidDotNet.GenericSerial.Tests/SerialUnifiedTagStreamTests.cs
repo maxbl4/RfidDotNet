@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
 using maxbl4.Infrastructure;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -24,17 +24,17 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             {
                 SubscribeStreams(stream);
 
-                connected.Count.ShouldBe(1);
-                connected[0].ShouldBeFalse();
-                tags.Count.ShouldBe(0);
-                errors.Count.ShouldBe(0);
+                connected.Count.Should().Be(1);
+                connected[0].Should().BeFalse();
+                tags.Count.Should().Be(0);
+                errors.Count.Should().Be(0);
 
                 stream.Start().Wait();
-                stream.RFPower(25).Result.ShouldBe(25);
+                stream.RFPower(25).Result.Should().Be(25);
                 new Timing()
                     .FailureDetails(()=> $"heartbeats.Count = {heartbeats.Count} tags.Count = {tags.Count}")
                     .Expect(() => heartbeats.Count > 2 && tags.Count > 20);
-                heartbeats.ShouldContain(x => x > DateTime.UtcNow.AddSeconds(-10));
+                heartbeats.Should().Contain(x => x > DateTime.UtcNow.AddSeconds(-10));
             }
         }
 

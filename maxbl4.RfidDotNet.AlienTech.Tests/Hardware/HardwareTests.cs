@@ -4,10 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using FluentAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using Serilog;
-using Shouldly;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
@@ -39,8 +39,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             tags.Clear();
             await new Timing().ExpectAsync(() => tags.Count > 100);
             Logger.Debug("{LastSeenTime}", tags.Last().LastSeenTime);
-            (DateTime.UtcNow - tags.Last().LastSeenTime).TotalMinutes.ShouldBeLessThan(1);
-            (await Proto.Api.AntennaSequence("3")).ShouldBe("3");
+            (DateTime.UtcNow - tags.Last().LastSeenTime).TotalMinutes.Should().BeLessThan(1);
+            (await Proto.Api.AntennaSequence("3")).Should().Be("3");
             await new Timing()
                 .FailureDetails(() => $"Now: {DateTime.UtcNow}, Actual: {tags.Last().LastSeenTime}")
                 .ExpectAsync(() => (DateTime.UtcNow - tags.Last().LastSeenTime).TotalSeconds > 1);
@@ -49,7 +49,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
             await Proto.Api.AntennaSequence("0");
             await new Timing().ExpectAsync(() => tags.Count > 100);
             msgs.ForEach(x => Logger.Error(x));
-            msgs.Count.ShouldBe(0);
+            msgs.Count.Should().Be(0);
         }
 
         [Fact()]
@@ -77,7 +77,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                     .Context("Keepalives should stop")
                     .ExpectAsync(() => (DateTime.UtcNow - Proto.LastKeepalive) > TimeSpan.FromSeconds(8));
             Logger.Debug("Keepalives have stopped");
-            Proto.IsConnected.ShouldBeFalse();
+            Proto.IsConnected.Should().BeFalse();
             Logger.Debug("proto in disconnected");
         }
 
@@ -92,8 +92,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
                 disc.Discovery.Subscribe(x => observed = true);
                 await new Timing().ExpectAsync(() => observed && disc.Readers.Any());
                 var infos = disc.Readers.ToList();
-                infos.Count.ShouldBe(1);
-                infos[0].IPAddress.ShouldBe(IPEndPoint.Parse(Settings.HardwareReaderAddress).Address);
+                infos.Count.Should().Be(1);
+                infos[0].IPAddress.Should().Be(IPEndPoint.Parse(Settings.HardwareReaderAddress).Address);
             }
             await Proto.Api.HeartbeatTime(30);
         }

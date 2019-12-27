@@ -1,4 +1,4 @@
-using Shouldly;
+using FluentAssertions;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -11,7 +11,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             byte[] example = {0x04, 0x00, 0x4c, 0x3a, 0xd2};
             byte[] test = {0x04, 0x00, 0x4c, 0, 0};
             Crc16.SetCrc16(test);
-            test.ShouldBe(example);
+            test.Should().Equal(example);
         }
 
         [Fact]
@@ -20,7 +20,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             for (var i = 0; i < SamplesData.AllPackets.Length; i++)
             {
                 var e = SamplesData.AllPackets[i];
-                Crc16.CheckCrc16(e).ShouldBeTrue($"Example {i}");
+                Crc16.CheckCrc16(e).Should().BeTrue($"Example {i}");
             }
         }
 
@@ -33,7 +33,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 test[test.Length - 2] = 0;
                 test[test.Length - 1] = 0;
                 Crc16.SetCrc16(test);
-                test.ShouldBe(e);
+                test.Should().Equal(e);
             }
         }
         
@@ -42,10 +42,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         {
             byte[] src = {1, 2, 3};
             byte[] dst = (byte[])src.Clone();
-            dst.ShouldNotBeSameAs(src);
-            dst.ShouldBe(src);
-            dst.Length.ShouldBe(3);
-            dst[0].ShouldBe((byte)1);
+            dst.Should().NotBeSameAs(src);
+            dst.Should().Equal(src);
+            dst.Length.Should().Be(3);
+            dst[0].Should().Be((byte)1);
         }
 
     }
