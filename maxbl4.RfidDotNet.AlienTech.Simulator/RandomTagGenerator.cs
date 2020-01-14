@@ -11,12 +11,11 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
     {
         private readonly Random rnd = new Random();
         
-        public string Next()
+        public IEnumerable<Tag> Next()
         {
             var count = rnd.Next(0, 10) - 5;
             if (count <= 0)
-                return ProtocolMessages.NoTags;
-            var tags = new List<Tag>();
+                yield break;
             for (int i = 0; i < count; i++)
             {
                 var t = new Tag
@@ -30,11 +29,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 };
                 for (int j = 0; j < rnd.Next(1, 10); j++)
                 {
-                    tags.Add(t);
+                    yield return t;
                 }
             }
-            
-            return string.Join("\r\n", tags.Select(x =>x.ToCustomFormatString()));
         }
 
         private string NextTagId()

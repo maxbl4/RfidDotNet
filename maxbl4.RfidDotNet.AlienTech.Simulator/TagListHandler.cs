@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
@@ -13,7 +14,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
         private Tag[] returnContinuos;
         DateTime lastInfo = DateTime.UtcNow;
         private int requestCounter = 0;
-        private RandomTagGenerator randomTagGenerator = new RandomTagGenerator(); 
+        private readonly RandomTagGenerator randomTagGenerator = new RandomTagGenerator();
+        private readonly Random random = new Random();
             
         public TagListHandler(SimulatorOptions simulatorOptions)
         {
@@ -34,18 +36,40 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
                 }
                 
                 Thread.Sleep(simulatorOptions.ReadLatencyMs);
+                
+                var tags = new List<Tag>();
 
                 if (simulatorOptions.RandomTags)
-                    return randomTagGenerator.Next();
-                
-                if (returnContinuos.Length > 0)
-                    return string.Join("\r\n", returnContinuos.Select(x =>
-                    {
-                        x.LastSeenTime = DateTime.UtcNow;
-                        return x.ToCustomFormatString();
-                    }));
+                    tags.AddRange(randomTagGenerator.Next());
 
-                return ProtocolMessages.NoTags;
+                if (returnContinuos.Length > 0)
+                {
+                    if (simulatorOptions.KnownTagsPercent > 99)
+                    {
+                        tags.AddRange(returnContinuos.Select(x =>
+                        {
+                            x.LastSeenTime = DateTime.UtcNow;
+                            return x;
+                        }));
+                    }else if (simulatorOptions.KnownTagsPercent > 0)
+                    {
+                        var take = (int)Math.Round(random.NextDouble() * returnContinuos.Length * simulatorOptions.KnownTagsPercent /
+                                     100d);
+                        var samples = returnContinuos.ToList();
+                        for (int i = 0; i < take; i++)
+                        {
+                            var index = random.Next(samples.Count);
+                            var tag = samples[index];
+                            samples.RemoveAt(index);
+                            tag.LastSeenTime = DateTime.UtcNow;
+                            tags.Add(tag);
+                        }
+                    }
+                }
+                
+                if (tags.Count == 0)
+                    return ProtocolMessages.NoTags;
+                return string.Join("\r\n", tags.Select(x => x.ToCustomFormatString()));
             }
         }
 

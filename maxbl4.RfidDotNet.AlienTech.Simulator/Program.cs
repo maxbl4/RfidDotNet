@@ -19,7 +19,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
             var simulator = new SimulatorListener(readerEndpoint);
             var tagListHandler = new TagListHandler(options);
             simulator.TagListHandler = tagListHandler.Handle;
-            var tags = options.VisibleTags
+            var tags = options.KnownTags
                 .Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => new Tag{TagId = x, DiscoveryTime = DateTime.UtcNow, LastSeenTime = DateTime.UtcNow, ReadCount = 1})
                 .ToArray();
