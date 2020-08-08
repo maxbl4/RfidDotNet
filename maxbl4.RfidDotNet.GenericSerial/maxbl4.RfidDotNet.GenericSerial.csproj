@@ -5,8 +5,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.37" />
-      <PackageReference Include="SerialPortStream" Version="2.2.0" />
+      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.39" />
+      <PackageReference Include="SerialPortStream" Version="2.2.2" />
     </ItemGroup>
 
     <ItemGroup>
