@@ -72,7 +72,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
                         Session = (SessionValue)connectionString.Session
                     }));
                     
-                    if (inventoryResults.Writer.TryWrite(res))
+                    if (!inventoryResults.Writer.TryWrite(res))
                         errors.OnNext(new TagReadBufferIsFull());
                     if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
                     {

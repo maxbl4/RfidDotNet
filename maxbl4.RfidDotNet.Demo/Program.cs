@@ -28,14 +28,16 @@ namespace maxbl4.RfidDotNet.Demo
 
             factory.UseSerialProtocol();
             factory.UseAlienProtocol();
-            using (var stream = factory.CreateStream(connectionString))
+            using var stream = factory.CreateStream(connectionString);
+            stream.Errors.Subscribe(e =>
             {
-                stream.Errors.Subscribe(e => errors +=  e.Message + "\r\n");
-                SubscribeToPollingResults(stream.Tags, 500);
-                stream.Start().Wait();
-                Console.WriteLine("Polling for tags...");
-                Console.ReadLine();
-            }
+                errors += e.Message + "\r\n";
+                Console.WriteLine(e.Message);
+            });
+            SubscribeToPollingResults(stream.Tags, 500);
+            stream.Start().Wait();
+            Console.WriteLine("Polling for tags...");
+            Console.ReadLine();
         }
         
         static void SubscribeToPollingResults(IObservable<Tag> tags, int samplingInterval)

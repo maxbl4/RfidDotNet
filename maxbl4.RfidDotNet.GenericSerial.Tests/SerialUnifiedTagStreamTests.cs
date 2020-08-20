@@ -35,6 +35,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                     .FailureDetails(()=> $"heartbeats.Count = {heartbeats.Count} tags.Count = {tags.Count}")
                     .Expect(() => heartbeats.Count > 2 && tags.Count > 20);
                 heartbeats.Should().Contain(x => x > DateTime.UtcNow.AddSeconds(-10));
+                errors.Count.Should().Be(0);
             }
         }
 
