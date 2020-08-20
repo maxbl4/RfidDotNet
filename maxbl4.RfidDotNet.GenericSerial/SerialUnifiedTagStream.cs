@@ -48,56 +48,53 @@ namespace maxbl4.RfidDotNet.GenericSerial
         readonly BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
         private bool doInventory = true;
         public IObservable<bool> Connected => connected;
-        public async Task Start()
+        public Task Start()
         {
             _ = StartPolling();
             _ = StartStreamingTags();
             connected.OnNext(true);
+            return Task.CompletedTask;
         }
 
-        private Task StartPolling()
+        private async Task StartPolling()
         {
-            var task = new Task(async () => { 
-                var sw = new Stopwatch();
-                if (connectionString.ThermalLimit > 0)
-                    sw.Start();
-                var lastHeartbeat = DateTime.UtcNow;
-                while (doInventory)
+            var sw = new Stopwatch();
+            if (connectionString.ThermalLimit > 0)
+                sw.Start();
+            var lastHeartbeat = DateTime.UtcNow;
+            while (doInventory)
+            {
+                try
                 {
-                    try
+                    var res = await serialReaderSafe.Do(x => x.TagInventory(new TagInventoryParams
                     {
-                        var res = await serialReaderSafe.Do(x => x.TagInventory(new TagInventoryParams
+                        QValue = (byte)connectionString.QValue,
+                        Session = (SessionValue)connectionString.Session
+                    }));
+                    
+                    if (inventoryResults.Writer.TryWrite(res))
+                        errors.OnNext(new TagReadBufferIsFull());
+                    if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
+                    {
+                        var t = await serialReaderSafe.Do(x => x.GetReaderTemperature());
+                        if (t > connectionString.ThermalLimit)
                         {
-                            QValue = (byte)connectionString.QValue,
-                            Session = (SessionValue)connectionString.Session
-                        }));
-                        
-                        if (inventoryResults.Writer.TryWrite(res))
-                            errors.OnNext(new TagReadBufferIsFull());
-                        if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
-                        {
-                            var t = await serialReaderSafe.Do(x => x.GetReaderTemperature());
-                            if (t > connectionString.ThermalLimit)
-                            {
-                                errors.OnNext(new TemperatureLimitExceededException(connectionString.ThermalLimit, t));
-                                await Task.Delay(10000);
-                            }
-                            sw.Restart();
+                            errors.OnNext(new TemperatureLimitExceededException(connectionString.ThermalLimit, t));
+                            await Task.Delay(10000);
                         }
-                        if (DateTime.UtcNow - lastHeartbeat > TimeSpan.FromSeconds(1))
-                        {
-                            Logger.Swallow(() => heartbeat.OnNext(DateTime.UtcNow));
-                            lastHeartbeat = DateTime.UtcNow;
-                        }
+                        sw.Restart();
                     }
-                    catch (Exception e)
+                    if (DateTime.UtcNow - lastHeartbeat > TimeSpan.FromSeconds(1))
                     {
-                        errors.OnNext(e);
+                        Logger.Swallow(() => heartbeat.OnNext(DateTime.UtcNow));
+                        lastHeartbeat = DateTime.UtcNow;
                     }
                 }
-            }, TaskCreationOptions.LongRunning);
-            task.Start();
-            return task;
+                catch (Exception e)
+                {
+                    errors.OnNext(e);
+                }
+            }
         }
         
         private async Task StartStreamingTags()

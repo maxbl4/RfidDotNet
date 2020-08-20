@@ -51,7 +51,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             }
         }
 
-        public async Task UpdateConnectionString(ConnectionString newConnectionString)
+        public void UpdateConnectionString(ConnectionString newConnectionString)
         {
             using var lck = actionSemaphore.UseOnce();
             connectionString = newConnectionString.Clone();
