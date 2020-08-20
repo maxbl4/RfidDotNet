@@ -248,8 +248,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public void Dispose()
         {
-            DisposableExt.DisposeSafe(realtimeInventoryListener);
-            DisposableExt.DisposeSafe(streamFactory);
+            realtimeInventoryListener.DisposeSafe();
+            streamFactory.DisposeSafe();
         }
     }
 }

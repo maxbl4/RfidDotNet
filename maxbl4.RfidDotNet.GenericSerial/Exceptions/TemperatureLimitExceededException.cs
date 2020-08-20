@@ -9,4 +9,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Exceptions
         {
         }
     }
+
+    public class TagReadBufferIsFull : Exception
+    {
+        
+    }
 }
