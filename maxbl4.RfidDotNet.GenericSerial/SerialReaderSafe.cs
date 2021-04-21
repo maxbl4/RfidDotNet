@@ -14,7 +14,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         private readonly IObserver<bool> connected;
         private readonly IObserver<Exception> errors;
         private ConnectionString connectionString;
-        private readonly SemaphoreSlim actionSemaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim actionSemaphore = new(1);
         private SerialReader serialReader;
 
         public SerialReaderSafe(ConnectionString connectionString, IObserver<bool> connected, IObserver<Exception> errors)

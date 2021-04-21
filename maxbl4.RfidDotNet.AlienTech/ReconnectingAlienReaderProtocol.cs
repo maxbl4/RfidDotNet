@@ -23,13 +23,13 @@ namespace maxbl4.RfidDotNet.AlienTech
         private readonly int receiveTimeout;
         private readonly bool usePolling;
         public bool AutoReconnect { get; set; }
-        private Subject<Tag> tags = new Subject<Tag>();
+        private Subject<Tag> tags = new();
         public IObservable<Tag> Tags => tags;
-        private Subject<Exception> errors = new Subject<Exception>();
+        private Subject<Exception> errors = new();
         public IObservable<Exception> Errors => errors;
-        private BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
+        private BehaviorSubject<bool> connected = new(false);
         public IObservable<bool> Connected => connected;
-        private BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
+        private BehaviorSubject<DateTime> heartbeat = new(DateTime.MinValue);
         public IObservable<DateTime> Heartbeat => heartbeat;
         public Task Start()
         {
@@ -63,7 +63,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         private AlienReaderProtocol proto = null;
         public AlienReaderProtocol Current => proto;
         public int ReconnectTimeout { get; set; } = 2000;
-        readonly SerialDisposable reconnectDisposable = new SerialDisposable();
+        readonly SerialDisposable reconnectDisposable = new();
 
         private string login = "alien";
         private string password = "password";

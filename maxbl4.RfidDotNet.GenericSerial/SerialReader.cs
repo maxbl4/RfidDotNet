@@ -21,11 +21,11 @@ namespace maxbl4.RfidDotNet.GenericSerial
     public class SerialReader : IDisposable
     {
         private readonly IDataStreamFactory streamFactory;        
-        private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim sendReceiveSemaphore = new(1);
         
-        private readonly Subject<Tag> tags = new Subject<Tag>();
+        private readonly Subject<Tag> tags = new();
         public IObservable<Tag> Tags => tags;
-        private readonly Subject<Exception> errors = new Subject<Exception>();
+        private readonly Subject<Exception> errors = new();
         public IObservable<Exception> Errors => errors;
 
         public bool ThrowOnIllegalCommandError { get; set; } = true;

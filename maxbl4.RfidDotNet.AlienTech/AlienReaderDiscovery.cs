@@ -18,10 +18,10 @@ namespace maxbl4.RfidDotNet.AlienTech
         static readonly ILogger Logger = Log.ForContext<AlienReaderDiscovery>();
         private readonly UdpClient client;
         public int HeartbeatInterval { get; set; } = 45;
-        readonly Subject<ReaderInfo> discovery = new Subject<ReaderInfo>();
+        readonly Subject<ReaderInfo> discovery = new();
         public IObservable<ReaderInfo> Discovery => discovery;
 
-        private List<ReaderInfo> readers = new List<ReaderInfo>();
+        private List<ReaderInfo> readers = new();
         public List<ReaderInfo> Readers 
         {
             get 

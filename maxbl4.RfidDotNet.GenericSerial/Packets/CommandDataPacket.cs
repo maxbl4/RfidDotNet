@@ -46,42 +46,42 @@ namespace maxbl4.RfidDotNet.GenericSerial.Packets
         
         public static CommandDataPacket SetRFPower(byte rfPower)
         {
-            return new CommandDataPacket(ReaderCommand.SetRFPower, rfPower);
+            return new(ReaderCommand.SetRFPower, rfPower);
         }
         
         public static CommandDataPacket GetNumberOfTagsInBuffer()
         {
-            return new CommandDataPacket(ReaderCommand.GetNumberOfTagsInBuffer);
+            return new(ReaderCommand.GetNumberOfTagsInBuffer);
         }
         
         public static CommandDataPacket GetEpcLengthForBufferOperations()
         {
-            return new CommandDataPacket(ReaderCommand.GetEpcLengthForBufferOperations);
+            return new(ReaderCommand.GetEpcLengthForBufferOperations);
         }
         
         public static CommandDataPacket SetEpcLengthForBufferOperations(EpcLength epcLength)
         {
-            return new CommandDataPacket(ReaderCommand.SetEpcLengthForBufferOperations, (byte)epcLength);
+            return new(ReaderCommand.SetEpcLengthForBufferOperations, (byte)epcLength);
         }
         
         public static CommandDataPacket SetAntennaConfiguration(GenAntennaConfiguration configuration)
         {
-            return new CommandDataPacket(ReaderCommand.SetAntennaConfiguration, (byte)configuration);
+            return new(ReaderCommand.SetAntennaConfiguration, (byte)configuration);
         }
         
         public static CommandDataPacket SetAntennaCheck(bool enable)
         {
-            return new CommandDataPacket(ReaderCommand.SetAntennaCheck, (byte)(enable ? 1 : 0));
+            return new(ReaderCommand.SetAntennaCheck, (byte)(enable ? 1 : 0));
         }
         
         public static CommandDataPacket TagInventory(ReaderCommand command, TagInventoryParams args)
         {
-            return new CommandDataPacket(command, args.Serialize());
+            return new(command, args.Serialize());
         }
         
         public static CommandDataPacket SetRealTimeInventoryParameters(RealtimeInventoryParams args)
         {
-            return new CommandDataPacket(ReaderCommand.SetRealTimeInventoryParameters, args.Serialize());
+            return new(ReaderCommand.SetRealTimeInventoryParameters, args.Serialize());
         }
     }
 }

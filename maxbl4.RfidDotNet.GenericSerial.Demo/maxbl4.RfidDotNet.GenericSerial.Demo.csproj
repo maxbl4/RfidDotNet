@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="PowerArgs" Version="3.6.0" />
-      <PackageReference Include="SerialPortStream" Version="2.2.2" />
+      <PackageReference Include="SerialPortStream" Version="2.3.1" />
     </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 {
     public class TagStreamParser
     {
-        public ReaderInfo Reader { get; } = new ReaderInfo();
+        public ReaderInfo Reader { get; } = new();
         public Tag Tag { get; private set; }
 
         public TagStreamParserReponse Parse(string msg)

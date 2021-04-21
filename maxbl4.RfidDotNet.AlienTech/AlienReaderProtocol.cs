@@ -19,7 +19,7 @@ namespace maxbl4.RfidDotNet.AlienTech
     {
         static readonly ILogger Logger = Log.ForContext<AlienReaderProtocol>();
         private readonly int keepAliveTimeout;
-        private readonly SerialDisposable pollerDisposable = new SerialDisposable();
+        private readonly SerialDisposable pollerDisposable = new();
         public const int DefaultKeepaliveTimeout = 1000;
         public const int DefaultReceiveTimeout = 3000;
         
@@ -28,7 +28,7 @@ namespace maxbl4.RfidDotNet.AlienTech
         private readonly AlienReaderApiImpl api;
         private string host;
         public IAlienReaderApi Api => api;
-        public DateTime LastKeepalive { get; private set; } = new DateTime(0, DateTimeKind.Utc);
+        public DateTime LastKeepalive { get; private set; } = new(0, DateTimeKind.Utc);
 
         private AlienTagStreamListener tagStreamListener;
         private TagPoller tagPoller;

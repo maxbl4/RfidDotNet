@@ -16,7 +16,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
     {
         static readonly ILogger Logger = Log.ForContext<DuplexProtocol>();
         private readonly int receiveTimeout;
-        private readonly SemaphoreSlim sendReceiveSemaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim sendReceiveSemaphore = new(1);
         private ByteStream stream;
         public ByteStream Stream => stream;
         public bool IsConnected => stream?.IsConnected == true;

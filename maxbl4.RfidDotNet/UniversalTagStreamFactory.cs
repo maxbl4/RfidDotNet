@@ -5,7 +5,7 @@ namespace maxbl4.RfidDotNet
 {
     public class UniversalTagStreamFactory
     {
-        private Dictionary<ReaderProtocolType, Func<ConnectionString, IUniversalTagStream>> implementations = new Dictionary<ReaderProtocolType, Func<ConnectionString, IUniversalTagStream>>();
+        private Dictionary<ReaderProtocolType, Func<ConnectionString, IUniversalTagStream>> implementations = new();
         public void Register(ReaderProtocolType protocolType, Func<ConnectionString, IUniversalTagStream> tagStreamFactory)
         {
             implementations[protocolType] = tagStreamFactory;

@@ -7,7 +7,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
 {
     public class TagStreamParserTests
     {
-        private readonly TagStreamParser p = new TagStreamParser();
+        private readonly TagStreamParser p = new();
 
         [Fact]
         public void Unparsed()

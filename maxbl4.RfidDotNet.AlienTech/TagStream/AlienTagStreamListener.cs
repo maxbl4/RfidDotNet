@@ -13,11 +13,11 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
     public class AlienTagStreamListener : IDisposable
     {
         static readonly ILogger Logger = Log.ForContext<AlienTagStreamListener>();
-        readonly Subject<string> unparsedMessages = new Subject<string>();
+        readonly Subject<string> unparsedMessages = new();
         public IObservable<string> UnparsedMessages => unparsedMessages;
         readonly IObserver<Tag> tags;
         private readonly TcpListener tcpListener;
-        readonly List<AlienTagStreamProtocol> connectedStreams = new List<AlienTagStreamProtocol>();
+        readonly List<AlienTagStreamProtocol> connectedStreams = new();
         private bool disposed = false;
         public IPEndPoint EndPoint { get; }
 

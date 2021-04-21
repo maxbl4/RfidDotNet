@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.40" />
-      <PackageReference Include="SerialPortStream" Version="2.2.2" />
-      <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
+      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.45" />
+      <PackageReference Include="SerialPortStream" Version="2.3.1" />
+      <PackageReference Include="System.Threading.Channels" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>

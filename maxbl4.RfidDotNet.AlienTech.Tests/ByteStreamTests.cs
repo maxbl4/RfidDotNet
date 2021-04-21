@@ -18,23 +18,19 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests
         [Fact]
         public void Timeout_should_throw()
         {
-            using (var con = new SocketConnection())
-            {
-                Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
-                con.Client.Connected.Should().BeFalse();
-            }
+            using var con = new SocketConnection();
+            Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
+            con.Client.Connected.Should().BeFalse();
         }
 
         [Fact]
         public void Timeout_after_some_data_should_throw()
         {
-            using (var con = new SocketConnection())
-            {
-                con.ServerStream.Send("hello\0");
-                con.ClientStream.Read()[0].Should().Be("hello");
-                Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
-                con.Client.Connected.Should().BeFalse();
-            }
+            using var con = new SocketConnection();
+            con.ServerStream.Send("hello\0");
+            con.ClientStream.Read()[0].Should().Be("hello");
+            Assert.Throws<ConnectionLostException>(() => con.ClientStream.Read());
+            con.Client.Connected.Should().BeFalse();
         }
 
         [Fact]

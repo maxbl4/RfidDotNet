@@ -20,7 +20,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
         private readonly bool acceptSingleClient;
         private readonly TcpListener listener;
         private Simulator client;
-        private object sync = new object();
+        private object sync = new();
 
         public static readonly Func<string> DefaultTagListHandler = () => ProtocolMessages.NoTags;
 

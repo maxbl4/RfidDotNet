@@ -17,8 +17,8 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
         private readonly IObserver<Exception> errors;
         private readonly IObserver<DateTime> heartbeat;
         private bool run = true;
-        readonly Subject<string> unparsedMessages = new Subject<string>();
-        readonly ConcurrentQueue<Tag> inventoryResults = new ConcurrentQueue<Tag>();
+        readonly Subject<string> unparsedMessages = new();
+        readonly ConcurrentQueue<Tag> inventoryResults = new();
         public IObservable<string> UnparsedMessages => unparsedMessages;
 
         public TagPoller(AlienReaderApi api, IObserver<Tag> tags, IObserver<Exception> errors, IObserver<DateTime> heartbeat)

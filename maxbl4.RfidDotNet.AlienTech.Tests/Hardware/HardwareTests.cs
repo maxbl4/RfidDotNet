@@ -16,9 +16,9 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
     {
         private static readonly ILogger Logger = Log.ForContext<HardwareTests>();
 
-        private readonly Subject<Tag> tagStream = new Subject<Tag>();
-        private readonly Subject<Exception> errorStream = new Subject<Exception>();
-        private readonly Subject<DateTime> heartbeatStream = new Subject<DateTime>();
+        private readonly Subject<Tag> tagStream = new();
+        private readonly Subject<Exception> errorStream = new();
+        private readonly Subject<DateTime> heartbeatStream = new();
 
         [Fact]
         public async Task Stream_should_continue_after_keepalive_timeout()

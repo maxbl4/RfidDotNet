@@ -11,7 +11,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
         static readonly ILogger Logger = Log.ForContext<AlienTagStreamProtocol>();
         private readonly IObserver<Tag> tags;
         private readonly IObserver<string> unparsedMessages;
-        readonly TagStreamParser parser = new TagStreamParser();
+        readonly TagStreamParser parser = new();
         
         public override string IncomingMessageTerminators => "\r\n\0";
 

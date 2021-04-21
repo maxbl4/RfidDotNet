@@ -10,12 +10,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
         public TimeSpan Elapsed { get; set; }
 
         public static PacketResult FromData(byte[] data, TimeSpan elapsed) 
-            => new PacketResult { Data = data, ResultType = PacketResultType.Success, Elapsed = elapsed};
+            => new() { Data = data, ResultType = PacketResultType.Success, Elapsed = elapsed};
         public static PacketResult WrongSize() 
-            => new PacketResult { ResultType = PacketResultType.WrongSize};
+            => new() { ResultType = PacketResultType.WrongSize};
         public static PacketResult WrongCrc() 
-            => new PacketResult { ResultType = PacketResultType.WrongCrc};
+            => new() { ResultType = PacketResultType.WrongCrc};
         public static PacketResult Timeout() 
-            => new PacketResult { ResultType = PacketResultType.Timeout};
+            => new() { ResultType = PacketResultType.Timeout};
     }
 }

@@ -56,7 +56,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Interfaces
         //TagStreamServer string 0 3333 any
         public async Task<TagStreamServer> TagStreamServer(TagStreamServer value = null)
         {
-            return new TagStreamServer(await Property<string>(value?.ToString()));
+            return new(await Property<string>(value?.ToString()));
         }
         //StreamHeader bool true
         public Task<bool> StreamHeader(bool? value = null)

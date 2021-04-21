@@ -9,7 +9,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
 {
     public class TagBufferResult
     {
-        public List<Tag> Tags { get; } = new List<Tag>();
+        public List<Tag> Tags { get; } = new();
         public TagBufferResult(IEnumerable<ResponseDataPacket> packets)
         {
             foreach (var packet in packets)
@@ -75,7 +75,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Model
         /// Number of tags in last inventory returned by TagInventoryWithMemoryBuffer command
         /// </summary>
         public ushort TagsInLastInventory { get; private set;}
-        public List<Tag> Tags { get; } = new List<Tag>();
+        public List<Tag> Tags { get; } = new();
 
         public TagInventoryResult(IEnumerable<ResponseDataPacket> packets)
         {

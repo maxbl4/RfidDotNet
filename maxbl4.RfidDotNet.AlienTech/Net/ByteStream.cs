@@ -19,8 +19,8 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
         static readonly ILogger Logger = Log.ForContext<ByteStream>();
         private readonly Socket socket;
         private readonly int timeout;
-        private readonly MessageParser parser = new MessageParser();
-        readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private readonly MessageParser parser = new();
+        readonly SemaphoreSlim semaphore = new(1);
         public bool IsConnected => socket.Connected;
         
         public ByteStream(Socket socket, int timeout = 2000)

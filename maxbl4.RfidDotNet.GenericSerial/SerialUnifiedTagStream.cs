@@ -39,13 +39,13 @@ namespace maxbl4.RfidDotNet.GenericSerial
             serialReaderSafe.DisposeSafe();
         }
 
-        readonly Subject<Tag> tags = new Subject<Tag>();
+        readonly Subject<Tag> tags = new();
         public IObservable<Tag> Tags => tags;
-        readonly Subject<Exception> errors = new Subject<Exception>();
+        readonly Subject<Exception> errors = new();
         public IObservable<Exception> Errors => errors;
-        readonly BehaviorSubject<bool> connected = new BehaviorSubject<bool>(false);
+        readonly BehaviorSubject<bool> connected = new(false);
         public IObservable<DateTime> Heartbeat => heartbeat;
-        readonly BehaviorSubject<DateTime> heartbeat = new BehaviorSubject<DateTime>(DateTime.MinValue);
+        readonly BehaviorSubject<DateTime> heartbeat = new(DateTime.MinValue);
         private bool doInventory = true;
         public IObservable<bool> Connected => connected;
         public Task Start()

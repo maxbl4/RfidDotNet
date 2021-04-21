@@ -10,12 +10,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
     public class TagListHandler
     {
         private readonly SimulatorOptions simulatorOptions;
-        readonly object sync = new object();
+        readonly object sync = new();
         private Tag[] returnContinuos;
         DateTime lastInfo = DateTime.UtcNow;
         private int requestCounter = 0;
-        private readonly RandomTagGenerator randomTagGenerator = new RandomTagGenerator();
-        private readonly Random random = new Random();
+        private readonly RandomTagGenerator randomTagGenerator = new();
+        private readonly Random random = new();
             
         public TagListHandler(SimulatorOptions simulatorOptions)
         {

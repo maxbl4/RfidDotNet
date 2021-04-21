@@ -12,8 +12,8 @@ namespace maxbl4.RfidDotNet
         public IPAddress IPAddress6 { get; set; }
         public int CommandPort { get; set; }
         public string MACAddress { get; set; }
-        public DateTime Time { get; set; } = new DateTime(0, DateTimeKind.Utc);
+        public DateTime Time { get; set; } = new(0, DateTimeKind.Utc);
         
-        public IPEndPoint EndPoint => new IPEndPoint(IPAddress, CommandPort);
+        public IPEndPoint EndPoint => new(IPAddress, CommandPort);
     }
 }

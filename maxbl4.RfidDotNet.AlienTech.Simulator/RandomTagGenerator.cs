@@ -9,7 +9,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Simulator
 {
     public class RandomTagGenerator
     {
-        private readonly Random rnd = new Random();
+        private readonly Random rnd = new();
         
         public IEnumerable<Tag> Next()
         {

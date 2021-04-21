@@ -14,14 +14,14 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 {
     public class TagStreamListenerTests : ReaderFixture
     {
-        private readonly List<Tag> tags = new List<Tag>();
-        private readonly List<Exception> errors = new List<Exception>();
-        private readonly List<string> msgs = new List<string>();
-        private readonly List<DateTime> heartbeats = new List<DateTime>();
+        private readonly List<Tag> tags = new();
+        private readonly List<Exception> errors = new();
+        private readonly List<string> msgs = new();
+        private readonly List<DateTime> heartbeats = new();
         private bool completed = false;
-        private Subject<Tag> tagStream = new Subject<Tag>();
-        private readonly Subject<Exception> errorStream = new Subject<Exception>();
-        private readonly Subject<DateTime> heartbeatStream = new Subject<DateTime>();
+        private Subject<Tag> tagStream = new();
+        private readonly Subject<Exception> errorStream = new();
+        private readonly Subject<DateTime> heartbeatStream = new();
 
         public TagStreamListenerTests()
         {

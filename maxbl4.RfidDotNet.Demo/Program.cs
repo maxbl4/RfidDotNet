@@ -8,7 +8,7 @@ namespace maxbl4.RfidDotNet.Demo
 {
     class Program
     {
-        static readonly UniversalTagStreamFactory factory = new UniversalTagStreamFactory();
+        static readonly UniversalTagStreamFactory factory = new();
         private static ConnectionString connectionString;
         private static string errors = "";
         static void Main(string[] args)

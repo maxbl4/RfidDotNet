@@ -8,7 +8,7 @@ namespace maxbl4.RfidDotNet.AlienTech.ReaderSimulator
     {
         private SimulatorLogicState state = SimulatorLogicState.WaitForLogin;
         private string login;
-        public Dictionary<string, string> Properties { get; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Properties { get; } = new();
 
         public Func<string> TagListHandler { get; set; } = SimulatorListener.DefaultTagListHandler;
 

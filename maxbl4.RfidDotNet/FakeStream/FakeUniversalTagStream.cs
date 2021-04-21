@@ -38,9 +38,9 @@ namespace maxbl4.RaceLogic.Tests.CheckpointService
             return Task.FromResult(RfidDotNet.AntennaConfiguration.Antenna1);
         }
         
-        public Subject<Tag> TagsSubject { get; set; } = new Subject<Tag>();
-        public Subject<Exception> ErrorsSubject { get; set; } = new Subject<Exception>();
-        public Subject<bool> ConnectedSubject { get; set; } = new Subject<bool>();
+        public Subject<Tag> TagsSubject { get; set; } = new();
+        public Subject<Exception> ErrorsSubject { get; set; } = new();
+        public Subject<bool> ConnectedSubject { get; set; } = new();
 
         public virtual IObservable<Tag> Tags => TagsSubject;
         public virtual IObservable<Exception> Errors => ErrorsSubject;

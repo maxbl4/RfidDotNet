@@ -14,10 +14,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 {
     class Program
     {
-        static readonly Subject<TagInventoryResultWithProcessingTime> pollingResults = new Subject<TagInventoryResultWithProcessingTime>();
-        static readonly Subject<Tag> tagStream = new Subject<Tag>();
-        static readonly Subject<Exception> tagStreamErrors = new Subject<Exception>();
-        static readonly BehaviorSubject<int> temperatureSubject = new BehaviorSubject<int>(0);
+        static readonly Subject<TagInventoryResultWithProcessingTime> pollingResults = new();
+        static readonly Subject<Tag> tagStream = new();
+        static readonly Subject<Exception> tagStreamErrors = new();
+        static readonly BehaviorSubject<int> temperatureSubject = new(0);
         private static ConnectionString connectionString;
         private static int updateNumber = 0;
 
@@ -38,26 +38,24 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
                     ShowUsageAndExit();
                 }
 
-                using (var reader = new SerialReader(new SerialConnectionString(connectionString).Connect()))
+                using var reader = new SerialReader(new SerialConnectionString(connectionString).Connect());
+                reader.Errors.Subscribe(e => Console.WriteLine(e.Message));
+                reader.ThrowOnIllegalCommandError = false;
+                reader.ActivateOnDemandInventoryMode(true).Wait();
+                ShowBasicReaderInfo(reader, demoArgs);
+                SubscribeToInventoryResults(reader, demoArgs);
+                SetInventoryOptions(reader, demoArgs);
+                switch (demoArgs.Inventory)
                 {
-                    reader.Errors.Subscribe(e => Console.WriteLine(e.Message));
-                    reader.ThrowOnIllegalCommandError = false;
-                    reader.ActivateOnDemandInventoryMode(true).Wait();
-                    ShowBasicReaderInfo(reader, demoArgs);
-                    SubscribeToInventoryResults(reader, demoArgs);
-                    SetInventoryOptions(reader, demoArgs);
-                    switch (demoArgs.Inventory)
-                    {
-                        case InventoryType.Poll:
-                            StartPolling(reader, demoArgs);
-                            break;
-                        case InventoryType.Realtime:
-                            StartStreaming(reader);
-                            break;
-                    }
-                    Console.ReadLine();
-                    reader.ActivateOnDemandInventoryMode(true).Wait();
+                    case InventoryType.Poll:
+                        StartPolling(reader, demoArgs);
+                        break;
+                    case InventoryType.Realtime:
+                        StartStreaming(reader);
+                        break;
                 }
+                Console.ReadLine();
+                reader.ActivateOnDemandInventoryMode(true).Wait();
             }
             catch (ArgException ex)
             {
