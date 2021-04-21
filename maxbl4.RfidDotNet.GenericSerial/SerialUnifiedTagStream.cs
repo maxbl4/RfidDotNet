@@ -50,7 +50,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public IObservable<bool> Connected => connected;
         public Task Start()
         {
-            _ = StartPolling();
+            _ = Task.Run(StartPolling);
             _ = StartStreamingTags();
             connected.OnNext(true);
             return Task.CompletedTask;
