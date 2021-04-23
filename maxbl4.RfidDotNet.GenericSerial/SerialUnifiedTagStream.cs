@@ -50,7 +50,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public IObservable<bool> Connected => connected;
         public Task Start()
         {
-            _ = Task.Run(StartPolling);
+            _ = StartPolling();
             _ = StartStreamingTags();
             connected.OnNext(true);
             return Task.CompletedTask;
@@ -58,6 +58,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         private async Task StartPolling()
         {
+            await Task.Yield();
             var sw = new Stopwatch();
             if (connectionString.ThermalLimit > 0)
                 sw.Start();
@@ -137,7 +138,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
             }
 
             var info = await serialReaderSafe.Do(x => x.GetReaderInfo());
-            return info.RFPower;
+            return info?.RFPower ?? 0;
         }
 
         public async Task<AntennaConfiguration> AntennaConfiguration(AntennaConfiguration? newValue = null)
@@ -148,7 +149,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
                 serialReaderSafe.UpdateConnectionString(connectionString);
             }
             var info = await serialReaderSafe.Do(x => x.GetReaderInfo());
-            return (AntennaConfiguration)info.AntennaConfiguration;
+            return (AntennaConfiguration?)info?.AntennaConfiguration ?? RfidDotNet.AntennaConfiguration.Nothing;
         }
     }
 }
