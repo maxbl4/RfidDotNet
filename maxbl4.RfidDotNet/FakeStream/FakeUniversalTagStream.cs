@@ -18,6 +18,11 @@ namespace maxbl4.RaceLogic.Tests.CheckpointService
             return Task.CompletedTask;
         }
 
+        public bool Start2()
+        {
+            return false;
+        }
+
         public virtual Task<int> QValue(int? newValue = null)
         {
             return Task.FromResult(0);

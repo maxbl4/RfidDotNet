@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -9,8 +10,11 @@ using System.Threading.Tasks;
 using maxbl4.Infrastructure.Extensions.DisposableExt;
 using maxbl4.Infrastructure.Extensions.LoggerExt;
 using maxbl4.RfidDotNet.Exceptions;
+using maxbl4.RfidDotNet.GenericSerial.Buffers;
 using maxbl4.RfidDotNet.GenericSerial.Exceptions;
 using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.RfidDotNet.GenericSerial.Packets;
+using RJCP.IO.Ports;
 using Serilog;
 
 namespace maxbl4.RfidDotNet.GenericSerial
@@ -19,7 +23,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
     {
         static readonly ILogger Logger = Log.ForContext<SerialUnifiedTagStream>();
         private readonly ConnectionString connectionString;
-        private readonly SerialReaderSafe serialReaderSafe;
+        private readonly SerialReader serialReaderSafe;
 
         private readonly Channel<TagInventoryResult> inventoryResults =
             Channel.CreateBounded<TagInventoryResult>(1000000);
@@ -30,7 +34,11 @@ namespace maxbl4.RfidDotNet.GenericSerial
         public SerialUnifiedTagStream(ConnectionString cs)
         {
             connectionString = cs.Clone();
-            serialReaderSafe = new SerialReaderSafe(connectionString, connected, errors);
+            //serialReaderSafe = new SerialReader(connectionString, connected, errors);
+            serialReaderSafe = new SerialReader(new SerialConnectionString(connectionString).Connect())
+            {
+                ThrowOnIllegalCommandError = false
+            };
         }
 
         public void Dispose()
@@ -48,75 +56,49 @@ namespace maxbl4.RfidDotNet.GenericSerial
         readonly BehaviorSubject<DateTime> heartbeat = new(DateTime.MinValue);
         private bool doInventory = true;
         public IObservable<bool> Connected => connected;
+
         public Task Start()
         {
+            return default;
+        }
+        public bool Start2()
+        {
             _ = StartPolling();
-            _ = StartStreamingTags();
-            connected.OnNext(true);
-            return Task.CompletedTask;
+            return true;
         }
 
-        private async Task StartPolling()
+        public async Task StartPolling()
         {
-            await Task.Yield();
-            var sw = new Stopwatch();
-            if (connectionString.ThermalLimit > 0)
-                sw.Start();
-            var lastHeartbeat = DateTime.UtcNow;
+            //await Task.Yield();
+            var stream = new SerialPortStream("COM5", 57600, 8, Parity.None, StopBits.One)
+            {
+                ReadTimeout = 3000, WriteTimeout = 200
+            };
+            stream.Open();
+            stream.DiscardInBuffer();
+            stream.DiscardOutBuffer();
+            var command = CommandDataPacket.TagInventory(ReaderCommand.TagInventory, new TagInventoryParams
+            {
+                QValue = (byte)connectionString.QValue,
+                Session = (SessionValue)connectionString.Session
+            });
             while (doInventory)
             {
-                try
+                var buffer = command.Serialize();
+                var sw = Stopwatch.StartNew();
+                await stream.WriteAsync(buffer, 0, buffer.Length);
+                var responsePackets = new List<ResponseDataPacket>();
+                ResponseDataPacket lastResponse;
+                do
                 {
-                    var res = await serialReaderSafe.Do(x => x.TagInventory(new TagInventoryParams
-                    {
-                        QValue = (byte)connectionString.QValue,
-                        Session = (SessionValue)connectionString.Session
-                    }));
-                    
-                    if (!inventoryResults.Writer.TryWrite(res))
-                        errors.OnNext(new TagReadBufferIsFull());
-                    if (sw.ElapsedMilliseconds > TemperatureLimitCheckInterval)
-                    {
-                        var t = await serialReaderSafe.Do(x => x.GetReaderTemperature());
-                        if (t > connectionString.ThermalLimit)
-                        {
-                            errors.OnNext(new TemperatureLimitExceededException(connectionString.ThermalLimit, t));
-                            await Task.Delay(10000);
-                        }
-                        sw.Restart();
-                    }
-                    if (DateTime.UtcNow - lastHeartbeat > TimeSpan.FromSeconds(1))
-                    {
-                        Logger.Swallow(() => heartbeat.OnNext(DateTime.UtcNow));
-                        lastHeartbeat = DateTime.UtcNow;
-                    }
-                }
-                catch (Exception e)
-                {
-                    errors.OnNext(e);
-                }
+                    var packet = await MessageParser.ReadPacket(stream, sw);
+                    sw = null;
+                    responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
+                } while (MessageParser.ShouldReadMore(lastResponse));
+                var res = new TagInventoryResult(responsePackets);
             }
         }
         
-        private async Task StartStreamingTags()
-        {
-            while (doInventory)
-            {
-                try
-                {
-                    var res = await inventoryResults.Reader.ReadAsync();
-                    foreach (var tag in res.Tags)
-                    {
-                        tags.OnNext(tag);
-                    }
-                }
-                catch (Exception e)
-                {
-                    errors.OnNext(e);
-                }
-            }
-        }
-
         public Task<int> QValue(int? newValue = null)
         {
             if (newValue != null) connectionString.QValue = newValue.Value;
@@ -131,25 +113,12 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public async Task<int> RFPower(int? newValue = null)
         {
-            if (newValue != null)
-            {
-                connectionString.RFPower = newValue.Value;
-                serialReaderSafe.UpdateConnectionString(connectionString);
-            }
-
-            var info = await serialReaderSafe.Do(x => x.GetReaderInfo());
-            return info?.RFPower ?? 0;
+            return default;
         }
 
         public async Task<AntennaConfiguration> AntennaConfiguration(AntennaConfiguration? newValue = null)
         {
-            if (newValue != null)
-            {
-                connectionString.AntennaConfiguration = newValue.Value;
-                serialReaderSafe.UpdateConnectionString(connectionString);
-            }
-            var info = await serialReaderSafe.Do(x => x.GetReaderInfo());
-            return (AntennaConfiguration?)info?.AntennaConfiguration ?? RfidDotNet.AntennaConfiguration.Nothing;
+            return default;
         }
     }
 }

@@ -47,7 +47,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         public async Task<IEnumerable<ResponseDataPacket>> SendReceive(CommandDataPacket command)
         {
-            using (sendReceiveSemaphore.UseOnce())
+            //using (sendReceiveSemaphore.UseOnce())
             {
                 try
                 {

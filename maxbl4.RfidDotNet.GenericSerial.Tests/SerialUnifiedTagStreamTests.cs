@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using FluentAssertions;
 using maxbl4.Infrastructure;
+using maxbl4.RfidDotNet.GenericSerial.Buffers;
+using maxbl4.RfidDotNet.GenericSerial.Model;
+using maxbl4.RfidDotNet.GenericSerial.Packets;
+using RJCP.IO.Ports;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
@@ -16,26 +21,42 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         private readonly List<bool> connected = new();
         private readonly List<DateTime> heartbeats = new();
         
-        [SkippableTheory]
-        [InlineData(ConnectionType.Serial)]
-        [InlineData(ConnectionType.Network)]
-        public async Task Should_receive_serial_tag_stream(ConnectionType connectionType)
+        [Fact]
+        public async Task Work()
         {
-            using var stream = new SerialUnifiedTagStream(TestSettings.Instance.GetConnectionString(connectionType));
-            SubscribeStreams(stream);
-
-            connected.Count.Should().Be(1);
-            connected[0].Should().BeFalse();
-            tags.Count.Should().Be(0);
-            errors.Count.Should().Be(0);
-
-            await stream.Start();
-            stream.RFPower(25).Result.Should().Be(25);
-            new Timing()
-                .FailureDetails(()=> $"heartbeats.Count = {heartbeats.Count} tags.Count = {tags.Count}")
-                .Expect(() => heartbeats.Count > 2 && tags.Count > 20);
-            heartbeats.Should().Contain(x => x > DateTime.UtcNow.AddSeconds(-10));
-            errors.Count.Should().Be(0);
+            _ = StartPolling(true);
+        }
+        
+        [Fact]
+        public async Task Hang()
+        {
+            _ = StartPolling(false);
+        }
+        
+        public async Task StartPolling(bool yield)
+        {
+            if (yield)
+                await Task.Yield();
+            var stream = new SerialPortStream("COM5", 57600, 8, Parity.None, StopBits.One)
+            {
+                ReadTimeout = 3000, WriteTimeout = 200
+            };
+            stream.Open();
+            stream.DiscardInBuffer();
+            stream.DiscardOutBuffer();
+            var command = CommandDataPacket.TagInventory(ReaderCommand.TagInventory, new TagInventoryParams());
+            var buffer = command.Serialize();
+            while (true)
+            {
+                await stream.WriteAsync(buffer, 0, buffer.Length);
+                var responsePackets = new List<ResponseDataPacket>();
+                ResponseDataPacket lastResponse;
+                do
+                {
+                    var packet = await MessageParser.ReadPacket(stream);
+                    responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
+                } while (MessageParser.ShouldReadMore(lastResponse));
+            }
         }
 
         private void SubscribeStreams(IUniversalTagStream stream)

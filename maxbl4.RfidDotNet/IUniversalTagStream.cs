@@ -10,6 +10,7 @@ namespace maxbl4.RfidDotNet
         IObservable<bool> Connected { get; }
         IObservable<DateTime> Heartbeat { get; }
         Task Start();
+        bool Start2();
         Task<int> QValue(int? newValue = null);
         Task<int> Session(int? newValue = null);
         Task<int> RFPower(int? newValue = null);
