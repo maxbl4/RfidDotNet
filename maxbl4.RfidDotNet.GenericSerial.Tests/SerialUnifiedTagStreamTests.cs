@@ -22,21 +22,16 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         private readonly List<DateTime> heartbeats = new();
         
         [Fact]
-        public async Task Work()
-        {
-            _ = StartPolling(true);
-        }
-        
-        [Fact]
         public async Task Hang()
         {
-            _ = StartPolling(false);
+            var command = CommandDataPacket.TagInventory(ReaderCommand.TagInventory, new TagInventoryParams());
+            var buffer = command.Serialize();
+            _ = StartPolling(false, buffer);
         }
         
-        public async Task StartPolling(bool yield)
+        public async Task StartPolling(bool yield, byte[] buffer)
         {
-            if (yield)
-                await Task.Yield();
+            // await Task.Yield(); uncomment and it will unblock
             var stream = new SerialPortStream("COM5", 57600, 8, Parity.None, StopBits.One)
             {
                 ReadTimeout = 3000, WriteTimeout = 200
@@ -44,18 +39,26 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             stream.Open();
             stream.DiscardInBuffer();
             stream.DiscardOutBuffer();
-            var command = CommandDataPacket.TagInventory(ReaderCommand.TagInventory, new TagInventoryParams());
-            var buffer = command.Serialize();
+            
             while (true)
             {
                 await stream.WriteAsync(buffer, 0, buffer.Length);
-                var responsePackets = new List<ResponseDataPacket>();
-                ResponseDataPacket lastResponse;
-                do
+                var packetLength = stream.ReadByte();
+                if (packetLength < 0)
+                    throw new Exception();
+                
+                var totalRead = 0;
+                var data = new byte[packetLength + 1];
+                data[0] = (byte)packetLength;
+                while (totalRead < packetLength)
                 {
-                    var packet = await MessageParser.ReadPacket(stream);
-                    responsePackets.Add(lastResponse = new ResponseDataPacket(command.Command, packet.Data, elapsed: packet.Elapsed));
-                } while (MessageParser.ShouldReadMore(lastResponse));
+                    var read = await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
+                    if (read == 0)
+                        throw new Exception();
+                    totalRead += read;
+                }
+
+                totalRead.Should().Be(packetLength);
             }
         }
 
