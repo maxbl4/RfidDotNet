@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using maxbl4.Infrastructure;
@@ -12,62 +13,74 @@ using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests
 {
-    [Collection("Hardware")]
-    [Trait("Hardware", "True")]
     public class SerialUnifiedTagStreamTests
     {
-        private readonly List<Tag> tags = new();
-        private readonly List<Exception> errors = new();
-        private readonly List<bool> connected = new();
-        private readonly List<DateTime> heartbeats = new();
-        
         [Fact]
-        public async Task Hang()
+        public async Task Com0ComRepro()
         {
-            var command = CommandDataPacket.TagInventory(ReaderCommand.TagInventory, new TagInventoryParams());
-            var buffer = command.Serialize();
-            _ = StartPolling(false, buffer);
+            var state = new State
+            {
+                Sw = Stopwatch.StartNew()
+            };
+            // These methods are expected to not block, because they return Task
+            // On version 2.3.1 Client method blocks and executes synchronously
+            // It does not hang, the loop inside is working, this is indicated by
+            // SuccessCount > 10 (which worked for me)
+            // But Sw.ElapsedMilliseconds indicate >5000 because Client() method blocked and test fails
+            // If I add Task.Yield() to Client() test passes, also test passes on version 2.2.2 without Yield()
+            _ = Device(state);
+            _ = Client(state);
+            await Task.Delay(500);
+            state.SuccessCount.Should().BeGreaterThan(10);
+            state.Sw.ElapsedMilliseconds.Should().BeLessThan(1000);
         }
         
-        public async Task StartPolling(bool yield, byte[] buffer)
+        async Task Device(State state)
         {
-            // await Task.Yield(); uncomment and it will unblock
-            var stream = new SerialPortStream("COM5", 57600, 8, Parity.None, StopBits.One)
+            var port = new SerialPortStream("COM8", 57600, 8, Parity.None, StopBits.One)
             {
                 ReadTimeout = 3000, WriteTimeout = 200
             };
-            stream.Open();
-            stream.DiscardInBuffer();
-            stream.DiscardOutBuffer();
-            
-            while (true)
+            port.Open();
+            port.DiscardInBuffer();
+            port.DiscardOutBuffer();
+            var buffer = new byte[100];
+            while (state.Sw.ElapsedMilliseconds < 5000)
             {
-                await stream.WriteAsync(buffer, 0, buffer.Length);
-                var packetLength = stream.ReadByte();
-                if (packetLength < 0)
-                    throw new Exception();
-                
-                var totalRead = 0;
-                var data = new byte[packetLength + 1];
-                data[0] = (byte)packetLength;
-                while (totalRead < packetLength)
+                var read = await port.ReadAsync(buffer);
+                if (read > 0)
                 {
-                    var read = await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
-                    if (read == 0)
-                        throw new Exception();
-                    totalRead += read;
+                    buffer[0] = 1;
+                    await port.WriteAsync(buffer, 0, read);
                 }
-
-                totalRead.Should().Be(packetLength);
+            }
+        }
+            
+        async Task Client(State state)
+        {
+            //await Task.Yield();
+            var port = new SerialPortStream("COM7", 57600, 8, Parity.None, StopBits.One)
+            {
+                ReadTimeout = 3000, WriteTimeout = 200
+            };
+            port.Open();
+            port.DiscardInBuffer();
+            port.DiscardOutBuffer();
+            var buffer = new byte[] { 6,0,1,4,0,172,54};
+            while (state.Sw.ElapsedMilliseconds < 5000)
+            {
+                await port.WriteAsync(buffer, 0, buffer.Length);
+                var packetLength = port.ReadByte(); // adding this line make method blocking and not return Task
+                var read = await port.ReadAsync(buffer);
+                if (read > 0)
+                    state.SuccessCount++;
             }
         }
 
-        private void SubscribeStreams(IUniversalTagStream stream)
+        class State
         {
-            stream.Connected.Subscribe(connected.Add);
-            stream.Tags.Subscribe(tags.Add);
-            stream.Errors.Subscribe(errors.Add);
-            stream.Heartbeat.Subscribe(heartbeats.Add);
+            public int SuccessCount;
+            public Stopwatch Sw;
         }
     }
 }
