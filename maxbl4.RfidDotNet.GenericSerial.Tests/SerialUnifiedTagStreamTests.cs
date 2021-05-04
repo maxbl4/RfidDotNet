@@ -37,7 +37,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
         
         async Task Device(State state)
         {
-            var port = new SerialPortStream("COM8", 57600, 8, Parity.None, StopBits.One)
+            var port = new SerialPortStream("COM5", 57600, 8, Parity.None, StopBits.One)
             {
                 ReadTimeout = 3000, WriteTimeout = 200
             };
@@ -66,11 +66,12 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             port.Open();
             port.DiscardInBuffer();
             port.DiscardOutBuffer();
+            var smallBuffer = new byte[1];
             var buffer = new byte[] { 6,0,1,4,0,172,54};
             while (state.Sw.ElapsedMilliseconds < 5000)
             {
                 await port.WriteAsync(buffer, 0, buffer.Length);
-                var packetLength = port.ReadByte(); // adding this line make method blocking and not return Task
+                var packetLength = await port.ReadAsync(smallBuffer); // adding this line make method blocking and not return Task
                 var read = await port.ReadAsync(buffer);
                 if (read > 0)
                     state.SuccessCount++;
