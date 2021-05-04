@@ -16,19 +16,21 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
             Logger.Debug("ReadPacket read packet length (1 byte)");
             if (sw == null)
                 sw = Stopwatch.StartNew();
-            var packetLength = stream.ReadByte();
+            var smallBuf = new byte[1];
+            var read = await stream.ReadAsync(smallBuf);
+            var packetLength = smallBuf[0];
             Logger.Debug("ReadPacket packetLength={packetLength}", packetLength);
-            if (packetLength < 0)
+            if (read < 1)
             {
                 Logger.Debug("ReadPacket Could not read packet length, return Timeout");
                 return PacketResult.Timeout();
             }
             var totalRead = 0;
             var data = new byte[packetLength + 1];
-            data[0] = (byte)packetLength;
+            data[0] = packetLength;
             while (totalRead < packetLength)
             {
-                var read = await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
+                read = await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
                 if (read == 0)
                 {
                     Logger.Debug("ReadPacket Could not complete reading of packet");
