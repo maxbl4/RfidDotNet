@@ -1,4 +1,4 @@
-#1.0.70
+#1.0.71
 $packages = @("maxbl4.RfidDotNet.AlienTech.Simulator","maxbl4.RfidDotNet","maxbl4.RfidDotNet.AlienTech","maxbl4.RfidDotNet.GenericSerial")
 
 function Main()

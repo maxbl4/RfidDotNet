@@ -58,6 +58,7 @@ namespace maxbl4.RfidDotNet.GenericSerial
 
         private async Task StartPolling()
         {
+            await Task.Yield();
             var sw = new Stopwatch();
             if (connectionString.ThermalLimit > 0)
                 sw.Start();
