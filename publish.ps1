@@ -1,4 +1,4 @@
-#1.0.71
+#1.0.72
 $packages = @("maxbl4.RfidDotNet.AlienTech.Simulator","maxbl4.RfidDotNet","maxbl4.RfidDotNet.AlienTech","maxbl4.RfidDotNet.GenericSerial")
 
 function Main()
@@ -21,7 +21,7 @@ function Pack($name, $version)
     if (-not $?) { exit; }    
     nuget push -Source NugetLocal .\$name\bin\Release\$name.$version.nupkg
     if (-not $?) { exit; }
-    nuget push .\$name\bin\Release\$name.$version.nupkg
+    nuget push -Source nuget.org .\$name\bin\Release\$name.$version.nupkg
     if (-not $?) { exit; }
 }
 

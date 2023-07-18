@@ -6,9 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.45" />
-      <PackageReference Include="SerialPortStream" Version="2.2.2" />
-      <PackageReference Include="System.Threading.Channels" Version="5.0.0" />
+      <PackageReference Include="maxbl4.Infrastructure" Version="1.0.46" />
+      <PackageReference Include="SerialPortStream" Version="2.4.1" />
+      <PackageReference Include="System.Threading.Channels" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
