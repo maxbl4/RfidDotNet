@@ -1,6 +1,6 @@
 using System.IO;
+using System.IO.Ports;
 using maxbl4.Infrastructure.Extensions.DisposableExt;
-using RJCP.IO.Ports;
 
 namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
 {
@@ -17,7 +17,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
         public Parity Parity { get; }
         public StopBits StopBits { get; }
         
-        private SerialPortStream stream = null;
+        private SerialPort stream = null;
 
         public SerialPortFactory(string serialPortName, int baudRate = DefaultBaudRate,
             int dataBits = DefaultDataBits, Parity parity = DefaultParity, StopBits stopBits = DefaultStopBits)
@@ -35,7 +35,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
             {
                 if (stream == null)
                 {
-                    stream = new SerialPortStream(SerialPortName, BaudRate, DataBits, Parity, StopBits)
+                    stream = new SerialPort(SerialPortName, BaudRate, Parity, DataBits, StopBits)
                     {
                         ReadTimeout = 3000, WriteTimeout = 200
                     };
@@ -43,7 +43,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
                 }
                 stream.DiscardInBuffer();
                 stream.DiscardOutBuffer();
-                return stream;
+                return stream.BaseStream;
             }
         }
 

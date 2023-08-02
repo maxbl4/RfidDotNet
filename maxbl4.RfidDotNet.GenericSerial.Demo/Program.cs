@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -7,8 +8,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using PowerArgs;
-using RJCP.IO.Ports;
+using Serilog;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Demo
 {
@@ -23,6 +25,16 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
 
         static void Main(string[] args)
         {
+            var config = new ConfigurationBuilder()
+                .AddJsonFile($"appsettings.json", true)
+                .AddJsonFile($"appsettings.Development.json", true)
+                .AddEnvironmentVariables()
+                .AddCommandLine(args ?? new string[0])
+                .Build();
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(config)
+                .CreateLogger();
+            
             if (args.Length == 0)
             {
                 ShowUsageAndExit();
@@ -226,7 +238,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Demo
         static void ListSerialPorts()
         {
             Console.WriteLine("Available serial ports:");
-            var names = SerialPortStream.GetPortNames();
+            var names = SerialPort.GetPortNames();
             foreach (var name in names)
             {
                 Console.WriteLine(name);

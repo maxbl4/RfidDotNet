@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Ports;
 
 namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
 {
