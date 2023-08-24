@@ -17,7 +17,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
             if (sw == null)
                 sw = Stopwatch.StartNew();
             var smallBuf = new byte[1];
-            var read = await stream.ReadAsync(smallBuf);
+            var read = stream.Read(smallBuf, 0, smallBuf.Length);
             var packetLength = smallBuf[0];
             Logger.Debug("ReadPacket packetLength={packetLength}", packetLength);
             if (read < 1)
@@ -30,7 +30,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Buffers
             data[0] = packetLength;
             while (totalRead < packetLength)
             {
-                read = await stream.ReadAsync(data, totalRead + 1, packetLength - totalRead);
+                read = stream.Read(data, totalRead + 1, packetLength - totalRead);
                 if (read == 0)
                 {
                     Logger.Debug("ReadPacket Could not complete reading of packet");

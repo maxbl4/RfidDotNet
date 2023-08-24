@@ -37,7 +37,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.DataAdapters
                 {
                     stream = new SerialPort(SerialPortName, BaudRate, Parity, DataBits, StopBits)
                     {
-                        ReadTimeout = 3000, WriteTimeout = 200
+                        ReadTimeout = 500, WriteTimeout = 500
                     };
                     stream.Open();
                 }
