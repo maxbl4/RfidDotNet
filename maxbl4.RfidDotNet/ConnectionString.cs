@@ -70,9 +70,9 @@ namespace maxbl4.RfidDotNet
                 {
                     if (!int.TryParse(value, out parsedInt))
                         throw new FormatException($"Could not parse value {value} for {name}");
-                    cs.QValue = parsedInt;
+                    cs.InventoryDuration = parsedInt;
                 }
-                
+
                 if (name.Equals(nameof(QValue), StringComparison.OrdinalIgnoreCase))
                 {
                     if (!int.TryParse(value, out parsedInt))
@@ -141,7 +141,7 @@ namespace maxbl4.RfidDotNet
                     message = $"Unknown protocol type {Protocol}";
                     return false;
             }
-            if (InventoryDuration < 1 || QValue > 25000) errors.Add($"InventoryDuration must be in range 1-25000 ms, was {InventoryDuration}");
+            if (InventoryDuration < 1 || InventoryDuration > 25000) errors.Add($"InventoryDuration must be in range 1-25000 ms, was {InventoryDuration}");
             if (QValue < 1 || QValue > 16) errors.Add($"QValue must be in range 1-16, was {QValue}");
             if (Session < 0 || Session > 4) errors.Add($"Session must be in range 0-4, was {Session}");
             if (RFPower <= 0 ) errors.Add($"RFPower must be greater than 0");
@@ -173,6 +173,9 @@ namespace maxbl4.RfidDotNet
             sb.Append($"{nameof(RFPower)}={RFPower};");
             sb.Append($"{nameof(ThermalLimit)}={ThermalLimit};");
             sb.Append($"{nameof(InventoryDuration)}={InventoryDuration};");
+            // Flags enum renders as "Antenna1, Antenna2"; spaces are dropped so the
+            // result stays parseable by Parse() without relying on trimming rules.
+            sb.Append($"{nameof(AntennaConfiguration)}={AntennaConfiguration.ToString().Replace(" ", "")};");
             return sb.ToString();
         }
     }

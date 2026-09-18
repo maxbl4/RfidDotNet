@@ -31,6 +31,69 @@ namespace maxbl4.RfidDotNet.Tests
         }
         
         [Fact]
+        public void Should_parse_inventory_duration_into_its_own_property()
+        {
+            // Regression: InventoryDuration used to be assigned to QValue, so any
+            // existing config with InventoryDuration produced QValue out of range 1-16
+            // and CreateStream failed with a misleading ArgumentException.
+            var cs = ConnectionString.Parse(
+                "protocol=Alien;Network=10.0.1.41;RfPower=200;InventoryDuration=500");
+            cs.InventoryDuration.Should().Be(500);
+            cs.QValue.Should().Be(ConnectionString.DefaultQValue);
+            cs.IsValid(out var msg).Should().BeTrue(msg);
+        }
+
+        [Fact]
+        public void Should_keep_every_parsed_value_in_its_own_property()
+        {
+            var cs = ConnectionString.Parse(
+                "protocol=Serial;Serial=COM4@57600;QValue=7;Session=2;RFPower=210;" +
+                "ThermalLimit=55;InventoryDuration=1500;AntennaConfiguration=Antenna3");
+            cs.QValue.Should().Be(7);
+            cs.Session.Should().Be(2);
+            cs.RFPower.Should().Be(210);
+            cs.ThermalLimit.Should().Be(55);
+            cs.InventoryDuration.Should().Be(1500);
+            cs.AntennaConfiguration.Should().Be(AntennaConfiguration.Antenna3);
+        }
+
+        [Fact]
+        public void Should_validate_inventory_duration_range()
+        {
+            // The upper bound used to be checked against QValue, so an out of range
+            // InventoryDuration passed validation silently.
+            var cs = ConnectionString.Parse("protocol=fake;InventoryDuration=30000");
+            cs.Protocol = ReaderProtocolType.Alien;
+            cs.Network = new DnsEndPoint("host", 23);
+            cs.IsValid(out var msg).Should().BeFalse();
+            msg.Should().Contain("InventoryDuration must be in range 1-25000 ms, was 30000");
+        }
+
+        [Fact]
+        public void Should_round_trip_through_to_string()
+        {
+            var original = ConnectionString.Parse(
+                "protocol=Alien;Network=10.0.1.41:23;Login=admin;Password=secret;QValue=7;" +
+                "Session=2;RFPower=210;ThermalLimit=55;InventoryDuration=1500;" +
+                "AntennaConfiguration=Antenna1,Antenna2");
+            var restored = ConnectionString.Parse(original.ToString());
+
+            restored.Protocol.Should().Be(original.Protocol);
+            restored.Network.Host.Should().Be(original.Network.Host);
+            restored.Network.Port.Should().Be(original.Network.Port);
+            restored.Login.Should().Be(original.Login);
+            restored.Password.Should().Be(original.Password);
+            restored.QValue.Should().Be(original.QValue);
+            restored.Session.Should().Be(original.Session);
+            restored.RFPower.Should().Be(original.RFPower);
+            restored.ThermalLimit.Should().Be(original.ThermalLimit);
+            restored.InventoryDuration.Should().Be(original.InventoryDuration);
+            // AntennaConfiguration used to be missing from ToString(), so a round trip
+            // silently reset it to the default single antenna.
+            restored.AntennaConfiguration.Should().Be(original.AntennaConfiguration);
+        }
+
+        [Fact]
         public void Should_validate_unknown_protocol()
         {
             var cs = ConnectionString.Parse(@"");
