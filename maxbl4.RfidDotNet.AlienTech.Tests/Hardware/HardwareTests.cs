@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
 using Serilog;

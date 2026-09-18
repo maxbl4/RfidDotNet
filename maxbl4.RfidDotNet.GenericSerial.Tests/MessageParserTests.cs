@@ -1,6 +1,6 @@
 using System.IO;
 using System.Linq;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.RfidDotNet.GenericSerial.Buffers;
 using Xunit;
 

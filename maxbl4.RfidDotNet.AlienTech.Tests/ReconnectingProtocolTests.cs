@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;
 using maxbl4.RfidDotNet.Exceptions;
 using Xunit;

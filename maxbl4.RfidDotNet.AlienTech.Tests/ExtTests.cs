@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.RfidDotNet.AlienTech.Extensions;
 using Xunit;
 

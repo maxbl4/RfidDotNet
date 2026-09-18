@@ -1,5 +1,5 @@
 using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.RfidDotNet.GenericSerial.Model;
 using maxbl4.RfidDotNet.GenericSerial.Packets;
 using Xunit;

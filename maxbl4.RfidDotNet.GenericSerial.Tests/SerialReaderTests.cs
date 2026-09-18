@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.GenericSerial.DataAdapters;
 using maxbl4.RfidDotNet.GenericSerial.Model;
@@ -39,7 +39,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 ProtocolType.Gen18000_6B, ProtocolType.Gen18000_6C | ProtocolType.Gen18000_6B
             }.Should().Contain(info.SupportedProtocols);
             info.RFPower.Should().Be((byte)20);
-            info.InventoryScanInterval.Should().BeLessOrEqualTo(TimeSpan.FromMilliseconds(25500));
+            info.InventoryScanInterval.Should().BeLessThanOrEqualTo(TimeSpan.FromMilliseconds(25500));
             info.AntennaConfiguration.Should().Be(GenAntennaConfiguration.Antenna1);
             info.AntennaCheck.Should().Be(false);
         }
@@ -142,7 +142,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             tags.Select(x => x.TagId)
                 .Intersect(TestSettings.Instance.GetKnownTagIds)
                 .Count()
-                .Should().BeGreaterOrEqualTo(1,
+                .Should().BeGreaterThanOrEqualTo(1,
                     $"Should find at least one tag from known tags list. " +
                     $"Actually found: {string.Join(", ", tags.Select(x => x.TagId))}");
             tags[0].Rssi.Should().BeGreaterThan(0);
@@ -177,7 +177,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             tagInBuffer.Tags.Select(x => x.TagId)
                 .Intersect(TestSettings.Instance.GetKnownTagIds)
                 .Count()
-                .Should().BeGreaterOrEqualTo(1,
+                .Should().BeGreaterThanOrEqualTo(1,
                     $"Should find at least one tag from known tags list. " +
                     $"Actually found: {string.Join(", ", tagInBuffer.Tags.Select(x => x.TagId))}");
             tagInBuffer.Tags[0].Antenna.Should().Be(0);
@@ -258,7 +258,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             aggTags.Select(x => x.TagId)
                 .Intersect(TestSettings.Instance.GetKnownTagIds)
                 .Count()
-                .Should().BeGreaterOrEqualTo(1,
+                .Should().BeGreaterThanOrEqualTo(1,
                     $"Should find at least one tag from known tags list. " +
                     $"Actually found: {string.Join(", ", aggTags.Select(x => x.TagId))}");
         }

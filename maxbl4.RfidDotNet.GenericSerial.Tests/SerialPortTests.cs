@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Threading;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Tests

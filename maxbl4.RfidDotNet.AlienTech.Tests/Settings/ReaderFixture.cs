@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.Infrastructure.Extensions.DisposableExt;
 using maxbl4.RfidDotNet.AlienTech.Extensions.TagFormatting;
 using maxbl4.RfidDotNet.AlienTech.ReaderSimulator;

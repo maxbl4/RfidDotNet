@@ -1,6 +1,6 @@
 using System;
 using System.Net;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.RfidDotNet.Extensions.Endpoint;
 using Xunit;
 

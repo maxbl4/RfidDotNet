@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using maxbl4.Infrastructure;
 using maxbl4.RfidDotNet.AlienTech.Enums;
 using maxbl4.RfidDotNet.AlienTech.Tests.Settings;
@@ -74,7 +74,7 @@ namespace maxbl4.RfidDotNet.AlienTech.Tests.Hardware
 
             var dict = tags.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.ToList());
             var foundTags = dict.Keys.Intersect(Settings.KnownTagIds).ToList();
-            foundTags.Count.Should().BeGreaterOrEqualTo(2);
+            foundTags.Count.Should().BeGreaterThanOrEqualTo(2);
             foreach (var tagId in foundTags)
             {
                 dict[tagId].Count.Should().BeGreaterThan(50);
