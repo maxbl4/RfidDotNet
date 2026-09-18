@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="maxbl4.Infrastructure" Version="1.0.46" />
-        <PackageReference Include="Serilog" Version="3.0.1" />
-        <PackageReference Include="System.Reactive.Linq" Version="6.0.0" />
+        <PackageReference Include="maxbl4.Infrastructure" Version="1.0.47" />
+        <PackageReference Include="Serilog" Version="4.4.0" />
+        <PackageReference Include="System.Reactive.Linq" Version="6.1.0" />
     </ItemGroup>
 
 </Project>
