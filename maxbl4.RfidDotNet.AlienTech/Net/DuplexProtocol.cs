@@ -73,8 +73,10 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
         {
             return Task.Run(() =>
             {
+                ThrowIfDisposed();
                 using (sendReceiveSemaphore.UseOnce())
                 {
+                    ThrowIfDisposed();
                     stream.Send(data);
                     return ReceiveImpl(terminatorsOverride);
                 }
@@ -85,8 +87,12 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
         {
             return Task.Run(() =>
             {
+                ThrowIfDisposed();
                 using (sendReceiveSemaphore.UseOnce())
+                {
+                    ThrowIfDisposed();
                     return ReceiveImpl(terminatorsOverride);
+                }
             });
         }
 
@@ -94,9 +100,25 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
         {
             return Task.Run(() =>
             {
+                ThrowIfDisposed();
                 using (sendReceiveSemaphore.UseOnce())
+                {
+                    ThrowIfDisposed();
                     stream.Send(data);
+                }
             });
+        }
+
+        /// <summary>
+        /// A request that races with Dispose is normal: the tag poller and the keepalive
+        /// timer are still in flight when the connection goes away. Report it as the
+        /// domain error everyone already handles, not as ObjectDisposedException or a
+        /// NullReferenceException on a stream that is gone.
+        /// </summary>
+        private void ThrowIfDisposed()
+        {
+            if (disposed || stream == null)
+                throw new ConnectionLostException("Connection is closed");
         }
 
         private List<string> ReceiveImpl(string terminatorsOverride = null)
@@ -119,8 +141,14 @@ namespace maxbl4.RfidDotNet.AlienTech.Net
             if (disposed) return;
             disposed = true;
             Logger.Information("Disposing");
-            sendReceiveSemaphore.DisposeSafe();
+            // sendReceiveSemaphore is deliberately NOT disposed. Requests already in
+            // flight would hit a disposed semaphore and throw ObjectDisposedException,
+            // which is indistinguishable from a real failure in the log — and with a
+            // gateway that auto restarts on errors, that noise is expensive.
+            // SemaphoreSlim only needs disposal when AvailableWaitHandle was used,
+            // and it never is here, so skipping it leaks nothing.
             stream.DisposeSafe();
+            stream = null;
             Disconnected(this, EventArgs.Empty);
             Disconnected = null;
         }

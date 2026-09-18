@@ -105,41 +105,47 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         private async Task Connect()
         {
+            if (disposed) return;
             Logger.Information("Trying to connect to {endpoint}", endpoint);
+            AlienReaderProtocol arp;
             try
             {
                 proto.DisposeSafe();
-                var arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
+                proto = null;
+                arp = new AlienReaderProtocol(keepAliveTimeout, receiveTimeout);
                 await arp.ConnectAndLogin(endpoint.Host, endpoint.Port, login, password);
                 if (usePolling)
                     await arp.StartTagPolling(tags, errors, heartbeat);
                 else
                     await arp.StartTagStreamOld(tags);
                 arp.Disconnected += (s, e) => ScheduleReconnect(true);
-                if (!arp.IsConnected) 
-                    ScheduleReconnect();
-                else
+                if (!arp.IsConnected)
                 {
-                    proto = arp;
-                    Logger.Swallow(() => connected.OnNext(true));
+                    ScheduleReconnect();
+                    return;
                 }
+                proto = arp;
+                Logger.Swallow(() => connected.OnNext(true));
             }
             catch (Exception ex)
             {
-                Logger.Warning("Could not connect to {endpoint} {ex}", endpoint, ex);
+                Logger.Warning(ex, "Could not connect to {endpoint}", endpoint);
                 ScheduleReconnect();
                 errors.OnNext(ex);
                 Logger.Swallow(() => connected.OnNext(false));
+                // Nothing is connected, so there is no reader to apply settings to.
+                // Falling through used to dereference a null proto and throw NRE,
+                // which then masked the real connection error in the log.
+                return;
             }
 
             try
             {
-                if (proto.IsConnected)
-                    await onConnected(proto.Api);
+                await onConnected(arp.Api);
             }
             catch (Exception ex)
             {
-                Logger.Warning(ex, "OnConnected handler failed {ex}");
+                Logger.Warning(ex, "OnConnected handler failed");
                 errors.OnNext(ex);
                 Logger.Swallow(() => connected.OnNext(false));
             }
@@ -147,6 +153,9 @@ namespace maxbl4.RfidDotNet.AlienTech
 
         private void ScheduleReconnect(bool report = false)
         {
+            // Disconnected fires while the protocol is being disposed, so without this
+            // guard Dispose() schedules a reconnect to a reader nobody is listening to.
+            if (disposed) return;
             if (report)
                 Logger.Swallow(() => connected.OnNext(false));
             reconnectDisposable.Disposable = Observable.Timer(TimeSpan.FromMilliseconds(ReconnectTimeout))
@@ -156,12 +165,17 @@ namespace maxbl4.RfidDotNet.AlienTech
                 });
         }
 
+        private volatile bool disposed;
+
         public void Dispose()
         {
+            if (disposed) return;
+            disposed = true;
             reconnectDisposable.DisposeSafe();
+            proto.DisposeSafe();
+            proto = null;
             Logger.Swallow((Action)tags.OnCompleted);
             tags.DisposeSafe();
-            proto.DisposeSafe();
         }
     }
 }

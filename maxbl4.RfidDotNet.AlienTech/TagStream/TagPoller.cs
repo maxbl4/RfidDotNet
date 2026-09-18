@@ -12,11 +12,13 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
     public class TagPoller : IDisposable
     {
         static readonly ILogger Logger = Log.ForContext<TagPoller>();
+        const int ErrorBackoffMs = 200;
+        const int IdleSleepMs = 1;
         private readonly AlienReaderApi api;
         private readonly IObserver<Tag> tags;
         private readonly IObserver<Exception> errors;
         private readonly IObserver<DateTime> heartbeat;
-        private bool run = true;
+        private volatile bool run = true;
         readonly Subject<string> unparsedMessages = new();
         readonly ConcurrentQueue<Tag> inventoryResults = new();
         public IObservable<string> UnparsedMessages => unparsedMessages;
@@ -61,8 +63,15 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warning(ex, "TagPoller stopped");
+                    // A failure right after Dispose is expected: the connection is gone
+                    // and that is exactly why we are stopping. Reporting it would make
+                    // a normal shutdown look like a reader fault.
+                    if (!run) return;
+                    Logger.Warning(ex, "TagPoller failed to poll the reader");
                     errors.OnNext(ex);
+                    // Without this the loop spins on a dead connection, filling the log
+                    // with the same exception thousands of times per second.
+                    await Task.Delay(ErrorBackoffMs);
                 }
             }
         }
@@ -75,6 +84,7 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                 {
                     if (inventoryResults.TryDequeue(out var tag))
                     {
+                        if (!run) return;
                         if (tag != null)
                         {
                             tags.OnNext(tag);
@@ -83,12 +93,17 @@ namespace maxbl4.RfidDotNet.AlienTech.TagStream
                         {
                             heartbeat.OnNext(DateTime.UtcNow);
                         }
+                        continue;
                     }
-
-                    Thread.Yield();
+                    // Thread.Yield() here burned a whole core on an idle reader. On the
+                    // four weak cores of an OrangePi that is a quarter of the machine
+                    // spent on nothing; a millisecond of sleep is invisible against the
+                    // 400 ms budget of "проезд → рейтинг".
+                    Thread.Sleep(IdleSleepMs);
                 }
                 catch (Exception e)
                 {
+                    if (!run) return;
                     errors.OnNext(e);
                 }
             }
