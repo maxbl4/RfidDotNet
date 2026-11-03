@@ -127,6 +127,7 @@ namespace maxbl4.RfidDotNet
                         errors.Add("Alien protocol requires valid port on Network endpoint");
                     break;
                 case ReaderProtocolType.Serial:
+                case ReaderProtocolType.Sl130:
                     if (Network == null && Serial == null)
                         errors.Add("Serial protocol requires Serial or Network endpoint");
                     if (Network != null && (Network.Port < 1 || Network.Port > 65535))

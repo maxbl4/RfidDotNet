@@ -58,6 +58,8 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
                 .Type.Should().Be(ConnectionType.Serial);
             new SerialConnectionString(ConnectionString.Parse("protocol=Serial;Network=host"))
                 .Type.Should().Be(ConnectionType.Network);
+            new SerialConnectionString(ConnectionString.Parse("protocol=Sl130;Serial=COM10"))
+                .Type.Should().Be(ConnectionType.Serial);
             new SerialConnectionString(ConnectionString.Parse("protocol=Alien;Network=host"))
                 .Type.Should().Be(ConnectionType.None);
         }

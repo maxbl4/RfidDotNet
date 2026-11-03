@@ -7,15 +7,18 @@ Provides abstracted interface for reading tags. You simply get Observable\<Tag>.
 Supported protocols:
   * Alien Technology reader protocol over TCP with automatic reconnection support.
   * (Work in progress) Chinese binary protocol over serial port. Serial port code depends on [SerialPortStream](https://github.com/jcurl/SerialPortStream) package. You have to build C driver to be able to work on linux, follow instruction on project page.
+  * SL130 continuous inventory over RS-232 (`protocol=Sl130`), including raw EPC reports, work-mode heartbeat and RF power settings.
 
 There are two API levels. High level is UniversalTagStreamFactory, it has only basic feature, but abstracts away driver details. You register drivers via extensions methods and create tag stream instance by supplying driver specific connection string:
 ```c#
 var factory = new UniversalTagStreamFactory();
 factory.UseSerialProtocol(); // protocol=Serial
+factory.UseSl130Protocol();  // protocol=Sl130
 factory.UseAlienProtocol();  // protocol=Alien
 // Connection string sapmles:
 // protocol=Serial;Serial=COM4
 // protocol=Serial;Serial=/dev/ttyS0
+// protocol=Sl130;Serial=/dev/ttyUSB0@57600;RFPower=30;AntennaConfiguration=Antenna1
 // protocol=Alien;Network=10.0.1.41;RfPower=200;AntennaConfiguration=Antenna1
 
 using (var stream = factory

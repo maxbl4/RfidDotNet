@@ -136,6 +136,17 @@ namespace maxbl4.RfidDotNet.Tests
         }
         
         [Fact]
+        public void Should_validate_sl130_protocol()
+        {
+            var cs = ConnectionString.Parse("protocol=Sl130;Serial=COM10@57600;RFPower=30;AntennaConfiguration=Antenna1");
+            cs.Protocol.Should().Be(ReaderProtocolType.Sl130);
+            cs.Serial.Port.Should().Be("COM10");
+            cs.Serial.BaudRate.Should().Be(57600);
+            cs.IsValid(out var msg).Should().BeTrue(msg);
+            ConnectionString.Parse(cs.ToString()).Protocol.Should().Be(ReaderProtocolType.Sl130);
+        }
+
+        [Fact]
         public void Should_return_invalid_connection_string_for_null_string()
         {
             var cs = ConnectionString.Parse(null);

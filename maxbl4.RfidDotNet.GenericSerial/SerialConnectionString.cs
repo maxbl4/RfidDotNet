@@ -16,7 +16,8 @@ namespace maxbl4.RfidDotNet.GenericSerial
         {
             get
             {
-                if (ConnectionString.IsValid(out var msg) && ConnectionString.Protocol == ReaderProtocolType.Serial)
+                if (ConnectionString.IsValid(out var msg) &&
+                    (ConnectionString.Protocol == ReaderProtocolType.Serial || ConnectionString.Protocol == ReaderProtocolType.Sl130))
                 {
                     if (ConnectionString.Network != null)
                         return ConnectionType.Network;
