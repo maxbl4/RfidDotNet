@@ -26,6 +26,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
         private CancellationTokenSource cts;
         private Task readLoop;
         private Task heartbeatLoop;
+        private Task inventoryLoop;
         private TaskCompletionSource<byte[]> pendingResponse;
         private byte pendingCommand;
         private bool disposed;
@@ -61,7 +62,9 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
                 }
 
                 var current = Sl130Protocol.ParseWorkMode(SendDirect(Sl130Protocol.GetWorkMode));
-                var required = Sl130Protocol.ForContinuousInventory(current);
+                var required = connectionString.Sl130Mode == Sl130Mode.Pull
+                    ? Sl130Protocol.ForPullInventory(current)
+                    : Sl130Protocol.ForContinuousInventory(current);
                 if (current != required)
                 {
                     Sl130Protocol.ValidateResponse(
@@ -82,7 +85,10 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
                 connected.OnNext(true);
                 heartbeat.OnNext(DateTime.UtcNow);
                 readLoop = Task.Run(() => ReadLoop(cts.Token));
-                heartbeatLoop = Task.Run(() => HeartbeatLoop(cts.Token));
+                if (connectionString.Sl130Mode == Sl130Mode.Pull)
+                    inventoryLoop = Task.Run(() => PullLoop(cts.Token));
+                else
+                    heartbeatLoop = Task.Run(() => HeartbeatLoop(cts.Token));
                 return Task.CompletedTask;
             }
             catch
@@ -160,15 +166,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
                     pendingResponse = completion;
                 }
                 var packet = Sl130Protocol.BuildCommand(command, data);
-                await ioLock.WaitAsync(ct);
-                try
-                {
-                    await stream.WriteAsync(packet, 0, packet.Length, ct);
-                }
-                finally
-                {
-                    ioLock.Release();
-                }
+                await stream.WriteAsync(packet, 0, packet.Length, ct);
                 return await completion.Task.WaitAsync(TimeSpan.FromSeconds(2), ct);
             }
             finally
@@ -248,8 +246,33 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
             }
         }
 
+        private async Task PullLoop(CancellationToken ct)
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    await SendCommand(Sl130Protocol.TagInventory, ct);
+                    heartbeat.OnNext(DateTime.UtcNow);
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) {}
+            catch (Exception ex)
+            {
+                errors.OnNext(ex);
+                connected.OnNext(false);
+                cts.Cancel();
+            }
+        }
+
         private void ProcessFrame(byte[] frame)
         {
+            if (frame.Length > 3 && frame[2] == Sl130Protocol.TagInventory)
+            {
+                PublishInventory(frame);
+                if (frame[3] == Sl130Protocol.InventoryMoreFramesPending) return;
+            }
+
             TaskCompletionSource<byte[]> completion = null;
             lock (responseSync)
             {
@@ -272,6 +295,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
             if (Sl130Protocol.TryCreateTag(frame, DateTime.UtcNow, out var tag)) tags.OnNext(tag);
         }
 
+        private void PublishInventory(byte[] frame)
+        {
+            foreach (var tag in Sl130Protocol.ParseInventory(frame, DateTime.UtcNow)) tags.OnNext(tag);
+        }
+
         public void Dispose()
         {
             if (disposed) return;
@@ -285,6 +313,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
             }
             try { readLoop?.Wait(1000); } catch {}
             try { heartbeatLoop?.Wait(1000); } catch {}
+            try { inventoryLoop?.Wait(1000); } catch {}
             connected.OnNext(false);
             cts?.Dispose();
             commandLock.Dispose();

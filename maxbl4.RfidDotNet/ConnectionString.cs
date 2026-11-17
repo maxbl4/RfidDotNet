@@ -20,6 +20,7 @@ namespace maxbl4.RfidDotNet
         public const string DefaultPassword = "password";
 
         public ReaderProtocolType Protocol { get; set; }
+        public Sl130Mode Sl130Mode { get; set; } = Sl130Mode.Pull;
         public DnsEndPoint Network { get; set; }
         public SerialEndpoint Serial { get; set; }
 
@@ -54,6 +55,12 @@ namespace maxbl4.RfidDotNet
                     if (!Enum.TryParse<ReaderProtocolType>(value, true, out var parsedProtocolType))
                         throw new FormatException($"Could not parse value {value} for {name}");
                     cs.Protocol = parsedProtocolType;
+                }
+                if (name.Equals(nameof(Sl130Mode), StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!Enum.TryParse<Sl130Mode>(value, true, out var parsedSl130Mode))
+                        throw new FormatException($"Could not parse value {value} for {name}");
+                    cs.Sl130Mode = parsedSl130Mode;
                 }
                 if (name.Equals(nameof(Network), StringComparison.OrdinalIgnoreCase))
                     cs.Network = value.ParseDnsEndPoint(DefaultNetworkPort);
@@ -161,6 +168,8 @@ namespace maxbl4.RfidDotNet
         {
             var sb = new StringBuilder();
             sb.Append($"{nameof(Protocol)}={Protocol};");
+            if (Protocol == ReaderProtocolType.Sl130)
+                sb.Append($"{nameof(Sl130Mode)}={Sl130Mode};");
             if (Network != null)
                 sb.Append($"{nameof(Network)}={Network.Host}:{Network.Port};");
             if (Serial != null)

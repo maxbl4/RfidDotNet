@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace maxbl4.RfidDotNet.GenericSerial.Sl130
@@ -15,6 +16,7 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
 
     public static class Sl130Protocol
     {
+        public const byte TagInventory = 0x01;
         public const byte GetReaderInformation = 0x21;
         public const byte SetRfPower = 0x2F;
         public const byte SetWorkMode = 0x35;
@@ -22,8 +24,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
         public const byte SetInventoryParameters = 0x3D;
         public const byte TagReport = 0xEE;
 
+        public const byte AnswerMode = 0x00;
         public const byte ScanMode = 0x01;
         public const byte InventoryMultiple = 0x04;
+        public const byte InventoryMoreFramesPending = 0x03;
+        public const byte NoOperableTagsFound = 0xFB;
         public const byte Rs232Output = 0x02;
         public const byte BeepOff = 0x04;
 
@@ -46,6 +51,11 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
             MemInven = InventoryMultiple,
         };
 
+        public static Sl130WorkMode ForPullInventory(Sl130WorkMode current) => current with
+        {
+            ReadMode = AnswerMode,
+        };
+
         public static Sl130WorkMode ParseWorkMode(byte[] frame)
         {
             ValidateResponse(frame, GetWorkMode, 18);
@@ -61,6 +71,46 @@ namespace maxbl4.RfidDotNet.GenericSerial.Sl130
         {
             ValidateResponse(frame, GetReaderInformation, 14);
             return new Sl130ReaderInfo(frame[10]);
+        }
+
+        public static IReadOnlyList<Tag> ParseInventory(byte[] frame, DateTime timestampUtc)
+        {
+            if (!IsValidFrame(frame))
+                throw new InvalidDataException("SL130 returned a malformed inventory frame or invalid CRC");
+            if (frame[2] != TagInventory)
+                throw new InvalidDataException($"SL130 inventory response has unexpected command 0x{frame[2]:X2}");
+
+            var tags = new List<Tag>();
+            var status = frame[3];
+            if (status == NoOperableTagsFound) return tags;
+            if (status != 0x01 && status != 0x02 && status != InventoryMoreFramesPending && status != 0x04)
+                throw new InvalidDataException($"SL130 inventory failed with status 0x{status:X2}");
+            if (frame.Length < 7)
+                throw new InvalidDataException("SL130 inventory response does not contain a tag count");
+
+            var count = frame[4];
+            var offset = 5;
+            for (var i = 0; i < count; i++)
+            {
+                if (offset >= frame.Length - 2)
+                    throw new InvalidDataException("SL130 inventory response ended before the declared tag count");
+                var epcLength = frame[offset++];
+                if (epcLength == 0 || offset + epcLength > frame.Length - 2)
+                    throw new InvalidDataException("SL130 inventory response contains an invalid EPC length");
+                tags.Add(new Tag
+                {
+                    TagId = Convert.ToHexString(frame, offset, epcLength),
+                    DiscoveryTime = timestampUtc,
+                    LastSeenTime = timestampUtc,
+                    Antenna = 0,
+                    ReadCount = 1,
+                    Rssi = 0,
+                });
+                offset += epcLength;
+            }
+            if (offset != frame.Length - 2)
+                throw new InvalidDataException("SL130 inventory response contains trailing data");
+            return tags;
         }
 
         public static bool TryCreateTag(byte[] frame, DateTime timestampUtc, out Tag tag)

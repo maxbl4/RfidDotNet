@@ -96,5 +96,52 @@ namespace maxbl4.RfidDotNet.GenericSerial.Tests
             action = () => Sl130Protocol.ParseReaderInfo(response);
             action.Should().Throw<InvalidDataException>();
         }
+
+        [Fact]
+        public void Should_enter_answer_mode_for_pull_inventory()
+        {
+            var current = Sl130Protocol.ParseWorkMode(WorkModeResponse);
+            var required = Sl130Protocol.ForPullInventory(current);
+            required.ReadMode.Should().Be(Sl130Protocol.AnswerMode);
+            required.ModeState.Should().Be(current.ModeState);
+            required.MemInven.Should().Be(current.MemInven);
+        }
+
+        [Fact]
+        public void Should_build_pull_inventory_without_parameters()
+        {
+            Sl130Protocol.BuildCommand(Sl130Protocol.TagInventory)
+                .Should().Equal(0x04, 0x00, 0x01, 0xDB, 0x4B);
+        }
+
+        [Fact]
+        public void Should_parse_live_pull_inventory_response()
+        {
+            byte[] frame =
+            {
+                0x2D, 0x00, 0x01, 0x01, 0x03, 0x0C, 0x03, 0x07, 0x26, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x92, 0xD5, 0x0C, 0xE2, 0x00, 0x00, 0x17, 0x29,
+                0x18, 0x01, 0x57, 0x28, 0x80, 0x02, 0x03, 0x0C, 0x03, 0x07, 0x26, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0xB1, 0x89, 0x59,
+            };
+            var now = DateTime.UtcNow;
+            var tags = Sl130Protocol.ParseInventory(frame, now);
+            tags.Count.Should().Be(3);
+            tags[0].TagId.Should().Be("0307260000000000000092D5");
+            tags[1].TagId.Should().Be("E20000172918015728800203");
+            tags[2].TagId.Should().Be("0307260000000000000090B1");
+            tags[0].DiscoveryTime.Should().Be(now);
+            tags[0].LastSeenTime.Should().Be(now);
+            tags[0].Antenna.Should().Be(0);
+            tags[0].Rssi.Should().Be(0);
+        }
+
+        [Fact]
+        public void Should_treat_no_tags_as_completed_pull_inventory()
+        {
+            Sl130Protocol.ParseInventory(
+                    new byte[] { 0x05, 0x00, 0x01, 0xFB, 0xF2, 0x3D }, DateTime.UtcNow)
+                .Should().BeEmpty();
+        }
     }
 }

@@ -140,10 +140,15 @@ namespace maxbl4.RfidDotNet.Tests
         {
             var cs = ConnectionString.Parse("protocol=Sl130;Serial=COM10@57600;RFPower=30;AntennaConfiguration=Antenna1");
             cs.Protocol.Should().Be(ReaderProtocolType.Sl130);
+            cs.Sl130Mode.Should().Be(Sl130Mode.Pull);
             cs.Serial.Port.Should().Be("COM10");
             cs.Serial.BaudRate.Should().Be(57600);
             cs.IsValid(out var msg).Should().BeTrue(msg);
             ConnectionString.Parse(cs.ToString()).Protocol.Should().Be(ReaderProtocolType.Sl130);
+
+            var pull = ConnectionString.Parse(cs + ";Sl130Mode=Pull");
+            pull.Sl130Mode.Should().Be(Sl130Mode.Pull);
+            ConnectionString.Parse(pull.ToString()).Sl130Mode.Should().Be(Sl130Mode.Pull);
         }
 
         [Fact]
